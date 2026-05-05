@@ -67,7 +67,7 @@ const DashboardPage = () => {
       const start = format(startOfMonth(date), 'yyyy-MM-dd');
       const end = format(endOfMonth(date), 'yyyy-MM-dd');
       
-      let filterString = `userId = "${currentUser.id}" && date >= "${start}" && date <= "${end}"`;
+      let filterString = `userId = "${currentUser.id}" && ((entryDate >= "${start} 00:00:00.000Z" && entryDate <= "${end} 23:59:59.999Z") || (date >= "${start} 00:00:00.000Z" && date <= "${end} 23:59:59.999Z"))`;
       if (selectedAccountId) {
         filterString += ` && accountId = "${selectedAccountId}"`;
       }

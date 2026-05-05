@@ -19,7 +19,7 @@ export const ConsentProvider = ({ children }) => {
   useEffect(() => {
     const checkConsent = () => {
       const storedConsent = localStorage.getItem('cookieConsent');
-      if (storedConsent === 'true') {
+      if (storedConsent === 'accepted') {
         setIsCookieConsentGiven(true);
       }
       setIsLoading(false);
@@ -56,7 +56,7 @@ export const ConsentProvider = ({ children }) => {
   };
 
   const acceptCookies = (preferences = { essential: true, auth: true, email: true }) => {
-    localStorage.setItem('cookieConsent', 'true');
+    localStorage.setItem('cookieConsent', 'accepted');
     localStorage.setItem('cookiePreferences', JSON.stringify(preferences));
     setIsCookieConsentGiven(true);
     setIsPreferencesOpen(false);

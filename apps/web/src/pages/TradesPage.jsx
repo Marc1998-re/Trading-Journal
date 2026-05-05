@@ -87,13 +87,11 @@ const TradesPage = () => {
     setIsExporting(true);
     try {
       const filterString = buildTradeFilterString(currentUser.id, filters, selectedAccountId);
-      const result = await pb.collection('trades').getList(1, 500, {
+      const tradesToExport = await pb.collection('trades').getFullList({
         filter: filterString,
         sort: '-entryDate',
         $autoCancel: false
       });
-
-      const tradesToExport = result.items;
 
       if (tradesToExport.length === 0) {
         toast.info('No trades found to export');

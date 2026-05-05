@@ -113,16 +113,19 @@ const EditTradeModal = ({ trade, open, onClose, onSaved }) => {
       const monetaryStopLoss = calculateStopLossInEuro(startingBalance, stopLossVal);
       const profitLossVal = monetaryStopLoss * rrSecuredVal;
 
+      const formattedDate = formData.entryDate ? `${formData.entryDate} 12:00:00.000Z` : null;
+
       const updateData = {
         accountId: formData.accountId,
         symbol: formData.symbol.trim().toUpperCase(),
         instrument: formData.symbol.trim().toUpperCase(), // Sync with legacy schema field
-        entryDate: formData.entryDate || null,
-        date: formData.entryDate || null, // Sync with legacy schema field
+        entryDate: formattedDate,
+        date: formattedDate, // Sync with legacy schema field
         entryTime: formData.entryTime || null,
         time: formData.entryTime || null,
         stopLoss: stopLossVal,
         rrSecured: rrSecuredVal,
+        riskRewardRatio: rrSecuredVal,
         status: derivedStatus,
         commissionPercentage: parseFloat(formData.commissionPercentage) || 0,
         profitLoss: profitLossVal,
