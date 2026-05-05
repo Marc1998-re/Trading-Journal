@@ -22,8 +22,9 @@ import {
   Target, 
   Activity, 
   DollarSign, 
-  BarChart2,
-  Percent
+  Percent,
+  Radar,
+  CalendarDays
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -128,25 +129,20 @@ const DashboardPage = () => {
     
     const bestTrade = profits.length > 0 ? Math.max(...profits) : 0;
     const worstTrade = losses.length > 0 ? Math.min(...losses) : 0;
-    
     const avgWin = profits.length > 0 ? profits.reduce((a, b) => a + b, 0) / profits.length : 0;
     const avgLoss = losses.length > 0 ? losses.reduce((a, b) => a + b, 0) / losses.length : 0;
-    
     const winRate = processedTrades.length > 0 ? (profits.length / processedTrades.length) * 100 : 0;
-    
     const grossProfit = profits.reduce((a, b) => a + b, 0);
     const grossLoss = Math.abs(losses.reduce((a, b) => a + b, 0));
     const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : (grossProfit > 0 ? grossProfit : 0);
-
     const netPnL = processedTrades.reduce((sum, t) => sum + t.calculatedNet, 0);
     const returnPercentage = calculateReturnPercentage(netPnL, totalCurrentBalance);
     const monetaryGain = calculateMonetaryGain(netPnL);
 
-    return { bestTrade, worstTrade, avgWin, avgLoss, winRate, profitFactor, returnPercentage, monetaryGain };
+    return { bestTrade, worstTrade, avgWin, avgLoss, winRate, profitFactor, returnPercentage, monetaryGain, netPnL, tradeCount: processedTrades.length };
   };
 
   const stats = calculateStats();
-
   const formatEuro = (val) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(val);
   const recentTrades = [...trades]
     .sort((a, b) => new Date(b.entryDate || b.date) - new Date(a.entryDate || a.date))
@@ -155,200 +151,174 @@ const DashboardPage = () => {
   return (
     <>
       <Helmet>
-        <title>Dashboard - Trading Journal</title>
+        <title>Command - Trading Journal</title>
       </Helmet>
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-8">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold">Trading Dashboard</h1>
-              <Badge variant="secondary" className="font-medium text-sm px-3 py-1 bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
-                {accountName}
-              </Badge>
-            </div>
-            <p className="text-muted-foreground">Month performance, risk profile and recent trading activity.</p>
-          </div>
-          <Button onClick={handleSync} disabled={isSyncing || loading} variant="outline" size="sm" className="gap-2">
-            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-            Sync Data
-          </Button>
-        </div>
-
-        {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <StatCard 
-            title="Return %" 
-            value={`${stats.returnPercentage >= 0 ? '+' : ''}${stats.returnPercentage.toFixed(2)}%`} 
-            icon={<Percent className="w-5 h-5 text-primary" />} 
-            loading={loading} 
-            valueClass={stats.returnPercentage >= 0 ? "text-success" : "text-destructive"}
-          />
-          <StatCard 
-            title="Monetary Gain" 
-            value={`${stats.monetaryGain >= 0 ? '+' : '-'}${formatEuro(Math.abs(stats.monetaryGain))}`} 
-            icon={<DollarSign className="w-5 h-5 text-primary" />} 
-            loading={loading} 
-            valueClass={stats.monetaryGain >= 0 ? "text-success" : "text-destructive"}
-          />
-          <StatCard 
-            title="Best Trade" 
-            value={formatEuro(stats.bestTrade)}
-            icon={<TrendingUp className="w-5 h-5 text-success" />} 
-            loading={loading} 
-            valueClass="text-success"
-          />
-          <StatCard 
-            title="Worst Trade" 
-            value={formatEuro(stats.worstTrade)}
-            icon={<TrendingDown className="w-5 h-5 text-destructive" />} 
-            loading={loading}
-            valueClass="text-destructive"
-          />
-          <StatCard 
-            title="Win Rate" 
-            value={`${stats.winRate.toFixed(1)}%`} 
-            icon={<Target className="w-5 h-5 text-primary" />} 
-            loading={loading} 
-          />
-          <StatCard 
-            title="Avg. Win" 
-            value={formatEuro(stats.avgWin)}
-            icon={<DollarSign className="w-5 h-5 text-success" />} 
-            loading={loading} 
-            valueClass="text-success"
-          />
-          <StatCard 
-            title="Avg. Loss" 
-            value={formatEuro(stats.avgLoss)}
-            icon={<Activity className="w-5 h-5 text-destructive" />} 
-            loading={loading} 
-            valueClass="text-destructive"
-          />
-          <StatCard 
-            title="Profit Factor" 
-            value={stats.profitFactor.toFixed(2)} 
-            icon={<BarChart2 className="w-5 h-5 text-info" />} 
-            loading={loading} 
-          />
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_380px] gap-6">
-          <Card className="border-border shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-4">
-              <CardTitle className="text-xl font-semibold flex items-center gap-2">
-                <Button variant="ghost" size="icon" onClick={prevMonth} aria-label="Previous month">
-                  <ChevronLeft className="w-5 h-5" />
-                </Button>
-                <span className="min-w-[140px] text-center">
-                  {format(currentDate, 'MMMM yyyy')}
-                </span>
-                <Button variant="ghost" size="icon" onClick={nextMonth} aria-label="Next month">
-                  <ChevronRight className="w-5 h-5" />
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-7 gap-2 mb-2">
-                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                  <div key={day} className="text-center text-xs font-semibold text-muted-foreground py-2 uppercase">
-                    {day}
-                  </div>
-                ))}
+      <main className="desk-shell market-grid">
+        <div className="desk-container">
+          <section className="command-panel rounded-lg p-5 sm:p-6 lg:p-7">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-3xl">
+                <p className="section-kicker mb-3">Live trading command</p>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <h1 className="text-3xl font-black tracking-normal sm:text-5xl">JournalOS Command</h1>
+                  <Badge className="w-fit border-primary/30 bg-primary/15 px-3 py-1.5 text-primary hover:bg-primary/20">
+                    {accountName}
+                  </Badge>
+                </div>
+                <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+                  Month performance, execution quality and trade flow in one focused workspace.
+                </p>
               </div>
-              <div className="grid grid-cols-7 gap-2">
-                {loading ? (
-                  Array.from({ length: 35 }).map((_, i) => (
-                    <Skeleton key={i} className="h-24 rounded-lg" />
-                  ))
-                ) : (
-                  calendarDays.map((day, i) => {
-                    const { count, pnl } = getDayData(day);
-                    const isCurrentMonth = isSameMonth(day, currentDate);
-                    const isPositive = pnl > 0;
-                    const isNegative = pnl < 0;
+              <div className="flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
+                <div className="rounded-md border border-white/10 bg-black/20 px-4 py-3">
+                  <p className="surface-label">Net month</p>
+                  <p className={`mt-1 text-2xl font-black ${stats.netPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
+                    {stats.netPnL >= 0 ? '+' : ''}{formatEuro(stats.netPnL)}
+                  </p>
+                </div>
+                <Button onClick={handleSync} disabled={isSyncing || loading} className="h-auto gap-2 bg-primary px-5 py-4 font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90">
+                  <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                  Sync Desk
+                </Button>
+              </div>
+            </div>
+          </section>
 
-                    return (
-                      <div
-                        key={i}
-                        className={`h-24 rounded-lg p-2 flex flex-col justify-between border transition-colors
-                          ${!isCurrentMonth ? 'opacity-40 bg-muted/30 border-transparent' : 'bg-card border-border'}
-                          ${isCurrentMonth && isPositive ? 'bg-success/10 border-success/20' : ''}
-                          ${isCurrentMonth && isNegative ? 'bg-destructive/10 border-destructive/20' : ''}
-                        `}
-                      >
-                        <span className={`text-sm font-medium ${!isCurrentMonth ? 'text-muted-foreground' : 'text-foreground'}`}>
-                          {format(day, 'd')}
-                        </span>
-                        {count > 0 && (
-                          <div className="flex flex-col items-end">
-                            <span className={`text-xs font-bold ${isPositive ? 'text-success' : isNegative ? 'text-destructive' : 'text-muted-foreground'}`}>
-                              {pnl > 0 ? '+' : ''}{formatEuro(pnl)}
+          {error && (
+            <Alert variant="destructive" className="border-destructive/30 bg-destructive/10">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <StatCard title="Return" value={`${stats.returnPercentage >= 0 ? '+' : ''}${stats.returnPercentage.toFixed(2)}%`} icon={<Percent className="w-5 h-5" />} loading={loading} valueClass={stats.returnPercentage >= 0 ? 'text-success' : 'text-destructive'} />
+            <StatCard title="Monetary Gain" value={`${stats.monetaryGain >= 0 ? '+' : '-'}${formatEuro(Math.abs(stats.monetaryGain))}`} icon={<DollarSign className="w-5 h-5" />} loading={loading} valueClass={stats.monetaryGain >= 0 ? 'text-success' : 'text-destructive'} />
+            <StatCard title="Win Rate" value={`${stats.winRate.toFixed(1)}%`} icon={<Target className="w-5 h-5" />} loading={loading} />
+            <StatCard title="Profit Factor" value={stats.profitFactor.toFixed(2)} icon={<Radar className="w-5 h-5" />} loading={loading} />
+            <StatCard title="Best Trade" value={formatEuro(stats.bestTrade)} icon={<TrendingUp className="w-5 h-5" />} loading={loading} valueClass="text-success" />
+            <StatCard title="Worst Trade" value={formatEuro(stats.worstTrade)} icon={<TrendingDown className="w-5 h-5" />} loading={loading} valueClass="text-destructive" />
+            <StatCard title="Avg. Win" value={formatEuro(stats.avgWin)} icon={<DollarSign className="w-5 h-5" />} loading={loading} valueClass="text-success" />
+            <StatCard title="Avg. Loss" value={formatEuro(stats.avgLoss)} icon={<Activity className="w-5 h-5" />} loading={loading} valueClass="text-destructive" />
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
+            <Card className="command-panel overflow-hidden rounded-lg">
+              <CardHeader className="flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="section-kicker mb-2">Performance calendar</p>
+                  <CardTitle className="flex items-center gap-3 text-2xl font-black">
+                    <CalendarDays className="h-6 w-6 text-primary" />
+                    {format(currentDate, 'MMMM yyyy')}
+                  </CardTitle>
+                </div>
+                <div className="flex items-center gap-2 rounded-md border border-white/10 bg-black/20 p-1">
+                  <Button variant="ghost" size="icon" onClick={prevMonth} aria-label="Previous month" className="hover:bg-white/[0.06]">
+                    <ChevronLeft className="w-5 h-5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={nextMonth} aria-label="Next month" className="hover:bg-white/[0.06]">
+                    <ChevronRight className="w-5 h-5" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 sm:p-6">
+                <div className="grid grid-cols-7 gap-2 mb-2">
+                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                    <div key={day} className="py-2 text-center text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                      {day}
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7 gap-2">
+                  {loading ? (
+                    Array.from({ length: 35 }).map((_, i) => (
+                      <Skeleton key={i} className="h-24 rounded-md bg-white/10" />
+                    ))
+                  ) : (
+                    calendarDays.map((day, i) => {
+                      const { count, pnl } = getDayData(day);
+                      const isCurrentMonth = isSameMonth(day, currentDate);
+                      const isPositive = pnl > 0;
+                      const isNegative = pnl < 0;
+
+                      return (
+                        <div
+                          key={i}
+                          className={`h-24 rounded-md border p-2 transition-colors ${!isCurrentMonth ? 'border-transparent bg-black/10 opacity-35' : 'border-white/10 bg-white/[0.035]'} ${isCurrentMonth && isPositive ? 'border-success/35 bg-success/10' : ''} ${isCurrentMonth && isNegative ? 'border-destructive/35 bg-destructive/10' : ''}`}
+                        >
+                          <div className="flex h-full flex-col justify-between">
+                            <span className={`text-sm font-bold ${!isCurrentMonth ? 'text-muted-foreground' : 'text-foreground'}`}>
+                              {format(day, 'd')}
                             </span>
-                            <span className="text-[10px] text-muted-foreground">
-                              {count} trade{count !== 1 ? 's' : ''}
-                            </span>
+                            {count > 0 && (
+                              <div className="text-right">
+                                <span className={`block text-[11px] font-black ${isPositive ? 'text-success' : isNegative ? 'text-destructive' : 'text-muted-foreground'}`}>
+                                  {pnl > 0 ? '+' : ''}{formatEuro(pnl)}
+                                </span>
+                                <span className="text-[10px] text-muted-foreground">
+                                  {count} trade{count !== 1 ? 's' : ''}
+                                </span>
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-panel rounded-lg">
+              <CardHeader className="border-b border-white/10">
+                <p className="section-kicker mb-2">Execution feed</p>
+                <CardTitle className="text-2xl font-black">Recent Trades</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 p-4">
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-md bg-white/10" />)
+                ) : recentTrades.length === 0 ? (
+                  <p className="rounded-md border border-white/10 bg-black/20 px-4 py-8 text-sm text-muted-foreground">No trades recorded for this month.</p>
+                ) : (
+                  recentTrades.map((trade) => {
+                    const gross = getTradeGrossProfit(trade, originalBalances, currentBalancesMap);
+                    const net = calculateNetProfit(gross, trade.commissionPercentage, originalBalances, currentBalancesMap);
+                    const tradeDate = trade.entryDate || trade.date;
+                    return (
+                      <div key={trade.id} className="rounded-md border border-white/10 bg-black/20 p-4 transition-colors hover:border-primary/30 hover:bg-primary/5">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-base font-black">{trade.symbol || trade.instrument || 'Trade'}</p>
+                            <p className="text-xs text-muted-foreground">{tradeDate ? format(new Date(tradeDate), 'MMM dd') : 'No date'} · {Number(trade.rrSecured || 0).toFixed(2)}R</p>
+                          </div>
+                          <p className={`text-sm font-black ${net > 0 ? 'text-success' : net < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                            {net > 0 ? '+' : ''}{formatEuro(net)}
+                          </p>
+                        </div>
                       </div>
                     );
                   })
                 )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-xl font-semibold">Recent Trades</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {loading ? (
-                Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-lg" />)
-              ) : recentTrades.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-6">No trades recorded for this month.</p>
-              ) : (
-                recentTrades.map((trade) => {
-                  const gross = getTradeGrossProfit(trade, originalBalances, currentBalancesMap);
-                  const net = calculateNetProfit(gross, trade.commissionPercentage, originalBalances, currentBalancesMap);
-                  const tradeDate = trade.entryDate || trade.date;
-                  return (
-                    <div key={trade.id} className="flex items-center justify-between rounded-lg border border-border bg-background p-3">
-                      <div>
-                        <p className="font-semibold">{trade.symbol || trade.instrument || 'Trade'}</p>
-                        <p className="text-xs text-muted-foreground">{tradeDate ? format(new Date(tradeDate), 'MMM dd') : 'No date'} · {Number(trade.rrSecured || 0).toFixed(2)}R</p>
-                      </div>
-                      <p className={`text-sm font-bold ${net > 0 ? 'text-success' : net < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                        {net > 0 ? '+' : ''}{formatEuro(net)}
-                      </p>
-                    </div>
-                  );
-                })
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
+      </main>
     </>
   );
 };
 
-const StatCard = ({ title, value, icon, loading, valueClass = "text-foreground" }) => (
-  <Card className="border-border shadow-sm">
-    <CardContent className="p-5 flex items-center gap-4">
-      <div className="p-3 bg-secondary rounded-lg">
+const StatCard = ({ title, value, icon, loading, valueClass = 'text-foreground' }) => (
+  <Card className="stat-surface rounded-lg">
+    <CardContent className="flex items-center gap-4 p-5">
+      <div className="grid h-11 w-11 place-items-center rounded-md border border-primary/20 bg-primary/10 text-primary">
         {icon}
       </div>
-      <div>
-        <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
+      <div className="min-w-0">
+        <p className="surface-label mb-1">{title}</p>
         {loading ? (
-          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-8 w-24 bg-white/10" />
         ) : (
-          <h3 className={`text-2xl font-bold ${valueClass}`}>{value}</h3>
+          <h3 className={`truncate text-2xl font-black ${valueClass}`}>{value}</h3>
         )}
       </div>
     </CardContent>

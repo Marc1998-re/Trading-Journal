@@ -34,7 +34,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
   const [validationUrl, setValidationUrl] = useState('');
   const [entryUrl, setEntryUrl] = useState('');
   const [notes, setNotes] = useState('');
-  
+
   const [loading, setLoading] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState('');
   const [startingBalance, setStartingBalance] = useState(10000);
@@ -140,7 +140,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
 
     const normalizedRrSecured = String(rrSecured).replace(',', '.');
     const finalRrSecured = Number(normalizedRrSecured);
-    
+
     if (isNaN(finalRrSecured)) {
       toast.error('Risk/Reward Ratio must be a valid number.');
       return;
@@ -150,7 +150,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
     const parsedStopLoss = parseFloat(stopLoss);
     const parsedStopLossPips = stopLossPips ? parseFloat(stopLossPips) : null;
     const parsedCommission = parseFloat(commissionPercentage);
-    
+
     if (isNaN(parsedStopLoss) || parsedStopLoss < 0) {
       toast.error('Stop Loss must be a valid positive number.');
       return;
@@ -201,7 +201,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
       await pb.collection('trades').create(payload, {
         $autoCancel: false
       });
-      
+
       toast.success('Trade added successfully');
 
       // Reset form
@@ -218,25 +218,25 @@ const TradeEntryForm = ({ onTradeAdded }) => {
       setEntryUrl('');
       setNotes('');
       setDuplicateWarning('');
-      
+
       if (onTradeAdded) onTradeAdded();
     } catch (err) {
       console.error('PocketBase Error:', err);
-      
+
       let errorMessage = 'Failed to add trade. Please check your inputs.';
-      
+
       if (err.response && err.response.data) {
         const validationErrors = Object.entries(err.response.data)
           .map(([field, errorObj]) => `${field}: ${errorObj.message}`)
           .join(' | ');
-          
+
         if (validationErrors) {
           errorMessage = `Validation Error: ${validationErrors}`;
         }
       } else if (err.message) {
         errorMessage = err.message;
       }
-      
+
       toast.error(errorMessage, {
         duration: 6000
       });
@@ -246,9 +246,10 @@ const TradeEntryForm = ({ onTradeAdded }) => {
   };
 
   return (
-    <Card className="border-border shadow-sm">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-xl font-semibold">Add new trade</CardTitle>
+    <Card className="glass-panel rounded-lg">
+      <CardHeader className="border-b border-white/10 pb-4">
+        <p className="section-kicker mb-2">New execution</p>
+        <CardTitle className="text-2xl font-black">Add New Trade</CardTitle>
         <CardDescription>Capture the trade, risk and review context in one pass</CardDescription>
       </CardHeader>
       <CardContent>
@@ -265,7 +266,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
             <div className="space-y-2">
               <Label htmlFor="accountId" className="text-xs font-semibold uppercase text-muted-foreground">Account *</Label>
               <Select value={accountId} onValueChange={setAccountId} required>
-                <SelectTrigger id="accountId" className="bg-background">
+                <SelectTrigger id="accountId" className="border-white/10 bg-black/20">
                   <SelectValue placeholder="Select Account" />
                 </SelectTrigger>
                 <SelectContent>
@@ -278,36 +279,36 @@ const TradeEntryForm = ({ onTradeAdded }) => {
 
             <div className="space-y-2">
               <Label htmlFor="symbol" className="text-xs font-semibold uppercase text-muted-foreground">Symbol *</Label>
-              <SymbolCombobox 
-                value={symbol} 
-                onChange={setSymbol} 
-                symbols={symbols} 
+              <SymbolCombobox
+                value={symbol}
+                onChange={setSymbol}
+                symbols={symbols}
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="entryDate" className="text-xs font-semibold uppercase text-muted-foreground">Entry Date *</Label>
-              <Input 
-                id="entryDate" 
-                name="entryDate" 
-                type="date" 
-                value={entryDate} 
-                onChange={handleEntryDateChange} 
-                required 
-                className="bg-background" 
+              <Input
+                id="entryDate"
+                name="entryDate"
+                type="date"
+                value={entryDate}
+                onChange={handleEntryDateChange}
+                required
+                className="border-white/10 bg-black/20"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="entryTime" className="text-xs font-semibold uppercase text-muted-foreground">Entry Time *</Label>
-              <Input 
-                id="entryTime" 
-                name="entryTime" 
-                type="time" 
-                value={entryTime} 
-                onChange={handleEntryTimeChange} 
-                required 
-                className="bg-background" 
+              <Input
+                id="entryTime"
+                name="entryTime"
+                type="time"
+                value={entryTime}
+                onChange={handleEntryTimeChange}
+                required
+                className="border-white/10 bg-black/20"
               />
             </div>
           </div>
@@ -316,18 +317,18 @@ const TradeEntryForm = ({ onTradeAdded }) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="stopLoss" className="text-xs font-semibold uppercase text-muted-foreground">Stop Loss (%) *</Label>
-              <Input 
-                id="stopLoss" 
-                name="stopLoss" 
-                type="number" 
-                step="0.01" 
-                min="0" 
+              <Input
+                id="stopLoss"
+                name="stopLoss"
+                type="number"
+                step="0.01"
+                min="0"
                 max="100"
-                value={stopLoss} 
-                onChange={handleStopLossChange} 
-                placeholder="e.g. 1.0" 
-                required 
-                className="bg-background" 
+                value={stopLoss}
+                onChange={handleStopLossChange}
+                placeholder="e.g. 1.0"
+                required
+                className="border-white/10 bg-black/20"
               />
               {stopLoss && !isNaN(parseFloat(stopLoss)) && (
                 <p className="text-xs text-muted-foreground font-medium mt-1">
@@ -338,38 +339,38 @@ const TradeEntryForm = ({ onTradeAdded }) => {
 
             <div className="space-y-2">
               <Label htmlFor="stopLossPips" className="text-xs font-semibold uppercase text-muted-foreground">Stop Loss (Pips)</Label>
-              <Input 
-                id="stopLossPips" 
-                name="stopLossPips" 
-                type="number" 
-                step="0.1" 
-                min="0" 
-                value={stopLossPips} 
-                onChange={handleStopLossPipsChange} 
-                placeholder="e.g. 15.5" 
-                className="bg-background" 
+              <Input
+                id="stopLossPips"
+                name="stopLossPips"
+                type="number"
+                step="0.1"
+                min="0"
+                value={stopLossPips}
+                onChange={handleStopLossPipsChange}
+                placeholder="e.g. 15.5"
+                className="border-white/10 bg-black/20"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="rrSecured" className="text-xs font-semibold uppercase text-primary">Risk/Reward Ratio *</Label>
-              <Input 
-                id="rrSecured" 
-                name="rrSecured" 
-                type="text" 
-                inputMode="decimal" 
-                value={rrSecured} 
-                onChange={handleRrSecuredChange} 
-                placeholder="e.g. 2.5, -1, 0" 
-                required 
-                className="bg-background border-primary/30 focus-visible:ring-primary/50" 
+              <Input
+                id="rrSecured"
+                name="rrSecured"
+                type="text"
+                inputMode="decimal"
+                value={rrSecured}
+                onChange={handleRrSecuredChange}
+                placeholder="e.g. 2.5, -1, 0"
+                required
+                className="border-primary/40 bg-primary/10 focus-visible:ring-primary/50"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="status" className="text-xs font-semibold uppercase text-muted-foreground">Status</Label>
               <Select value={status} onValueChange={handleStatusChange}>
-                <SelectTrigger id="status" className="bg-background">
+                <SelectTrigger id="status" className="border-white/10 bg-black/20">
                   <SelectValue placeholder="Auto-calculate" />
                 </SelectTrigger>
                 <SelectContent>
@@ -385,54 +386,54 @@ const TradeEntryForm = ({ onTradeAdded }) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="commissionPercentage" className="text-xs font-semibold uppercase text-muted-foreground">Commission (%)</Label>
-              <Input 
-                id="commissionPercentage" 
-                name="commissionPercentage" 
-                type="number" 
-                step="0.001" 
-                min="0" 
-                value={commissionPercentage} 
-                onChange={handleCommissionChange} 
-                className="bg-background" 
+              <Input
+                id="commissionPercentage"
+                name="commissionPercentage"
+                type="number"
+                step="0.001"
+                min="0"
+                value={commissionPercentage}
+                onChange={handleCommissionChange}
+                className="border-white/10 bg-black/20"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="contextUrl" className="text-xs font-semibold uppercase text-muted-foreground">Context URL</Label>
-              <Input 
-                id="contextUrl" 
-                name="contextUrl" 
-                type="url" 
-                value={contextUrl} 
-                onChange={handleContextUrlChange} 
-                placeholder="https://..." 
-                className="bg-background" 
+              <Input
+                id="contextUrl"
+                name="contextUrl"
+                type="url"
+                value={contextUrl}
+                onChange={handleContextUrlChange}
+                placeholder="https://..."
+                className="border-white/10 bg-black/20"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="validationUrl" className="text-xs font-semibold uppercase text-muted-foreground">Validation URL</Label>
-              <Input 
-                id="validationUrl" 
-                name="validationUrl" 
-                type="url" 
-                value={validationUrl} 
-                onChange={handleValidationUrlChange} 
-                placeholder="https://..." 
-                className="bg-background" 
+              <Input
+                id="validationUrl"
+                name="validationUrl"
+                type="url"
+                value={validationUrl}
+                onChange={handleValidationUrlChange}
+                placeholder="https://..."
+                className="border-white/10 bg-black/20"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="entryUrl" className="text-xs font-semibold uppercase text-muted-foreground">Entry URL</Label>
-              <Input 
-                id="entryUrl" 
-                name="entryUrl" 
-                type="url" 
-                value={entryUrl} 
-                onChange={handleEntryUrlChange} 
-                placeholder="https://..." 
-                className="bg-background" 
+              <Input
+                id="entryUrl"
+                name="entryUrl"
+                type="url"
+                value={entryUrl}
+                onChange={handleEntryUrlChange}
+                placeholder="https://..."
+                className="border-white/10 bg-black/20"
               />
             </div>
           </div>
@@ -440,20 +441,20 @@ const TradeEntryForm = ({ onTradeAdded }) => {
           {/* Row 4 */}
           <div className="space-y-2">
             <Label htmlFor="notes" className="text-xs font-semibold uppercase text-muted-foreground">Notes</Label>
-            <Textarea 
-              id="notes" 
-              name="notes" 
-              value={notes} 
-              onChange={handleNotesChange} 
-              placeholder="Trade setup, market conditions, lessons learned..." 
-              rows={3} 
-              className="bg-background resize-none" 
+            <Textarea
+              id="notes"
+              name="notes"
+              value={notes}
+              onChange={handleNotesChange}
+              placeholder="Trade setup, market conditions, lessons learned..."
+              rows={3}
+              className="border-white/10 bg-black/20 resize-none"
             />
           </div>
 
-          <Button 
-            type="submit" 
-            className="w-full gap-2 py-5 text-base font-semibold transition-all active:scale-[0.99]"
+          <Button
+            type="submit"
+            className="w-full gap-2 bg-primary py-5 text-base font-black text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-[0.99]"
             disabled={loading}
           >
             {loading ? (
