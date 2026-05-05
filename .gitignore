@@ -1,0 +1,15 @@
+.DS_Store
+node_modules/
+dist/
+build/
+.env
+.env.*
+
+# PocketBase local runtime data and binaries
+apps/pocketbase/pb_data/
+apps/pocketbase/pb_backups/
+apps/pocketbase/pb_snapshots/
+apps/pocketbase/pocketbase
+
+# Nested/exported Git metadata
+**/.git/
