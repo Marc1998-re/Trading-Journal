@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Trash2, Edit, ExternalLink, ChevronDown, ChevronUp, Download } from 'lucide-react';
+import { Trash2, Edit, ExternalLink, ChevronDown, ChevronUp, Download, ListFilter } from 'lucide-react';
 import { format } from 'date-fns';
 import { getTradeGrossProfit, calculateCommissionAmount, calculateNetProfit, calculateStopLossInEuro } from '@/lib/tradeCalculations.js';
 
@@ -189,8 +189,8 @@ const TradesPage = () => {
         <title>Trades - Trading Journal</title>
         <meta name="description" content="View and manage your trading history" />
       </Helmet>
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-3xl font-bold">Trades</h1>
@@ -198,7 +198,7 @@ const TradesPage = () => {
                 {accountName}
               </Badge>
             </div>
-            <p className="text-muted-foreground">Record and manage your trading activity</p>
+            <p className="text-muted-foreground">Record, filter and audit every trade in your journal.</p>
           </div>
           <Button onClick={handleExportCSV} disabled={isExporting} variant="outline" className="bg-card">
             <Download className="w-4 h-4 mr-2" />
@@ -208,22 +208,30 @@ const TradesPage = () => {
 
         <TradeEntryForm onTradeAdded={fetchTrades} />
 
-        <Card>
+        <Card className="border-border shadow-sm">
           <CardHeader>
-            <CardTitle>Filter trades</CardTitle>
-            <CardDescription>Narrow down your trade history</CardDescription>
+            <CardTitle className="text-xl font-semibold flex items-center gap-2">
+              <ListFilter className="w-5 h-5 text-primary" />
+              Filter trades
+            </CardTitle>
+            <CardDescription>Narrow the table by symbol, status and date range</CardDescription>
           </CardHeader>
           <CardContent>
             <FilterBar />
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Trade history</CardTitle>
-            <CardDescription>
-              {trades.length} {trades.length === 1 ? 'trade' : 'trades'} found
-            </CardDescription>
+        <Card className="border-border shadow-sm">
+          <CardHeader className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+            <div>
+              <CardTitle className="text-xl font-semibold">Trade history</CardTitle>
+              <CardDescription>
+                {trades.length} {trades.length === 1 ? 'trade' : 'trades'} found
+              </CardDescription>
+            </div>
+            <Badge variant="secondary" className="w-fit bg-secondary text-secondary-foreground">
+              {accountName}
+            </Badge>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -240,9 +248,9 @@ const TradesPage = () => {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto rounded-lg border border-border">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="bg-muted/50">
                     <TableRow>
                       <TableHead className="w-[10%]">Symbol</TableHead>
                       <TableHead className="w-[10%]">Date</TableHead>
@@ -272,7 +280,7 @@ const TradesPage = () => {
                       return (
                         <React.Fragment key={trade.id}>
                           <TableRow className="trade-row">
-                            <TableCell className="font-medium">{displaySymbol}</TableCell>
+                            <TableCell className="font-semibold">{displaySymbol}</TableCell>
                             <TableCell>
                               {displayDate ? format(new Date(displayDate), 'MMM dd, yyyy') : '-'}
                             </TableCell>
@@ -284,11 +292,13 @@ const TradesPage = () => {
                               </div>
                             </TableCell>
                             <TableCell>{trade.stopLossPips || '-'}</TableCell>
-                            <TableCell className="font-medium">{trade.rrSecured?.toFixed(2) || '0.00'}R</TableCell>
+                            <TableCell className={`font-semibold ${(trade.rrSecured || 0) > 0 ? 'text-success' : (trade.rrSecured || 0) < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                              {Number(trade.rrSecured || 0).toFixed(2)}R
+                            </TableCell>
                             <TableCell className="text-muted-foreground">
                               €{commission.toFixed(2)}
                             </TableCell>
-                            <TableCell className={netProfit > 0 ? 'text-emerald-600 font-medium' : netProfit < 0 ? 'text-rose-600 font-medium' : 'text-muted-foreground'}>
+                            <TableCell className={netProfit > 0 ? 'text-success font-semibold' : netProfit < 0 ? 'text-destructive font-semibold' : 'text-muted-foreground'}>
                               {netProfit > 0 ? '+' : netProfit < 0 ? '-' : ''}€{Math.abs(netProfit).toFixed(2)}
                             </TableCell>
                             <TableCell>{getStatusBadge(trade)}</TableCell>

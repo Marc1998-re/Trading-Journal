@@ -147,8 +147,10 @@ const DashboardPage = () => {
 
   const stats = calculateStats();
 
-  const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
   const formatEuro = (val) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(val);
+  const recentTrades = [...trades]
+    .sort((a, b) => new Date(b.entryDate || b.date) - new Date(a.entryDate || a.date))
+    .slice(0, 5);
 
   return (
     <>
@@ -159,12 +161,12 @@ const DashboardPage = () => {
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-8">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold tracking-tight">Trading Dashboard</h1>
+              <h1 className="text-3xl font-bold">Trading Dashboard</h1>
               <Badge variant="secondary" className="font-medium text-sm px-3 py-1 bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
                 {accountName}
               </Badge>
             </div>
-            <p className="text-muted-foreground">Overview of your trading performance for the selected month.</p>
+            <p className="text-muted-foreground">Month performance, risk profile and recent trading activity.</p>
           </div>
           <Button onClick={handleSync} disabled={isSyncing || loading} variant="outline" size="sm" className="gap-2">
             <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
@@ -178,71 +180,7 @@ const DashboardPage = () => {
           </Alert>
         )}
 
-        <Card className="mb-8 border-border/50 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-4">
-            <CardTitle className="text-xl font-semibold flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={prevMonth}>
-                <ChevronLeft className="w-5 h-5" />
-              </Button>
-              <span className="min-w-[140px] text-center">
-                {format(currentDate, 'MMMM yyyy')}
-              </span>
-              <Button variant="ghost" size="icon" onClick={nextMonth}>
-                <ChevronRight className="w-5 h-5" />
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-7 gap-2 mb-2">
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                <div key={day} className="text-center text-sm font-medium text-muted-foreground py-2">
-                  {day}
-                </div>
-              ))}
-            </div>
-            <div className="grid grid-cols-7 gap-2">
-              {loading ? (
-                Array.from({ length: 35 }).map((_, i) => (
-                  <Skeleton key={i} className="h-24 rounded-xl" />
-                ))
-              ) : (
-                calendarDays.map((day, i) => {
-                  const { count, pnl } = getDayData(day);
-                  const isCurrentMonth = isSameMonth(day, currentDate);
-                  const isPositive = pnl > 0;
-                  const isNegative = pnl < 0;
-                  
-                  return (
-                    <div 
-                      key={i} 
-                      className={`h-24 rounded-xl p-2 flex flex-col justify-between border transition-all
-                        ${!isCurrentMonth ? 'opacity-40 bg-muted/30 border-transparent' : 'bg-card border-border/50'}
-                        ${isCurrentMonth && isPositive ? 'bg-success/10 border-success/20' : ''}
-                        ${isCurrentMonth && isNegative ? 'bg-destructive/10 border-destructive/20' : ''}
-                      `}
-                    >
-                      <span className={`text-sm font-medium ${!isCurrentMonth ? 'text-muted-foreground' : 'text-foreground'}`}>
-                        {format(day, 'd')}
-                      </span>
-                      {count > 0 && (
-                        <div className="flex flex-col items-end">
-                          <span className={`text-xs font-bold ${isPositive ? 'text-success' : isNegative ? 'text-destructive' : 'text-muted-foreground'}`}>
-                            {pnl > 0 ? '+' : ''}{formatCurrency(pnl)}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground">
-                            {count} trade{count !== 1 ? 's' : ''}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatCard 
             title="Return %" 
             value={`${stats.returnPercentage >= 0 ? '+' : ''}${stats.returnPercentage.toFixed(2)}%`} 
@@ -259,14 +197,14 @@ const DashboardPage = () => {
           />
           <StatCard 
             title="Best Trade" 
-            value={formatCurrency(stats.bestTrade)} 
+            value={formatEuro(stats.bestTrade)}
             icon={<TrendingUp className="w-5 h-5 text-success" />} 
             loading={loading} 
             valueClass="text-success"
           />
           <StatCard 
             title="Worst Trade" 
-            value={formatCurrency(stats.worstTrade)} 
+            value={formatEuro(stats.worstTrade)}
             icon={<TrendingDown className="w-5 h-5 text-destructive" />} 
             loading={loading}
             valueClass="text-destructive"
@@ -279,14 +217,14 @@ const DashboardPage = () => {
           />
           <StatCard 
             title="Avg. Win" 
-            value={formatCurrency(stats.avgWin)} 
+            value={formatEuro(stats.avgWin)}
             icon={<DollarSign className="w-5 h-5 text-success" />} 
             loading={loading} 
             valueClass="text-success"
           />
           <StatCard 
             title="Avg. Loss" 
-            value={formatCurrency(stats.avgLoss)} 
+            value={formatEuro(stats.avgLoss)}
             icon={<Activity className="w-5 h-5 text-destructive" />} 
             loading={loading} 
             valueClass="text-destructive"
@@ -298,15 +236,111 @@ const DashboardPage = () => {
             loading={loading} 
           />
         </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_380px] gap-6">
+          <Card className="border-border shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-4">
+              <CardTitle className="text-xl font-semibold flex items-center gap-2">
+                <Button variant="ghost" size="icon" onClick={prevMonth} aria-label="Previous month">
+                  <ChevronLeft className="w-5 h-5" />
+                </Button>
+                <span className="min-w-[140px] text-center">
+                  {format(currentDate, 'MMMM yyyy')}
+                </span>
+                <Button variant="ghost" size="icon" onClick={nextMonth} aria-label="Next month">
+                  <ChevronRight className="w-5 h-5" />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-7 gap-2 mb-2">
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                  <div key={day} className="text-center text-xs font-semibold text-muted-foreground py-2 uppercase">
+                    {day}
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 gap-2">
+                {loading ? (
+                  Array.from({ length: 35 }).map((_, i) => (
+                    <Skeleton key={i} className="h-24 rounded-lg" />
+                  ))
+                ) : (
+                  calendarDays.map((day, i) => {
+                    const { count, pnl } = getDayData(day);
+                    const isCurrentMonth = isSameMonth(day, currentDate);
+                    const isPositive = pnl > 0;
+                    const isNegative = pnl < 0;
+
+                    return (
+                      <div
+                        key={i}
+                        className={`h-24 rounded-lg p-2 flex flex-col justify-between border transition-colors
+                          ${!isCurrentMonth ? 'opacity-40 bg-muted/30 border-transparent' : 'bg-card border-border'}
+                          ${isCurrentMonth && isPositive ? 'bg-success/10 border-success/20' : ''}
+                          ${isCurrentMonth && isNegative ? 'bg-destructive/10 border-destructive/20' : ''}
+                        `}
+                      >
+                        <span className={`text-sm font-medium ${!isCurrentMonth ? 'text-muted-foreground' : 'text-foreground'}`}>
+                          {format(day, 'd')}
+                        </span>
+                        {count > 0 && (
+                          <div className="flex flex-col items-end">
+                            <span className={`text-xs font-bold ${isPositive ? 'text-success' : isNegative ? 'text-destructive' : 'text-muted-foreground'}`}>
+                              {pnl > 0 ? '+' : ''}{formatEuro(pnl)}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {count} trade{count !== 1 ? 's' : ''}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold">Recent Trades</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-lg" />)
+              ) : recentTrades.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-6">No trades recorded for this month.</p>
+              ) : (
+                recentTrades.map((trade) => {
+                  const gross = getTradeGrossProfit(trade, originalBalances, currentBalancesMap);
+                  const net = calculateNetProfit(gross, trade.commissionPercentage, originalBalances, currentBalancesMap);
+                  const tradeDate = trade.entryDate || trade.date;
+                  return (
+                    <div key={trade.id} className="flex items-center justify-between rounded-lg border border-border bg-background p-3">
+                      <div>
+                        <p className="font-semibold">{trade.symbol || trade.instrument || 'Trade'}</p>
+                        <p className="text-xs text-muted-foreground">{tradeDate ? format(new Date(tradeDate), 'MMM dd') : 'No date'} · {Number(trade.rrSecured || 0).toFixed(2)}R</p>
+                      </div>
+                      <p className={`text-sm font-bold ${net > 0 ? 'text-success' : net < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                        {net > 0 ? '+' : ''}{formatEuro(net)}
+                      </p>
+                    </div>
+                  );
+                })
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </>
   );
 };
 
 const StatCard = ({ title, value, icon, loading, valueClass = "text-foreground" }) => (
-  <Card className="border-border/50 shadow-sm">
-    <CardContent className="p-6 flex items-center gap-4">
-      <div className="p-3 bg-muted rounded-xl">
+  <Card className="border-border shadow-sm">
+    <CardContent className="p-5 flex items-center gap-4">
+      <div className="p-3 bg-secondary rounded-lg">
         {icon}
       </div>
       <div>
@@ -314,7 +348,7 @@ const StatCard = ({ title, value, icon, loading, valueClass = "text-foreground" 
         {loading ? (
           <Skeleton className="h-8 w-24" />
         ) : (
-          <h3 className={`text-2xl font-bold tracking-tight ${valueClass}`}>{value}</h3>
+          <h3 className={`text-2xl font-bold ${valueClass}`}>{value}</h3>
         )}
       </div>
     </CardContent>

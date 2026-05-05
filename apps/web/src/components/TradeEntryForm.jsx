@@ -246,13 +246,13 @@ const TradeEntryForm = ({ onTradeAdded }) => {
   };
 
   return (
-    <Card className="shadow-md border-border/50">
+    <Card className="border-border shadow-sm">
       <CardHeader className="pb-4">
-        <CardTitle className="text-2xl font-bold">Add new trade</CardTitle>
-        <CardDescription>Record your essential trading metrics accurately</CardDescription>
+        <CardTitle className="text-xl font-semibold">Add new trade</CardTitle>
+        <CardDescription>Capture the trade, risk and review context in one pass</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {duplicateWarning && (
             <Alert variant="warning" className="bg-amber-500/10 text-amber-600 border-amber-500/20">
               <AlertTriangle className="w-4 h-4" />
@@ -261,9 +261,9 @@ const TradeEntryForm = ({ onTradeAdded }) => {
           )}
 
           {/* Row 1 */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="accountId" className="font-medium">Account *</Label>
+              <Label htmlFor="accountId" className="text-xs font-semibold uppercase text-muted-foreground">Account *</Label>
               <Select value={accountId} onValueChange={setAccountId} required>
                 <SelectTrigger id="accountId" className="bg-background">
                   <SelectValue placeholder="Select Account" />
@@ -277,7 +277,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="symbol" className="font-medium">Symbol *</Label>
+              <Label htmlFor="symbol" className="text-xs font-semibold uppercase text-muted-foreground">Symbol *</Label>
               <SymbolCombobox 
                 value={symbol} 
                 onChange={setSymbol} 
@@ -286,7 +286,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="entryDate" className="font-medium">Entry Date *</Label>
+              <Label htmlFor="entryDate" className="text-xs font-semibold uppercase text-muted-foreground">Entry Date *</Label>
               <Input 
                 id="entryDate" 
                 name="entryDate" 
@@ -299,7 +299,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="entryTime" className="font-medium">Entry Time *</Label>
+              <Label htmlFor="entryTime" className="text-xs font-semibold uppercase text-muted-foreground">Entry Time *</Label>
               <Input 
                 id="entryTime" 
                 name="entryTime" 
@@ -313,9 +313,9 @@ const TradeEntryForm = ({ onTradeAdded }) => {
           </div>
 
           {/* Row 2 */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="stopLoss" className="font-medium">Stop Loss (%) *</Label>
+              <Label htmlFor="stopLoss" className="text-xs font-semibold uppercase text-muted-foreground">Stop Loss (%) *</Label>
               <Input 
                 id="stopLoss" 
                 name="stopLoss" 
@@ -337,7 +337,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="stopLossPips" className="font-medium">Stop Loss (Pips)</Label>
+              <Label htmlFor="stopLossPips" className="text-xs font-semibold uppercase text-muted-foreground">Stop Loss (Pips)</Label>
               <Input 
                 id="stopLossPips" 
                 name="stopLossPips" 
@@ -352,7 +352,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="rrSecured" className="font-medium text-primary">Risk/Reward Ratio *</Label>
+              <Label htmlFor="rrSecured" className="text-xs font-semibold uppercase text-primary">Risk/Reward Ratio *</Label>
               <Input 
                 id="rrSecured" 
                 name="rrSecured" 
@@ -367,7 +367,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="status" className="font-medium">Status</Label>
+              <Label htmlFor="status" className="text-xs font-semibold uppercase text-muted-foreground">Status</Label>
               <Select value={status} onValueChange={handleStatusChange}>
                 <SelectTrigger id="status" className="bg-background">
                   <SelectValue placeholder="Auto-calculate" />
@@ -382,9 +382,9 @@ const TradeEntryForm = ({ onTradeAdded }) => {
           </div>
 
           {/* Row 3 */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="commissionPercentage" className="font-medium">Commission (%)</Label>
+              <Label htmlFor="commissionPercentage" className="text-xs font-semibold uppercase text-muted-foreground">Commission (%)</Label>
               <Input 
                 id="commissionPercentage" 
                 name="commissionPercentage" 
@@ -398,7 +398,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="contextUrl" className="font-medium">Context URL</Label>
+              <Label htmlFor="contextUrl" className="text-xs font-semibold uppercase text-muted-foreground">Context URL</Label>
               <Input 
                 id="contextUrl" 
                 name="contextUrl" 
@@ -411,7 +411,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="validationUrl" className="font-medium">Validation URL</Label>
+              <Label htmlFor="validationUrl" className="text-xs font-semibold uppercase text-muted-foreground">Validation URL</Label>
               <Input 
                 id="validationUrl" 
                 name="validationUrl" 
@@ -424,7 +424,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="entryUrl" className="font-medium">Entry URL</Label>
+              <Label htmlFor="entryUrl" className="text-xs font-semibold uppercase text-muted-foreground">Entry URL</Label>
               <Input 
                 id="entryUrl" 
                 name="entryUrl" 
@@ -439,7 +439,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
 
           {/* Row 4 */}
           <div className="space-y-2">
-            <Label htmlFor="notes" className="font-medium">Notes</Label>
+            <Label htmlFor="notes" className="text-xs font-semibold uppercase text-muted-foreground">Notes</Label>
             <Textarea 
               id="notes" 
               name="notes" 
@@ -453,7 +453,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
 
           <Button 
             type="submit" 
-            className="w-full gap-2 py-6 text-base font-semibold transition-all active:scale-[0.98]" 
+            className="w-full gap-2 py-5 text-base font-semibold transition-all active:scale-[0.99]"
             disabled={loading}
           >
             {loading ? (
