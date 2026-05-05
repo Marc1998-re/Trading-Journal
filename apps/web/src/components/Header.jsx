@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext.jsx';
 import { Button } from '@/components/ui/button';
-import { LineChart, Activity, Settings, LogOut, Menu, Home } from 'lucide-react';
+import { LineChart, Activity, Settings, LogOut, Menu, Home, BarChart3 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import AccountSwitcher from '@/components/AccountSwitcher.jsx';
 
@@ -17,7 +17,7 @@ const Header = () => {
   };
 
   const navItems = [
-    { name: 'Home', path: '/home', icon: Home },
+    { name: 'Dashboard', path: '/home', icon: Home },
     { name: 'Trades', path: '/trades', icon: Activity },
     { name: 'Analysis', path: '/analysis', icon: LineChart },
   ];
@@ -34,7 +34,7 @@ const Header = () => {
             className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
               isActive
                 ? 'bg-primary/10 text-primary'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
             } ${mobile ? 'w-full text-base py-3' : ''}`}
           >
             <Icon className="w-4 h-4" />
@@ -46,16 +46,16 @@ const Header = () => {
   );
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-theme">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 transition-theme">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-6 md:gap-10">
-            <Link to="/" className="flex items-center gap-2 transition-transform hover:scale-105 active:scale-95">
-              <div className="bg-primary text-primary-foreground p-1.5 rounded-lg shadow-sm">
-                <LineChart className="w-5 h-5" />
+            <Link to="/" className="flex items-center gap-2 transition-colors hover:text-primary active:text-primary">
+              <div className="bg-primary text-primary-foreground p-1.5 rounded-md shadow-sm">
+                <BarChart3 className="w-5 h-5" />
               </div>
-              <span className="font-bold text-lg tracking-tight hidden sm:inline-block">
-                TradeJournal
+              <span className="font-bold text-lg hidden sm:inline-block">
+                Marc's Trading Journal
               </span>
             </Link>
 
@@ -92,10 +92,10 @@ const Header = () => {
                     <div className="flex flex-col h-full bg-background">
                       <div className="p-6 pb-2">
                         <Link to="/" className="flex items-center gap-2">
-                          <div className="bg-primary text-primary-foreground p-1.5 rounded-lg">
-                            <LineChart className="w-5 h-5" />
+                          <div className="bg-primary text-primary-foreground p-1.5 rounded-md">
+                            <BarChart3 className="w-5 h-5" />
                           </div>
-                          <span className="font-bold text-lg tracking-tight">TradeJournal</span>
+                          <span className="font-bold text-lg">Marc's Trading Journal</span>
                         </Link>
                       </div>
                       
