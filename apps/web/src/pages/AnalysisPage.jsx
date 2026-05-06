@@ -58,21 +58,25 @@ const AnalysisPage = () => {
         <title>Analysis - Trading Journal</title>
         <meta name="description" content="Analyze your trading performance with detailed metrics" />
       </Helmet>
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
+      <main className="desk-shell market-grid">
+        <div className="desk-container">
+        <section className="command-panel rounded-lg p-5 sm:p-6 lg:p-7">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-4xl font-extrabold tracking-tight">Analysis</h1>
-              <Badge variant="secondary" className="font-medium text-sm px-3 py-1 bg-primary/10 text-primary">
+            <p className="section-kicker mb-3">Performance lab</p>
+            <div className="flex items-center gap-3 mb-3">
+              <h1 className="text-3xl font-black tracking-normal sm:text-5xl">Analysis</h1>
+              <Badge className="font-medium text-sm px-3 py-1 bg-primary/10 text-primary border-primary/30">
                 {accountName}
               </Badge>
             </div>
-            <p className="text-lg text-muted-foreground">Comprehensive insights into your trading performance</p>
+            <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">Comprehensive insights into your trading performance, edge and risk profile.</p>
           </div>
         </div>
+        </section>
 
         <Tabs value="/analysis" onValueChange={(v) => navigate(v)} className="w-full">
-          <TabsList className="grid w-full max-w-[400px] grid-cols-2">
+          <TabsList className="grid w-full max-w-[400px] grid-cols-2 bg-black/20 border border-white/10">
             <TabsTrigger value="/analysis">Analysis</TabsTrigger>
             <TabsTrigger value="/charts">Charts</TabsTrigger>
           </TabsList>
@@ -81,15 +85,15 @@ const AnalysisPage = () => {
         {loading ? (
           <div className="space-y-12">
             <div className="space-y-4">
-              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-8 w-48 bg-white/10" />
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
+                {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28 rounded-xl bg-white/10" />)}
               </div>
             </div>
             <div className="space-y-4">
-              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-8 w-48 bg-white/10" />
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
+                {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28 rounded-xl bg-white/10" />)}
               </div>
             </div>
           </div>
@@ -102,7 +106,8 @@ const AnalysisPage = () => {
             onUpdateBalance={updateAccountBalance} 
           />
         )}
-      </div>
+        </div>
+      </main>
     </>
   );
 };

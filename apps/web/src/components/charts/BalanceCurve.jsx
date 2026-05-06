@@ -1,8 +1,8 @@
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { format } from 'date-fns';
+import { buildEquitySeries } from '@/lib/tradeCalculations.js';
 
-const BalanceCurve = ({ trades, startingBalance = 10000 }) => {
+const BalanceCurve = ({ trades, startingBalance = 10000, originalBalances = {}, currentBalances = {} }) => {
   if (!trades || trades.length === 0) {
     return (
       <div className="h-[300px] flex items-center justify-center text-muted-foreground">
@@ -11,23 +11,11 @@ const BalanceCurve = ({ trades, startingBalance = 10000 }) => {
     );
   }
 
-  const sortedTrades = [...trades].sort((a, b) => new Date(a.date) - new Date(b.date));
-
-  let balance = Number(startingBalance) || 0;
-  const chartData = [
-    {
-      date: 'Start',
-      balance: balance,
-    },
-  ];
-
-  sortedTrades.forEach((trade) => {
-    balance += trade.profitLoss || 0;
-    chartData.push({
-      date: format(new Date(trade.date), 'MMM dd'),
-      balance: parseFloat(balance.toFixed(2)),
-    });
-  });
+  const chartData = buildEquitySeries(trades, startingBalance, originalBalances, currentBalances)
+    .map((point) => ({
+      date: point.label,
+      balance: point.balance,
+    }));
 
   // Determine domain to make chart look good even with small changes
   const minBalance = Math.min(...chartData.map(d => d.balance));
@@ -49,7 +37,7 @@ const BalanceCurve = ({ trades, startingBalance = 10000 }) => {
           stroke="hsl(var(--muted-foreground))" 
           tick={{ fontSize: 12 }} 
           domain={[Math.max(0, minBalance - padding), maxBalance + padding]}
-          tickFormatter={(val) => `$${val.toLocaleString()}`}
+          tickFormatter={(val) => `€${val.toLocaleString()}`}
         />
         <Tooltip
           contentStyle={{
@@ -59,7 +47,7 @@ const BalanceCurve = ({ trades, startingBalance = 10000 }) => {
             color: 'hsl(var(--foreground))'
           }}
           itemStyle={{ color: 'hsl(var(--primary))', fontWeight: 'bold' }}
-          formatter={(value) => [`$${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 'Balance']}
+          formatter={(value) => [`€${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 'Balance']}
         />
         <Area
           type="monotone"

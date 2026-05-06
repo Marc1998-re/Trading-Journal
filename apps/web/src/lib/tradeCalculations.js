@@ -115,3 +115,169 @@ export const calculateMonetaryGain = (totalProfitLoss) => {
   // Total profit loss is already accumulated from scaled per-trade calculations
   return Number(totalProfitLoss) || 0;
 };
+
+export const getTradeDate = (trade) => {
+  if (!trade) return null;
+  const rawDate = trade.entryDate || trade.date || trade.created;
+  if (!rawDate) return null;
+
+  const date = new Date(rawDate);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+export const getTradeNetProfit = (trade, originalBalances = {}, currentBalances = {}) => {
+  const gross = getTradeGrossProfit(trade, originalBalances, currentBalances);
+  return calculateNetProfit(gross, trade?.commissionPercentage, originalBalances, currentBalances);
+};
+
+export const buildProcessedTrades = (trades, originalBalances = {}, currentBalances = {}) => {
+  if (!Array.isArray(trades)) return [];
+
+  return trades
+    .map((trade) => {
+      const date = getTradeDate(trade);
+      const grossProfit = getTradeGrossProfit(trade, originalBalances, currentBalances);
+      const netProfit = calculateNetProfit(grossProfit, trade.commissionPercentage, originalBalances, currentBalances);
+      const rrSecured = Number(trade.rrSecured ?? trade.riskRewardRatio ?? 0) || 0;
+      const stopLoss = Number(trade.stopLoss) || 0;
+      const accountBalance = getBalance(trade, currentBalances, getBalance(trade, originalBalances, 10000));
+      const stopLossAmount = calculateStopLossInEuro(accountBalance, stopLoss);
+
+      return {
+        trade,
+        date,
+        grossProfit,
+        netProfit,
+        rrSecured,
+        stopLoss,
+        stopLossAmount,
+        status: trade.status,
+      };
+    })
+    .sort((a, b) => {
+      const aTime = a.date ? a.date.getTime() : 0;
+      const bTime = b.date ? b.date.getTime() : 0;
+      return aTime - bTime;
+    });
+};
+
+export const buildEquitySeries = (trades, startingBalance = 10000, originalBalances = {}, currentBalances = {}) => {
+  const processedTrades = buildProcessedTrades(trades, originalBalances, currentBalances);
+  let balance = Number(startingBalance) || 0;
+  let cumulativePnL = 0;
+  let peakBalance = balance;
+  let peakPnL = 0;
+
+  const series = [
+    {
+      label: 'Start',
+      date: null,
+      balance,
+      cumulativePnL,
+      drawdown: 0,
+      drawdownPct: 0,
+      tradeCount: 0,
+    },
+  ];
+
+  processedTrades.forEach((item, index) => {
+    cumulativePnL += item.netProfit;
+    balance += item.netProfit;
+    peakBalance = Math.max(peakBalance, balance);
+    peakPnL = Math.max(peakPnL, cumulativePnL);
+
+    const drawdown = Math.max(0, peakBalance - balance);
+    const drawdownPct = peakBalance > 0 ? (drawdown / peakBalance) * 100 : 0;
+
+    series.push({
+      label: item.date ? item.date.toLocaleDateString('en-US', { month: 'short', day: '2-digit' }) : `Trade ${index + 1}`,
+      date: item.date,
+      balance: Number(balance.toFixed(2)),
+      cumulativePnL: Number(cumulativePnL.toFixed(2)),
+      drawdown: Number(drawdown.toFixed(2)),
+      drawdownPct: Number(drawdownPct.toFixed(2)),
+      peakPnL: Number(peakPnL.toFixed(2)),
+      tradeCount: index + 1,
+    });
+  });
+
+  return series;
+};
+
+export const calculateAdvancedStats = (trades, startingBalance = 10000, originalBalances = {}, currentBalances = {}) => {
+  const processedTrades = buildProcessedTrades(trades, originalBalances, currentBalances);
+  const totalTrades = processedTrades.length;
+
+  if (totalTrades === 0) {
+    return {
+      totalTrades: 0,
+      wins: 0,
+      losses: 0,
+      breakeven: 0,
+      winRate: 0,
+      lossRate: 0,
+      breakevenRate: 0,
+      grossProfit: 0,
+      grossLoss: 0,
+      netPnL: 0,
+      bestTrade: 0,
+      worstTrade: 0,
+      avgWin: 0,
+      avgLoss: 0,
+      avgR: 0,
+      totalR: 0,
+      expectancy: 0,
+      expectancyR: 0,
+      profitFactor: 0,
+      maxDrawdown: 0,
+      maxDrawdownPct: 0,
+      avgRiskPct: 0,
+      avgStopLossAmount: 0,
+      endingBalance: Number(startingBalance) || 0,
+    };
+  }
+
+  const winners = processedTrades.filter((item) => item.netProfit > 0);
+  const losers = processedTrades.filter((item) => item.netProfit < 0);
+  const breakeven = processedTrades.filter((item) => item.netProfit === 0);
+  const netValues = processedTrades.map((item) => item.netProfit);
+  const rValues = processedTrades.map((item) => item.rrSecured);
+
+  const grossProfit = winners.reduce((sum, item) => sum + item.netProfit, 0);
+  const grossLoss = Math.abs(losers.reduce((sum, item) => sum + item.netProfit, 0));
+  const netPnL = processedTrades.reduce((sum, item) => sum + item.netProfit, 0);
+  const totalR = rValues.reduce((sum, value) => sum + value, 0);
+  const equitySeries = buildEquitySeries(trades, startingBalance, originalBalances, currentBalances);
+  const maxDrawdown = Math.max(...equitySeries.map((point) => point.drawdown), 0);
+  const maxDrawdownPct = Math.max(...equitySeries.map((point) => point.drawdownPct), 0);
+  const totalRiskAmount = processedTrades.reduce((sum, item) => sum + item.stopLossAmount, 0);
+  const avgStopLossAmount = totalRiskAmount / totalTrades;
+  const avgRiskPct = processedTrades.reduce((sum, item) => sum + item.stopLoss, 0) / totalTrades;
+
+  return {
+    totalTrades,
+    wins: winners.length,
+    losses: losers.length,
+    breakeven: breakeven.length,
+    winRate: (winners.length / totalTrades) * 100,
+    lossRate: (losers.length / totalTrades) * 100,
+    breakevenRate: (breakeven.length / totalTrades) * 100,
+    grossProfit,
+    grossLoss,
+    netPnL,
+    bestTrade: Math.max(...netValues, 0),
+    worstTrade: Math.min(...netValues, 0),
+    avgWin: winners.length > 0 ? grossProfit / winners.length : 0,
+    avgLoss: losers.length > 0 ? losers.reduce((sum, item) => sum + item.netProfit, 0) / losers.length : 0,
+    avgR: totalR / totalTrades,
+    totalR,
+    expectancy: netPnL / totalTrades,
+    expectancyR: totalR / totalTrades,
+    profitFactor: grossLoss > 0 ? grossProfit / grossLoss : (grossProfit > 0 ? Infinity : 0),
+    maxDrawdown,
+    maxDrawdownPct,
+    avgRiskPct,
+    avgStopLossAmount,
+    endingBalance: (Number(startingBalance) || 0) + netPnL,
+  };
+};

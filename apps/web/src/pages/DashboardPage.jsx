@@ -11,7 +11,6 @@ import {
   isSameDay, 
   startOfWeek, 
   endOfWeek,
-  parseISO
 } from 'date-fns';
 import { 
   ChevronLeft, 
@@ -36,9 +35,9 @@ import { useAccount } from '@/contexts/AccountContext.jsx';
 import pb from '@/lib/pocketbaseClient.js';
 import { 
   calculateReturnPercentage, 
-  calculateMonetaryGain,
-  getTradeGrossProfit,
-  calculateNetProfit
+  calculateAdvancedStats,
+  getTradeDate,
+  getTradeNetProfit
 } from '@/lib/tradeCalculations.js';
 
 const DashboardPage = () => {
@@ -75,7 +74,7 @@ const DashboardPage = () => {
 
       const records = await pb.collection('trades').getFullList({
         filter: filterString,
-        sort: '-date',
+        sort: '-entryDate',
         $autoCancel: false
       });
       
@@ -108,44 +107,37 @@ const DashboardPage = () => {
   const calendarDays = eachDayOfInterval({ start: startDate, end: endDate });
 
   const getDayData = (day) => {
-    const dayTrades = trades.filter(t => isSameDay(parseISO(t.date || t.entryDate), day));
+    const dayTrades = trades.filter(t => {
+      const tradeDate = getTradeDate(t);
+      return tradeDate ? isSameDay(tradeDate, day) : false;
+    });
     const pnl = dayTrades.reduce((sum, t) => {
-      const gross = getTradeGrossProfit(t, originalBalances, currentBalancesMap);
-      const net = calculateNetProfit(gross, t.commissionPercentage, originalBalances, currentBalancesMap);
-      return sum + net;
+      return sum + getTradeNetProfit(t, originalBalances, currentBalancesMap);
     }, 0);
     return { count: dayTrades.length, pnl };
   };
 
   const calculateStats = () => {
-    const processedTrades = trades.map(t => {
-      const gross = getTradeGrossProfit(t, originalBalances, currentBalancesMap);
-      const net = calculateNetProfit(gross, t.commissionPercentage, originalBalances, currentBalancesMap);
-      return { ...t, calculatedNet: net };
-    });
+    const advancedStats = calculateAdvancedStats(trades, totalCurrentBalance, originalBalances, currentBalancesMap);
+    const returnPercentage = calculateReturnPercentage(advancedStats.netPnL, totalCurrentBalance);
 
-    const profits = processedTrades.filter(t => t.calculatedNet > 0).map(t => t.calculatedNet);
-    const losses = processedTrades.filter(t => t.calculatedNet < 0).map(t => t.calculatedNet);
-    
-    const bestTrade = profits.length > 0 ? Math.max(...profits) : 0;
-    const worstTrade = losses.length > 0 ? Math.min(...losses) : 0;
-    const avgWin = profits.length > 0 ? profits.reduce((a, b) => a + b, 0) / profits.length : 0;
-    const avgLoss = losses.length > 0 ? losses.reduce((a, b) => a + b, 0) / losses.length : 0;
-    const winRate = processedTrades.length > 0 ? (profits.length / processedTrades.length) * 100 : 0;
-    const grossProfit = profits.reduce((a, b) => a + b, 0);
-    const grossLoss = Math.abs(losses.reduce((a, b) => a + b, 0));
-    const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : (grossProfit > 0 ? grossProfit : 0);
-    const netPnL = processedTrades.reduce((sum, t) => sum + t.calculatedNet, 0);
-    const returnPercentage = calculateReturnPercentage(netPnL, totalCurrentBalance);
-    const monetaryGain = calculateMonetaryGain(netPnL);
-
-    return { bestTrade, worstTrade, avgWin, avgLoss, winRate, profitFactor, returnPercentage, monetaryGain, netPnL, tradeCount: processedTrades.length };
+    return {
+      ...advancedStats,
+      returnPercentage,
+      monetaryGain: advancedStats.netPnL,
+      tradeCount: advancedStats.totalTrades
+    };
   };
 
   const stats = calculateStats();
   const formatEuro = (val) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(val);
+  const formatProfitFactor = (val) => val === Infinity ? '∞' : val.toFixed(2);
   const recentTrades = [...trades]
-    .sort((a, b) => new Date(b.entryDate || b.date) - new Date(a.entryDate || a.date))
+    .sort((a, b) => {
+      const bDate = getTradeDate(b);
+      const aDate = getTradeDate(a);
+      return (bDate ? bDate.getTime() : 0) - (aDate ? aDate.getTime() : 0);
+    })
     .slice(0, 5);
 
   return (
@@ -194,11 +186,15 @@ const DashboardPage = () => {
             <StatCard title="Return" value={`${stats.returnPercentage >= 0 ? '+' : ''}${stats.returnPercentage.toFixed(2)}%`} icon={<Percent className="w-5 h-5" />} loading={loading} valueClass={stats.returnPercentage >= 0 ? 'text-success' : 'text-destructive'} />
             <StatCard title="Monetary Gain" value={`${stats.monetaryGain >= 0 ? '+' : '-'}${formatEuro(Math.abs(stats.monetaryGain))}`} icon={<DollarSign className="w-5 h-5" />} loading={loading} valueClass={stats.monetaryGain >= 0 ? 'text-success' : 'text-destructive'} />
             <StatCard title="Win Rate" value={`${stats.winRate.toFixed(1)}%`} icon={<Target className="w-5 h-5" />} loading={loading} />
-            <StatCard title="Profit Factor" value={stats.profitFactor.toFixed(2)} icon={<Radar className="w-5 h-5" />} loading={loading} />
+            <StatCard title="Profit Factor" value={formatProfitFactor(stats.profitFactor)} icon={<Radar className="w-5 h-5" />} loading={loading} />
             <StatCard title="Best Trade" value={formatEuro(stats.bestTrade)} icon={<TrendingUp className="w-5 h-5" />} loading={loading} valueClass="text-success" />
             <StatCard title="Worst Trade" value={formatEuro(stats.worstTrade)} icon={<TrendingDown className="w-5 h-5" />} loading={loading} valueClass="text-destructive" />
             <StatCard title="Avg. Win" value={formatEuro(stats.avgWin)} icon={<DollarSign className="w-5 h-5" />} loading={loading} valueClass="text-success" />
             <StatCard title="Avg. Loss" value={formatEuro(stats.avgLoss)} icon={<Activity className="w-5 h-5" />} loading={loading} valueClass="text-destructive" />
+            <StatCard title="Expectancy" value={formatEuro(stats.expectancy)} icon={<Target className="w-5 h-5" />} loading={loading} valueClass={stats.expectancy >= 0 ? 'text-success' : 'text-destructive'} />
+            <StatCard title="Avg. R" value={`${stats.avgR >= 0 ? '+' : ''}${stats.avgR.toFixed(2)}R`} icon={<Radar className="w-5 h-5" />} loading={loading} valueClass={stats.avgR >= 0 ? 'text-success' : 'text-destructive'} />
+            <StatCard title="Max Drawdown" value={formatEuro(stats.maxDrawdown)} icon={<TrendingDown className="w-5 h-5" />} loading={loading} valueClass="text-destructive" />
+            <StatCard title="Drawdown %" value={`${stats.maxDrawdownPct.toFixed(2)}%`} icon={<Activity className="w-5 h-5" />} loading={loading} valueClass={stats.maxDrawdownPct > 10 ? 'text-destructive' : 'text-foreground'} />
           </div>
 
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
@@ -280,8 +276,7 @@ const DashboardPage = () => {
                   <p className="rounded-md border border-white/10 bg-black/20 px-4 py-8 text-sm text-muted-foreground">No trades recorded for this month.</p>
                 ) : (
                   recentTrades.map((trade) => {
-                    const gross = getTradeGrossProfit(trade, originalBalances, currentBalancesMap);
-                    const net = calculateNetProfit(gross, trade.commissionPercentage, originalBalances, currentBalancesMap);
+                    const net = getTradeNetProfit(trade, originalBalances, currentBalancesMap);
                     const tradeDate = trade.entryDate || trade.date;
                     return (
                       <div key={trade.id} className="rounded-md border border-white/10 bg-black/20 p-4 transition-colors hover:border-primary/30 hover:bg-primary/5">

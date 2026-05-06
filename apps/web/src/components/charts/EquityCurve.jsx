@@ -1,6 +1,6 @@
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { format } from 'date-fns';
+import { buildEquitySeries } from '@/lib/tradeCalculations.js';
 
 const CustomTooltip = ({ active, payload, label, startingBalance }) => {
   if (active && payload && payload.length) {
@@ -9,12 +9,13 @@ const CustomTooltip = ({ active, payload, label, startingBalance }) => {
     const pct = ((val / safeStartingBalance) * 100).toFixed(2);
     const sign = val >= 0 ? '+' : '';
     const colorClass = val >= 0 ? 'text-[#10b981]' : 'text-[#ef4444]';
+    const formattedValue = new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(val);
 
     return (
       <div className="bg-card border border-border p-3 rounded-lg shadow-lg">
         <p className="text-muted-foreground text-sm mb-1">{label}</p>
         <p className={`font-bold text-lg ${colorClass}`}>
-          ${val.toFixed(2)} <span className="text-sm font-medium opacity-80">({sign}{pct}%)</span>
+          {formattedValue} <span className="text-sm font-medium opacity-80">({sign}{pct}%)</span>
         </p>
       </div>
     );
@@ -22,7 +23,7 @@ const CustomTooltip = ({ active, payload, label, startingBalance }) => {
   return null;
 };
 
-const EquityCurve = ({ trades, startingBalance = 10000 }) => {
+const EquityCurve = ({ trades, startingBalance = 10000, originalBalances = {}, currentBalances = {} }) => {
   if (!trades || trades.length === 0) {
     return (
       <div className="h-[300px] flex items-center justify-center text-muted-foreground">
@@ -31,16 +32,12 @@ const EquityCurve = ({ trades, startingBalance = 10000 }) => {
     );
   }
 
-  const sortedTrades = [...trades].sort((a, b) => new Date(a.date) - new Date(b.date));
-
-  let cumulativePL = 0;
-  const chartData = sortedTrades.map((trade) => {
-    cumulativePL += trade.profitLoss || 0;
-    return {
-      date: format(new Date(trade.date), 'MMM dd'),
-      cumulativePL: parseFloat(cumulativePL.toFixed(2)),
-    };
-  });
+  const chartData = buildEquitySeries(trades, startingBalance, originalBalances, currentBalances)
+    .filter((point) => point.tradeCount > 0)
+    .map((point) => ({
+      date: point.label,
+      cumulativePL: point.cumulativePnL,
+    }));
 
   // Calculate gradient offset for split color (green for positive, red for negative)
   const dataMax = Math.max(...chartData.map((i) => i.cumulativePL), 0);
@@ -69,7 +66,7 @@ const EquityCurve = ({ trades, startingBalance = 10000 }) => {
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
         <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} tickMargin={10} />
-        <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} tickFormatter={(val) => `$${val}`} />
+        <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} tickFormatter={(val) => `€${val}`} />
         <Tooltip content={<CustomTooltip startingBalance={startingBalance} />} />
         <Area
           type="monotone"

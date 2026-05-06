@@ -37,7 +37,7 @@ const metricDescriptions = {
   "Avg Stop Size": "Average monetary amount risked per trade.",
   "Max Drawdown %": "Largest percentage drop from a peak balance to a subsequent trough.",
   "Max Drawdown R": "Largest drop in Risk (R) multiples from a peak to a subsequent trough.",
-  "Avg Drawdown $": "Average monetary loss during drawdown periods.",
+  "Avg Drawdown €": "Average monetary loss during drawdown periods.",
   "Avg Drawdown R": "Average Risk (R) multiple loss during drawdown periods."
 };
 
@@ -75,6 +75,11 @@ const MetricSection = ({ title, metrics }) => (
     </div>
   </div>
 );
+
+const formatEuro = (value) => new Intl.NumberFormat('en-IE', {
+  style: 'currency',
+  currency: 'EUR',
+}).format(Number(value) || 0);
 
 const AnalysisDashboard = ({ trades, accounts, originalBalances, selectedAccountId, onUpdateBalance }) => {
   const { filters, isFiltersActive, clearFilters } = useFilters();
@@ -212,11 +217,11 @@ const AnalysisDashboard = ({ trades, accounts, originalBalances, selectedAccount
   const hasData = stats !== null;
 
   const balanceMetrics = hasData ? [
-    { label: "Net P&L", value: `${stats.netPL >= 0 ? '+' : '-'}$${Math.abs(stats.netPL).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, type: stats.netPL >= 0 ? "positive" : "negative" },
-    { label: "Total Wins (Net)", value: `$${stats.totalWinsAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, type: "positive" },
-    { label: "Total Losses", value: `-$${stats.totalLossesAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, type: "negative" },
-    { label: "Total Commissions", value: `$${stats.totalCommission.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, type: "negative" },
-    { label: "Compounded Balance", value: `$${stats.compoundedBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, type: stats.compoundedBalance >= stats.totalCurrentBalance ? "positive" : "negative" },
+    { label: "Net P&L", value: `${stats.netPL >= 0 ? '+' : '-'}${formatEuro(Math.abs(stats.netPL))}`, type: stats.netPL >= 0 ? "positive" : "negative" },
+    { label: "Total Wins (Net)", value: formatEuro(stats.totalWinsAmount), type: "positive" },
+    { label: "Total Losses", value: `-${formatEuro(stats.totalLossesAmount)}`, type: "negative" },
+    { label: "Total Commissions", value: formatEuro(stats.totalCommission), type: "negative" },
+    { label: "Compounded Balance", value: formatEuro(stats.compoundedBalance), type: stats.compoundedBalance >= stats.totalCurrentBalance ? "positive" : "negative" },
     { label: "Total Return", value: `${((stats.compoundedBalance - stats.totalCurrentBalance) / stats.totalCurrentBalance * 100).toFixed(2)}%`, type: stats.compoundedBalance >= stats.totalCurrentBalance ? "positive" : "negative" },
   ] : [];
 
@@ -242,10 +247,10 @@ const AnalysisDashboard = ({ trades, accounts, originalBalances, selectedAccount
     {
       title: "Performance Metrics",
       metrics: [
-        { label: "Expected Value", value: `$${stats.expectedValue.toFixed(2)}`, type: stats.expectedValue > 0 ? "positive" : "negative" },
+        { label: "Expected Value", value: formatEuro(stats.expectedValue), type: stats.expectedValue > 0 ? "positive" : "negative" },
         { label: "Profit Factor", value: stats.profitFactor === Infinity ? '∞' : stats.profitFactor.toFixed(2), type: stats.profitFactor >= 1.5 ? "positive" : (stats.profitFactor >= 1 ? "neutral" : "negative") },
         { label: "Avg Win R", value: `${stats.avgWinR.toFixed(2)}R`, type: stats.avgWinR >= 2 ? "positive" : "neutral" },
-        { label: "Avg Stop Size", value: `$${stats.avgStopLoss.toFixed(2)}`, type: "neutral" },
+        { label: "Avg Stop Size", value: formatEuro(stats.avgStopLoss), type: "neutral" },
       ]
     },
     {
@@ -253,7 +258,7 @@ const AnalysisDashboard = ({ trades, accounts, originalBalances, selectedAccount
       metrics: [
         { label: "Max Drawdown %", value: `${stats.maxDrawdownPct.toFixed(2)}%`, type: stats.maxDrawdownPct > 20 ? "negative" : "neutral" },
         { label: "Max Drawdown R", value: `${stats.maxDrawdownR.toFixed(2)}R`, type: stats.maxDrawdownR > 10 ? "negative" : "neutral" },
-        { label: "Avg Drawdown $", value: `$${stats.avgDrawdown.toFixed(2)}`, type: "negative" },
+        { label: "Avg Drawdown €", value: formatEuro(stats.avgDrawdown), type: "negative" },
         { label: "Avg Drawdown R", value: `${stats.avgDrawdownR.toFixed(2)}R`, type: "negative" },
       ]
     }

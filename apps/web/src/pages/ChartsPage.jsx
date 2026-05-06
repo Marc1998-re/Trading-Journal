@@ -28,7 +28,7 @@ import {
   Cell,
   Label
 } from 'recharts';
-import { getTradeGrossProfit, calculateNetProfit } from '@/lib/tradeCalculations.js';
+import { getTradeDate, getTradeNetProfit } from '@/lib/tradeCalculations.js';
 
 const ChartsPage = () => {
   const { currentUser } = useAuth();
@@ -103,11 +103,10 @@ const ChartsPage = () => {
     const data = months.map(m => ({ name: m, trades: 0, pnl: 0, pnlPct: 0 }));
     
     trades.forEach(t => {
-      const d = new Date(t.entryDate || t.date);
-      if (!isNaN(d.getTime())) {
+      const d = getTradeDate(t);
+      if (d) {
         const monthIdx = d.getMonth();
-        const gross = getTradeGrossProfit(t, originalBalances, currentBalancesMap);
-        const net = calculateNetProfit(gross, t.commissionPercentage, originalBalances, currentBalancesMap);
+        const net = getTradeNetProfit(t, originalBalances, currentBalancesMap);
         
         data[monthIdx].trades += 1;
         data[monthIdx].pnl += net;
@@ -137,11 +136,10 @@ const ChartsPage = () => {
     };
 
     trades.forEach(t => {
-      const d = new Date(t.entryDate || t.date);
-      if (!isNaN(d.getTime())) {
+      const d = getTradeDate(t);
+      if (d) {
         const dayName = days[d.getDay()];
-        const gross = getTradeGrossProfit(t, originalBalances, currentBalancesMap);
-        const net = calculateNetProfit(gross, t.commissionPercentage, originalBalances, currentBalancesMap);
+        const net = getTradeNetProfit(t, originalBalances, currentBalancesMap);
         
         dayDataMap[dayName].trades += 1;
         dayDataMap[dayName].pnl += net;
@@ -169,9 +167,9 @@ const ChartsPage = () => {
               <span className="font-semibold text-foreground">{data.trades}</span>
             </div>
             <div className="flex items-center justify-between gap-4 text-sm">
-              <span className="text-muted-foreground">P&L ($)</span>
+              <span className="text-muted-foreground">P&L (€)</span>
               <span className={`font-semibold ${data.pnl >= 0 ? 'text-success' : 'text-destructive'}`}>
-                {data.pnl >= 0 ? '+' : '-'}${Math.abs(data.pnl).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                {data.pnl >= 0 ? '+' : '-'}€{Math.abs(data.pnl).toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </span>
             </div>
             <div className="flex items-center justify-between gap-4 text-sm">
@@ -193,21 +191,25 @@ const ChartsPage = () => {
         <title>Charts - Trading Journal</title>
         <meta name="description" content="Visual performance analytics and trading charts" />
       </Helmet>
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
+      <main className="desk-shell market-grid">
+        <div className="desk-container">
+        <section className="command-panel rounded-lg p-5 sm:p-6 lg:p-7">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-4xl font-extrabold tracking-tight">Charts</h1>
-              <Badge variant="secondary" className="font-medium text-sm px-3 py-1 bg-primary/10 text-primary">
+            <p className="section-kicker mb-3">Visual analytics</p>
+            <div className="flex items-center gap-3 mb-3">
+              <h1 className="text-3xl font-black tracking-normal sm:text-5xl">Charts</h1>
+              <Badge className="font-medium text-sm px-3 py-1 bg-primary/10 text-primary border-primary/30">
                 {accountName}
               </Badge>
             </div>
-            <p className="text-lg text-muted-foreground">Visual representation of your trading data</p>
+            <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">Visual representation of your trading data, equity curve and time-based performance.</p>
           </div>
         </div>
+        </section>
 
         <Tabs value="/charts" onValueChange={(v) => navigate(v)} className="w-full">
-          <TabsList className="grid w-full max-w-[400px] grid-cols-2">
+          <TabsList className="grid w-full max-w-[400px] grid-cols-2 bg-black/20 border border-white/10">
             <TabsTrigger value="/analysis">Analysis</TabsTrigger>
             <TabsTrigger value="/charts">Charts</TabsTrigger>
           </TabsList>
@@ -230,10 +232,10 @@ const ChartsPage = () => {
 
         {loading ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-[400px] rounded-2xl" />)}
+            {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-[400px] rounded-lg bg-white/10" />)}
           </div>
         ) : trades.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 px-4 text-center bg-card rounded-2xl border border-border shadow-sm">
+          <div className="glass-panel flex flex-col items-center justify-center py-24 px-4 text-center rounded-lg">
             <div className="w-16 h-16 mb-4 rounded-full bg-muted flex items-center justify-center">
               <BarChart3 className="w-8 h-8 text-muted-foreground" />
             </div>
@@ -252,8 +254,8 @@ const ChartsPage = () => {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             
-            <Card className="shadow-md rounded-2xl overflow-hidden border-border/50">
-              <CardHeader className="bg-muted/30 border-b border-border/50 pb-6">
+            <Card className="glass-panel rounded-lg overflow-hidden">
+              <CardHeader className="border-b border-white/10 pb-6">
                 <CardTitle className="text-xl">Win/Loss Distribution</CardTitle>
                 <CardDescription>Breakdown of your trade outcomes</CardDescription>
               </CardHeader>
@@ -262,8 +264,8 @@ const ChartsPage = () => {
               </CardContent>
             </Card>
 
-            <Card className="shadow-md rounded-2xl overflow-hidden border-border/50">
-              <CardHeader className="bg-muted/30 border-b border-border/50 pb-6">
+            <Card className="glass-panel rounded-lg overflow-hidden">
+              <CardHeader className="border-b border-white/10 pb-6">
                 <CardTitle className="text-xl">Day of Week Performance</CardTitle>
                 <CardDescription>Profit and Loss breakdown by day of the week</CardDescription>
               </CardHeader>
@@ -285,10 +287,10 @@ const ChartsPage = () => {
                     </XAxis>
                     <YAxis 
                       tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                      tickFormatter={(val) => `$${val}`}
+                      tickFormatter={(val) => `€${val}`}
                     >
                       <Label 
-                        value="Profit / Loss ($)" 
+                        value="Profit / Loss (€)"
                         angle={-90} 
                         position="insideLeft" 
                         offset={-10} 
@@ -303,7 +305,7 @@ const ChartsPage = () => {
                         { value: 'Loss', type: 'square', color: '#ef4444' }
                       ]} 
                     />
-                    <Bar dataKey="pnl" name="P&L ($)" maxBarSize={40}>
+                    <Bar dataKey="pnl" name="P&L (€)" maxBarSize={40}>
                       {dayOfWeekData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.pnl >= 0 ? '#10b981' : '#ef4444'} />
                       ))}
@@ -313,8 +315,8 @@ const ChartsPage = () => {
               </CardContent>
             </Card>
 
-            <Card className="lg:col-span-2 shadow-md rounded-2xl overflow-hidden border-border/50">
-              <CardHeader className="bg-muted/30 border-b border-border/50 pb-6">
+            <Card className="lg:col-span-2 glass-panel rounded-lg overflow-hidden">
+              <CardHeader className="border-b border-white/10 pb-6">
                 <CardTitle className="text-xl">Monthly Performance</CardTitle>
                 <CardDescription>Profit and Loss progression across the year</CardDescription>
               </CardHeader>
@@ -336,10 +338,10 @@ const ChartsPage = () => {
                     </XAxis>
                     <YAxis 
                       tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                      tickFormatter={(val) => `$${val}`}
+                      tickFormatter={(val) => `€${val}`}
                     >
                       <Label 
-                        value="Profit / Loss ($)" 
+                        value="Profit / Loss (€)"
                         angle={-90} 
                         position="insideLeft" 
                         offset={-10} 
@@ -354,7 +356,7 @@ const ChartsPage = () => {
                         { value: 'Loss', type: 'square', color: '#ef4444' }
                       ]} 
                     />
-                    <Bar dataKey="pnl" name="P&L ($)" maxBarSize={50}>
+                    <Bar dataKey="pnl" name="P&L (€)" maxBarSize={50}>
                       {monthlyData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.pnl >= 0 ? '#10b981' : '#ef4444'} />
                       ))}
@@ -364,29 +366,40 @@ const ChartsPage = () => {
               </CardContent>
             </Card>
 
-            <Card className="lg:col-span-2 shadow-md rounded-2xl overflow-hidden border-border/50">
-              <CardHeader className="bg-muted/30 border-b border-border/50 pb-6">
+            <Card className="lg:col-span-2 glass-panel rounded-lg overflow-hidden">
+              <CardHeader className="border-b border-white/10 pb-6">
                 <CardTitle className="text-xl">Equity Curve</CardTitle>
                 <CardDescription>Cumulative profit/loss over time</CardDescription>
               </CardHeader>
               <CardContent className="pt-6">
-                <EquityCurve trades={trades} startingBalance={totalCurrentBalance} />
+                <EquityCurve
+                  trades={trades}
+                  startingBalance={totalCurrentBalance}
+                  originalBalances={originalBalances}
+                  currentBalances={currentBalancesMap}
+                />
               </CardContent>
             </Card>
 
-            <Card className="lg:col-span-2 shadow-md rounded-2xl overflow-hidden border-border/50">
-              <CardHeader className="bg-muted/30 border-b border-border/50 pb-6">
+            <Card className="lg:col-span-2 glass-panel rounded-lg overflow-hidden">
+              <CardHeader className="border-b border-white/10 pb-6">
                 <CardTitle className="text-xl">Balance Curve</CardTitle>
                 <CardDescription>Account balance progression over time</CardDescription>
               </CardHeader>
               <CardContent className="pt-6">
-                <BalanceCurve trades={trades} startingBalance={totalCurrentBalance} />
+                <BalanceCurve
+                  trades={trades}
+                  startingBalance={totalCurrentBalance}
+                  originalBalances={originalBalances}
+                  currentBalances={currentBalancesMap}
+                />
               </CardContent>
             </Card>
 
           </div>
         )}
-      </div>
+        </div>
+      </main>
     </>
   );
 };
