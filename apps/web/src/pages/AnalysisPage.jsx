@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { Activity, BarChart3, Radar, ShieldCheck } from 'lucide-react';
 
 const AnalysisPage = () => {
   const { currentUser } = useAuth();
@@ -60,23 +61,32 @@ const AnalysisPage = () => {
       </Helmet>
       <main className="desk-shell market-grid">
         <div className="desk-container">
-        <section className="command-panel rounded-lg p-5 sm:p-6 lg:p-7">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div>
-            <p className="section-kicker mb-3">Performance lab</p>
-            <div className="flex items-center gap-3 mb-3">
-              <h1 className="text-3xl font-black tracking-normal sm:text-5xl">Analysis</h1>
-              <Badge className="font-medium text-sm px-3 py-1 bg-primary/10 text-primary border-primary/30">
-                {accountName}
-              </Badge>
+        <section className="command-panel relative overflow-hidden rounded-lg">
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-info via-primary to-accent" />
+          <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="border-b border-white/10 p-5 sm:p-7 lg:border-b-0 lg:border-r lg:p-8">
+              <p className="section-kicker mb-3">Performance lab</p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <h1 className="text-4xl font-black tracking-normal sm:text-6xl">Analysis</h1>
+                <Badge className="w-fit border-primary/30 bg-primary/10 px-3 py-1 text-primary">
+                  {accountName}
+                </Badge>
+              </div>
+              <p className="mt-5 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+                Comprehensive insights into performance, edge, drawdown and risk behavior.
+              </p>
             </div>
-            <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">Comprehensive insights into your trading performance, edge and risk profile.</p>
+            <div className="grid grid-cols-2 gap-3 bg-black/20 p-5 sm:p-7">
+              <LabTile icon={<BarChart3 className="h-5 w-5" />} label="Trades" value={trades.length.toString()} loading={loading} />
+              <LabTile icon={<Radar className="h-5 w-5" />} label="Scope" value={selectedAccountId ? 'Account' : 'All'} loading={loading} />
+              <LabTile icon={<ShieldCheck className="h-5 w-5" />} label="Mode" value="Audit" loading={false} />
+              <LabTile icon={<Activity className="h-5 w-5" />} label="View" value="Live" loading={false} />
+            </div>
           </div>
-        </div>
         </section>
 
         <Tabs value="/analysis" onValueChange={(v) => navigate(v)} className="w-full">
-          <TabsList className="grid w-full max-w-[400px] grid-cols-2 bg-black/20 border border-white/10">
+          <TabsList className="grid w-full max-w-[400px] grid-cols-2 border border-white/10 bg-black/20 p-1">
             <TabsTrigger value="/analysis">Analysis</TabsTrigger>
             <TabsTrigger value="/charts">Charts</TabsTrigger>
           </TabsList>
@@ -111,5 +121,17 @@ const AnalysisPage = () => {
     </>
   );
 };
+
+const LabTile = ({ icon, label, value, loading }) => (
+  <div className="rounded-md border border-white/10 bg-card/70 p-4">
+    <div className="mb-3 text-primary">{icon}</div>
+    <p className="surface-label">{label}</p>
+    {loading ? (
+      <Skeleton className="mt-2 h-7 w-16 bg-white/10" />
+    ) : (
+      <p className="mt-2 text-xl font-black">{value}</p>
+    )}
+  </div>
+);
 
 export default AnalysisPage;

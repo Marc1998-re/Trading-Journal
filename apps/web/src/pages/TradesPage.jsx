@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Trash2, Edit, ExternalLink, ChevronDown, ChevronUp, Download, ListFilter } from 'lucide-react';
+import { Trash2, Edit, ExternalLink, ChevronDown, ChevronUp, Download, ListFilter, Activity, Target, TrendingDown, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { getTradeGrossProfit, calculateCommissionAmount, calculateNetProfit, calculateStopLossInEuro } from '@/lib/tradeCalculations.js';
 
@@ -149,6 +149,21 @@ const TradesPage = () => {
     setExpandedRow(expandedRow === id ? null : id);
   };
 
+  const ledgerStats = trades.reduce((acc, trade) => {
+    const grossProfit = getTradeGrossProfit(trade, originalBalances, currentBalancesMap);
+    const netProfit = calculateNetProfit(grossProfit, trade.commissionPercentage, originalBalances, currentBalancesMap);
+    const rr = Number(trade.rrSecured || 0);
+
+    acc.net += netProfit;
+    acc.totalR += rr;
+    if (netProfit > 0) acc.wins += 1;
+    if (netProfit < 0) acc.losses += 1;
+    return acc;
+  }, { net: 0, totalR: 0, wins: 0, losses: 0 });
+
+  const avgR = trades.length > 0 ? ledgerStats.totalR / trades.length : 0;
+  const winRate = trades.length > 0 ? (ledgerStats.wins / trades.length) * 100 : 0;
+
   return (
     <>
       <Helmet>
@@ -177,6 +192,13 @@ const TradesPage = () => {
               </Button>
             </div>
           </section>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <LedgerMetric title="Filtered net" value={`${ledgerStats.net >= 0 ? '+' : '-'}€${Math.abs(ledgerStats.net).toFixed(2)}`} icon={<TrendingUp className="h-5 w-5" />} valueClass={ledgerStats.net >= 0 ? 'text-success' : 'text-destructive'} loading={loading} />
+            <LedgerMetric title="Win rate" value={`${winRate.toFixed(1)}%`} icon={<Target className="h-5 w-5" />} loading={loading} />
+            <LedgerMetric title="Avg. R" value={`${avgR >= 0 ? '+' : ''}${avgR.toFixed(2)}R`} icon={<Activity className="h-5 w-5" />} valueClass={avgR >= 0 ? 'text-success' : 'text-destructive'} loading={loading} />
+            <LedgerMetric title="Loss count" value={ledgerStats.losses.toString()} icon={<TrendingDown className="h-5 w-5" />} valueClass={ledgerStats.losses > ledgerStats.wins ? 'text-destructive' : 'text-foreground'} loading={loading} />
+          </div>
 
           <TradeEntryForm onTradeAdded={fetchTrades} />
 
@@ -215,9 +237,14 @@ const TradesPage = () => {
                   ))}
                 </div>
               ) : trades.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground mb-4">No trades found</p>
-                  <p className="text-sm text-muted-foreground">Try adjusting your filters or add a new trade above.</p>
+                <div className="p-5">
+                  <div className="rounded-lg border border-dashed border-white/15 bg-black/20 px-6 py-14 text-center">
+                    <p className="section-kicker mb-3">No ledger rows</p>
+                    <h3 className="text-2xl font-black">Start with the next execution</h3>
+                    <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-muted-foreground">
+                      Add a trade above or loosen the active filters to bring historical executions back into view.
+                    </p>
+                  </div>
                 </div>
               ) : (
                 <div className="terminal-table overflow-x-auto">
@@ -331,5 +358,23 @@ const TradesPage = () => {
     </>
   );
 };
+
+const LedgerMetric = ({ title, value, icon, loading, valueClass = 'text-foreground' }) => (
+  <Card className="group relative overflow-hidden rounded-lg border-white/10 bg-black/25 shadow-none transition-colors hover:border-primary/40 hover:bg-primary/5">
+    <CardContent className="flex items-center justify-between gap-4 p-4">
+      <div className="min-w-0">
+        <p className="surface-label mb-2">{title}</p>
+        {loading ? (
+          <Skeleton className="h-8 w-24 bg-white/10" />
+        ) : (
+          <p className={`truncate text-2xl font-black ${valueClass}`}>{value}</p>
+        )}
+      </div>
+      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-md border border-white/10 bg-white/[0.04] text-primary">
+        {icon}
+      </div>
+    </CardContent>
+  </Card>
+);
 
 export default TradesPage;

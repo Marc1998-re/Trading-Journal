@@ -14,7 +14,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Filter, X, BarChart3 } from 'lucide-react';
+import { Activity, Filter, LineChart, PieChart as PieChartIcon, X, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   BarChart,
@@ -193,23 +193,32 @@ const ChartsPage = () => {
       </Helmet>
       <main className="desk-shell market-grid">
         <div className="desk-container">
-        <section className="command-panel rounded-lg p-5 sm:p-6 lg:p-7">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div>
-            <p className="section-kicker mb-3">Visual analytics</p>
-            <div className="flex items-center gap-3 mb-3">
-              <h1 className="text-3xl font-black tracking-normal sm:text-5xl">Charts</h1>
-              <Badge className="font-medium text-sm px-3 py-1 bg-primary/10 text-primary border-primary/30">
-                {accountName}
-              </Badge>
+        <section className="command-panel relative overflow-hidden rounded-lg">
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-accent via-primary to-info" />
+          <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="border-b border-white/10 p-5 sm:p-7 lg:border-b-0 lg:border-r lg:p-8">
+              <p className="section-kicker mb-3">Visual analytics</p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <h1 className="text-4xl font-black tracking-normal sm:text-6xl">Charts</h1>
+                <Badge className="w-fit border-primary/30 bg-primary/10 px-3 py-1 text-primary">
+                  {accountName}
+                </Badge>
+              </div>
+              <p className="mt-5 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+                Visual representation of equity, balance, distribution and time-based performance.
+              </p>
             </div>
-            <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">Visual representation of your trading data, equity curve and time-based performance.</p>
+            <div className="grid grid-cols-2 gap-3 bg-black/20 p-5 sm:p-7">
+              <ChartTile icon={<LineChart className="h-5 w-5" />} label="Equity" value="Curve" loading={false} />
+              <ChartTile icon={<PieChartIcon className="h-5 w-5" />} label="Outcome" value="Split" loading={false} />
+              <ChartTile icon={<BarChart3 className="h-5 w-5" />} label="Trades" value={trades.length.toString()} loading={loading} />
+              <ChartTile icon={<Activity className="h-5 w-5" />} label="Filters" value={isFiltersActive() ? 'Active' : 'Clear'} loading={false} />
+            </div>
           </div>
-        </div>
         </section>
 
         <Tabs value="/charts" onValueChange={(v) => navigate(v)} className="w-full">
-          <TabsList className="grid w-full max-w-[400px] grid-cols-2 bg-black/20 border border-white/10">
+          <TabsList className="grid w-full max-w-[400px] grid-cols-2 border border-white/10 bg-black/20 p-1">
             <TabsTrigger value="/analysis">Analysis</TabsTrigger>
             <TabsTrigger value="/charts">Charts</TabsTrigger>
           </TabsList>
@@ -403,5 +412,17 @@ const ChartsPage = () => {
     </>
   );
 };
+
+const ChartTile = ({ icon, label, value, loading }) => (
+  <div className="rounded-md border border-white/10 bg-card/70 p-4">
+    <div className="mb-3 text-primary">{icon}</div>
+    <p className="surface-label">{label}</p>
+    {loading ? (
+      <Skeleton className="mt-2 h-7 w-16 bg-white/10" />
+    ) : (
+      <p className="mt-2 text-xl font-black">{value}</p>
+    )}
+  </div>
+);
 
 export default ChartsPage;
