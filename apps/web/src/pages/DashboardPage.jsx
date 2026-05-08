@@ -136,6 +136,15 @@ const DashboardPage = () => {
   const stats = calculateStats();
   const formatEuro = (val) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(val);
   const formatProfitFactor = (val) => val === Infinity ? '∞' : val.toFixed(2);
+  const formatRatio = (val) => val === Infinity ? '∞' : Number(val || 0).toFixed(2);
+  const formatPerformanceLabel = (item) => {
+    if (!item) return 'No data';
+    return `${item.label} ${item.netPnL >= 0 ? '+' : ''}${formatEuro(item.netPnL)}`;
+  };
+  const formatStreak = (type, count) => {
+    if (!count || type === 'none' || type === 'breakeven') return 'No active streak';
+    return `${count} ${type === 'win' ? 'wins' : 'losses'}`;
+  };
   const equitySeries = buildEquitySeries(trades, totalCurrentBalance, originalBalances, currentBalancesMap);
   const equityData = equitySeries.map((point) => ({
     ...point,
@@ -156,18 +165,18 @@ const DashboardPage = () => {
   const primaryMetrics = [
     { title: 'Return', value: `${stats.returnPercentage >= 0 ? '+' : ''}${stats.returnPercentage.toFixed(2)}%`, icon: <Percent className="h-5 w-5" />, valueClass: stats.returnPercentage >= 0 ? 'text-success' : 'text-destructive' },
     { title: 'Net P/L', value: `${stats.monetaryGain >= 0 ? '+' : '-'}${formatEuro(Math.abs(stats.monetaryGain))}`, icon: <DollarSign className="h-5 w-5" />, valueClass: stats.monetaryGain >= 0 ? 'text-success' : 'text-destructive' },
-    { title: 'Trades', value: stats.tradeCount.toString(), icon: <Activity className="h-5 w-5" /> },
-    { title: 'Win Rate', value: `${stats.winRate.toFixed(1)}%`, icon: <Target className="h-5 w-5" /> },
-    { title: 'Profit Factor', value: formatProfitFactor(stats.profitFactor), icon: <Radar className="h-5 w-5" /> },
-    { title: 'Expectancy', value: formatEuro(stats.expectancy), icon: <Target className="h-5 w-5" />, valueClass: stats.expectancy >= 0 ? 'text-success' : 'text-destructive' },
     { title: 'Avg. R', value: `${stats.avgR >= 0 ? '+' : ''}${stats.avgR.toFixed(2)}R`, icon: <TrendingUp className="h-5 w-5" />, valueClass: stats.avgR >= 0 ? 'text-success' : 'text-destructive' },
+    { title: 'Expectancy R', value: `${stats.expectancyR >= 0 ? '+' : ''}${stats.expectancyR.toFixed(2)}R`, icon: <Target className="h-5 w-5" />, valueClass: stats.expectancyR >= 0 ? 'text-success' : 'text-destructive' },
+    { title: 'Win Rate', value: `${stats.winRate.toFixed(1)}%`, icon: <Target className="h-5 w-5" /> },
+    { title: 'Payoff', value: formatRatio(stats.payoffRatio), icon: <Activity className="h-5 w-5" />, valueClass: stats.payoffRatio >= 1.2 ? 'text-success' : stats.payoffRatio >= 1 ? 'text-foreground' : 'text-destructive' },
+    { title: 'Profit Factor', value: formatProfitFactor(stats.profitFactor), icon: <Radar className="h-5 w-5" /> },
     { title: 'Max DD', value: `${stats.maxDrawdownPct.toFixed(2)}%`, icon: <TrendingDown className="h-5 w-5" />, valueClass: stats.maxDrawdownPct > 10 ? 'text-destructive' : 'text-foreground' },
   ];
   const commandTiles = [
-    { label: 'Win / Loss', value: `${stats.wins} / ${stats.losses}` },
-    { label: 'Best trade', value: formatEuro(stats.bestTrade), valueClass: 'text-success' },
-    { label: 'Worst trade', value: formatEuro(stats.worstTrade), valueClass: 'text-destructive' },
-    { label: 'Profit factor', value: formatProfitFactor(stats.profitFactor) },
+    { label: 'Trades', value: stats.tradeCount.toString() },
+    { label: 'Current streak', value: formatStreak(stats.currentStreakType, stats.currentStreakCount), valueClass: stats.currentStreakType === 'loss' ? 'text-destructive' : stats.currentStreakType === 'win' ? 'text-success' : 'text-foreground' },
+    { label: 'Best symbol', value: stats.bestSymbol ? stats.bestSymbol.label : 'No data', valueClass: 'text-success' },
+    { label: 'Loss streak', value: stats.longestLossStreak.toString(), valueClass: stats.longestLossStreak >= 4 ? 'text-destructive' : 'text-foreground' },
   ];
   const recentTrades = [...trades]
     .sort((a, b) => {
@@ -311,9 +320,10 @@ const DashboardPage = () => {
                       <p className={`mt-1 text-3xl font-black ${riskModeClass}`}>{riskMode}</p>
                     </div>
                     <RiskRow label="Avg. risk" value={`${stats.avgRiskPct.toFixed(2)}%`} />
-                    <RiskRow label="Avg. risk value" value={formatEuro(stats.avgStopLossAmount)} />
+                    <RiskRow label="Payoff ratio" value={formatRatio(stats.payoffRatio)} valueClass={stats.payoffRatio >= 1.2 ? 'text-success' : stats.payoffRatio >= 1 ? 'text-foreground' : 'text-destructive'} />
+                    <RiskRow label="Best weekday" value={stats.bestWeekday ? stats.bestWeekday.label : 'No data'} valueClass="text-success" />
+                    <RiskRow label="Weakest symbol" value={formatPerformanceLabel(stats.worstSymbol)} valueClass={stats.worstSymbol?.netPnL < 0 ? 'text-destructive' : 'text-foreground'} />
                     <RiskRow label="Total R" value={`${stats.totalR >= 0 ? '+' : ''}${stats.totalR.toFixed(2)}R`} valueClass={stats.totalR >= 0 ? 'text-success' : 'text-destructive'} />
-                    <RiskRow label="Best / Worst" value={`${formatEuro(stats.bestTrade)} / ${formatEuro(stats.worstTrade)}`} />
                   </>
                 )}
               </CardContent>

@@ -6,14 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Filter, X } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
-  calculateTotalWins,
-  calculateTotalLosses,
-  calculateNetPnL,
+  calculateAdvancedStats,
   calculateTotalCommissionCosts,
-  calculateWinRate,
-  getTradeGrossProfit,
-  calculateNetProfit,
-  calculateStopLossInEuro
 } from '@/lib/tradeCalculations.js';
 
 const metricDescriptions = {
@@ -30,15 +24,24 @@ const metricDescriptions = {
   "R Secured": "Total Risk (R) multiples gained or lost across all trades.",
   "Avg R / Trade": "Average Risk (R) multiple gained or lost per trade.",
   "Risk Per Trade": "Average percentage of account balance risked per trade.",
-  "Risk of Ruin": "Probability of losing all trading capital based on current win rate and risk.",
   "Expected Value": "Average expected monetary return per trade based on historical performance.",
+  "Expectancy R": "Average expected R multiple per trade. This is one of the cleanest edge metrics.",
+  "Payoff Ratio": "Average winning trade divided by the average losing trade.",
   "Profit Factor": "Ratio of gross profit to gross loss. A value above 1 indicates a profitable system.",
   "Avg Win R": "Average Risk (R) multiple gained on winning trades.",
+  "Avg Loss R": "Average Risk (R) multiple lost on losing trades.",
   "Avg Stop Size": "Average monetary amount risked per trade.",
   "Max Drawdown %": "Largest percentage drop from a peak balance to a subsequent trough.",
-  "Max Drawdown R": "Largest drop in Risk (R) multiples from a peak to a subsequent trough.",
-  "Avg Drawdown €": "Average monetary loss during drawdown periods.",
-  "Avg Drawdown R": "Average Risk (R) multiple loss during drawdown periods."
+  "Max Drawdown €": "Largest monetary drop from a peak balance to a subsequent trough.",
+  "Win Streak": "Longest sequence of profitable trades.",
+  "Loss Streak": "Longest sequence of losing trades.",
+  "Current Streak": "Current active sequence based on the latest trades.",
+  "Best Symbol": "Most profitable symbol in the selected data.",
+  "Weakest Symbol": "Least profitable symbol in the selected data.",
+  "Best Day": "Most profitable trading day in the selected data.",
+  "Weakest Day": "Least profitable trading day in the selected data.",
+  "Best Weekday": "Most profitable weekday in the selected data.",
+  "Weakest Weekday": "Least profitable weekday in the selected data."
 };
 
 const MetricCard = ({ label, value, type = 'neutral' }) => {
@@ -81,6 +84,19 @@ const formatEuro = (value) => new Intl.NumberFormat('en-IE', {
   currency: 'EUR',
 }).format(Number(value) || 0);
 
+const formatRatio = (value) => value === Infinity ? '∞' : Number(value || 0).toFixed(2);
+
+const formatPerformanceLabel = (item) => {
+  if (!item) return 'No data';
+  const sign = item.netPnL >= 0 ? '+' : '';
+  return `${item.label} ${sign}${formatEuro(item.netPnL)}`;
+};
+
+const formatStreak = (type, count) => {
+  if (!count || type === 'none' || type === 'breakeven') return 'No active streak';
+  return `${count} ${type === 'win' ? 'wins' : 'losses'}`;
+};
+
 const AnalysisDashboard = ({ trades, accounts, originalBalances, selectedAccountId, onUpdateBalance }) => {
   const { filters, isFiltersActive, clearFilters } = useFilters();
 
@@ -108,121 +124,24 @@ const AnalysisDashboard = ({ trades, accounts, originalBalances, selectedAccount
 
   const stats = useMemo(() => {
     if (!trades || trades.length === 0) return null;
-
-    const totalTrades = trades.length;
-    
-    const winningTrades = trades.filter((t) => t.status === 'Win' || (!t.status && (t.rrSecured || 0) >= 1));
-    const losingTrades = trades.filter((t) => t.status === 'Loss' || (!t.status && (t.rrSecured || 0) < 0));
-    const breakevenTrades = trades.filter((t) => t.status === 'Breakeven' || (!t.status && (t.rrSecured || 0) >= 0 && (t.rrSecured || 0) < 1));
-
-    const wins = winningTrades.length;
-    const losses = losingTrades.length;
-    const breakeven = breakevenTrades.length;
-
-    const winRate = calculateWinRate(trades, originalBalances, currentBalancesMap);
-    const lossRate = (losses / totalTrades) * 100;
-    const breakevenRate = (breakeven / totalTrades) * 100;
-
-    const totalWinsAmount = calculateTotalWins(trades, originalBalances, currentBalancesMap);
-    const totalLossesAmount = calculateTotalLosses(trades, originalBalances, currentBalancesMap);
-    const netPL = calculateNetPnL(trades, originalBalances, currentBalancesMap);
     const totalCommission = calculateTotalCommissionCosts(trades, originalBalances, currentBalancesMap);
 
-    const totalR = trades.reduce((sum, t) => sum + (t.rrSecured || 0), 0);
-    const avgR = totalR / totalTrades;
-    
-    const totalMonetaryStopLoss = trades.reduce((sum, t) => {
-      const currBal = currentBalancesMap[t.accountId] || 10000;
-      return sum + calculateStopLossInEuro(currBal, t.stopLoss);
-    }, 0);
-    const avgStopLoss = totalMonetaryStopLoss / totalTrades;
-    const riskPerTradePct = totalCurrentBalance > 0 ? (avgStopLoss / totalCurrentBalance) * 100 : 0;
-    
-    const winProb = winRate / 100;
-    const lossProb = lossRate / 100;
-    const edge = winProb - lossProb;
-    const capitalUnits = avgStopLoss > 0 ? totalCurrentBalance / avgStopLoss : 0;
-    let riskOfRuin = 0;
-    if (edge <= 0) {
-      riskOfRuin = 100;
-    } else if (capitalUnits > 0) {
-      riskOfRuin = Math.pow((1 - edge) / (1 + edge), capitalUnits) * 100;
-    }
-
-    const avgWinSize = wins > 0 ? totalWinsAmount / wins : 0;
-    const avgLossSize = losses > 0 ? totalLossesAmount / losses : 0;
-    const expectedValue = (winProb * avgWinSize) - (lossProb * avgLossSize);
-    
-    const profitFactor = totalLossesAmount > 0 ? totalWinsAmount / totalLossesAmount : (totalWinsAmount > 0 ? Infinity : 0);
-    
-    const avgWinR = wins > 0 ? winningTrades.reduce((sum, t) => sum + (t.rrSecured || 0), 0) / wins : 0;
-
-    let maxDrawdown = 0;
-    let maxDrawdownR = 0;
-    let currentDrawdown = 0;
-    let currentDrawdownR = 0;
-    let peak = totalCurrentBalance;
-    let peakR = 0;
-    let runningBalance = totalCurrentBalance;
-    let runningR = 0;
-    let peakForDrawdownPct = totalCurrentBalance;
-
-    const sortedTrades = [...trades].sort((a, b) => new Date(a.entryDate || a.date) - new Date(b.entryDate || b.date));
-
-    sortedTrades.forEach((trade) => {
-      const gross = getTradeGrossProfit(trade, originalBalances, currentBalancesMap);
-      const net = calculateNetProfit(gross, trade.commissionPercentage, originalBalances, currentBalancesMap);
-      
-      runningBalance += net;
-      runningR += trade.rrSecured || 0;
-
-      if (runningBalance > peak) {
-        peak = runningBalance;
-        currentDrawdown = 0;
-        peakForDrawdownPct = peak;
-      } else {
-        currentDrawdown = peak - runningBalance;
-        if (currentDrawdown > maxDrawdown) {
-          maxDrawdown = currentDrawdown;
-        }
-      }
-
-      if (runningR > peakR) {
-        peakR = runningR;
-        currentDrawdownR = 0;
-      } else {
-        currentDrawdownR = peakR - runningR;
-        if (currentDrawdownR > maxDrawdownR) {
-          maxDrawdownR = currentDrawdownR;
-        }
-      }
-    });
-
-    const maxDrawdownPct = peakForDrawdownPct > 0 ? (maxDrawdown / peakForDrawdownPct) * 100 : 0;
-    const avgDrawdown = losses > 0 ? totalLossesAmount / losses : 0;
-    const avgDrawdownR = losses > 0 ? Math.abs(losingTrades.reduce((sum, t) => sum + (t.rrSecured || 0), 0)) / losses : 0;
-
-    const compoundedBalance = totalCurrentBalance + netPL;
-
     return {
-      totalTrades, winRate, lossRate, breakevenRate,
-      totalR, avgR, riskPerTradePct, riskOfRuin,
-      expectedValue, profitFactor, avgWinR, avgStopLoss,
-      avgDrawdownR, avgDrawdown, maxDrawdownR, maxDrawdownPct, maxDrawdown,
-      totalCurrentBalance, compoundedBalance, netPL,
-      totalWinsAmount, totalLossesAmount, totalCommission
+      ...calculateAdvancedStats(trades, totalCurrentBalance, originalBalances, currentBalancesMap),
+      totalCurrentBalance,
+      totalCommission,
     };
   }, [trades, currentBalancesMap, originalBalances, totalCurrentBalance]);
 
   const hasData = stats !== null;
 
   const balanceMetrics = hasData ? [
-    { label: "Net P&L", value: `${stats.netPL >= 0 ? '+' : '-'}${formatEuro(Math.abs(stats.netPL))}`, type: stats.netPL >= 0 ? "positive" : "negative" },
-    { label: "Total Wins (Net)", value: formatEuro(stats.totalWinsAmount), type: "positive" },
-    { label: "Total Losses", value: `-${formatEuro(stats.totalLossesAmount)}`, type: "negative" },
+    { label: "Net P&L", value: `${stats.netPnL >= 0 ? '+' : '-'}${formatEuro(Math.abs(stats.netPnL))}`, type: stats.netPnL >= 0 ? "positive" : "negative" },
+    { label: "Total Wins (Net)", value: formatEuro(stats.grossProfit), type: "positive" },
+    { label: "Total Losses", value: `-${formatEuro(stats.grossLoss)}`, type: "negative" },
     { label: "Total Commissions", value: formatEuro(stats.totalCommission), type: "negative" },
-    { label: "Compounded Balance", value: formatEuro(stats.compoundedBalance), type: stats.compoundedBalance >= stats.totalCurrentBalance ? "positive" : "negative" },
-    { label: "Total Return", value: `${((stats.compoundedBalance - stats.totalCurrentBalance) / stats.totalCurrentBalance * 100).toFixed(2)}%`, type: stats.compoundedBalance >= stats.totalCurrentBalance ? "positive" : "negative" },
+    { label: "Compounded Balance", value: formatEuro(stats.endingBalance), type: stats.endingBalance >= stats.totalCurrentBalance ? "positive" : "negative" },
+    { label: "Total Return", value: `${((stats.netPnL / Math.max(stats.totalCurrentBalance, 0.01)) * 100).toFixed(2)}%`, type: stats.netPnL >= 0 ? "positive" : "negative" },
   ] : [];
 
   const sections = hasData ? [
@@ -236,30 +155,48 @@ const AnalysisDashboard = ({ trades, accounts, originalBalances, selectedAccount
       ]
     },
     {
+      title: "Edge Quality",
+      metrics: [
+        { label: "Expected Value", value: formatEuro(stats.expectancy), type: stats.expectancy > 0 ? "positive" : "negative" },
+        { label: "Expectancy R", value: `${stats.expectancyR > 0 ? '+' : ''}${stats.expectancyR.toFixed(2)}R`, type: stats.expectancyR >= 0 ? "positive" : "negative" },
+        { label: "Payoff Ratio", value: formatRatio(stats.payoffRatio), type: stats.payoffRatio >= 1.2 ? "positive" : (stats.payoffRatio >= 1 ? "neutral" : "negative") },
+        { label: "Profit Factor", value: formatRatio(stats.profitFactor), type: stats.profitFactor >= 1.5 ? "positive" : (stats.profitFactor >= 1 ? "neutral" : "negative") },
+      ]
+    },
+    {
       title: "Risk Metrics",
       metrics: [
         { label: "R Secured", value: `${stats.totalR > 0 ? '+' : ''}${stats.totalR.toFixed(2)}R`, type: stats.totalR >= 0 ? "positive" : "negative" },
         { label: "Avg R / Trade", value: `${stats.avgR > 0 ? '+' : ''}${stats.avgR.toFixed(2)}R`, type: stats.avgR >= 0 ? "positive" : "negative" },
-        { label: "Risk Per Trade", value: `${stats.riskPerTradePct.toFixed(2)}%`, type: stats.riskPerTradePct > 2 ? "negative" : "neutral" },
-        { label: "Risk of Ruin", value: `${stats.riskOfRuin.toFixed(2)}%`, type: stats.riskOfRuin > 10 ? "negative" : "positive" },
+        { label: "Risk Per Trade", value: `${stats.avgRiskPct.toFixed(2)}%`, type: stats.avgRiskPct > 2 ? "negative" : "neutral" },
+        { label: "Avg Stop Size", value: formatEuro(stats.avgStopLossAmount), type: "neutral" },
       ]
     },
     {
-      title: "Performance Metrics",
+      title: "R-Multiple Quality",
       metrics: [
-        { label: "Expected Value", value: formatEuro(stats.expectedValue), type: stats.expectedValue > 0 ? "positive" : "negative" },
-        { label: "Profit Factor", value: stats.profitFactor === Infinity ? '∞' : stats.profitFactor.toFixed(2), type: stats.profitFactor >= 1.5 ? "positive" : (stats.profitFactor >= 1 ? "neutral" : "negative") },
         { label: "Avg Win R", value: `${stats.avgWinR.toFixed(2)}R`, type: stats.avgWinR >= 2 ? "positive" : "neutral" },
-        { label: "Avg Stop Size", value: formatEuro(stats.avgStopLoss), type: "neutral" },
+        { label: "Avg Loss R", value: `${stats.avgLossR.toFixed(2)}R`, type: "negative" },
+        { label: "Win Streak", value: `${stats.longestWinStreak}`, type: "positive" },
+        { label: "Loss Streak", value: `${stats.longestLossStreak}`, type: stats.longestLossStreak >= 4 ? "negative" : "neutral" },
       ]
     },
     {
       title: "Drawdown Metrics",
       metrics: [
         { label: "Max Drawdown %", value: `${stats.maxDrawdownPct.toFixed(2)}%`, type: stats.maxDrawdownPct > 20 ? "negative" : "neutral" },
-        { label: "Max Drawdown R", value: `${stats.maxDrawdownR.toFixed(2)}R`, type: stats.maxDrawdownR > 10 ? "negative" : "neutral" },
-        { label: "Avg Drawdown €", value: formatEuro(stats.avgDrawdown), type: "negative" },
-        { label: "Avg Drawdown R", value: `${stats.avgDrawdownR.toFixed(2)}R`, type: "negative" },
+        { label: "Max Drawdown €", value: formatEuro(stats.maxDrawdown), type: "negative" },
+        { label: "Current Streak", value: formatStreak(stats.currentStreakType, stats.currentStreakCount), type: stats.currentStreakType === "loss" ? "negative" : stats.currentStreakType === "win" ? "positive" : "neutral" },
+        { label: "Weakest Day", value: formatPerformanceLabel(stats.worstDay), type: stats.worstDay?.netPnL < 0 ? "negative" : "neutral" },
+      ]
+    },
+    {
+      title: "Market & Timing",
+      metrics: [
+        { label: "Best Symbol", value: formatPerformanceLabel(stats.bestSymbol), type: "positive" },
+        { label: "Weakest Symbol", value: formatPerformanceLabel(stats.worstSymbol), type: stats.worstSymbol?.netPnL < 0 ? "negative" : "neutral" },
+        { label: "Best Weekday", value: formatPerformanceLabel(stats.bestWeekday), type: "positive" },
+        { label: "Weakest Weekday", value: formatPerformanceLabel(stats.worstWeekday), type: stats.worstWeekday?.netPnL < 0 ? "negative" : "neutral" },
       ]
     }
   ] : [];
