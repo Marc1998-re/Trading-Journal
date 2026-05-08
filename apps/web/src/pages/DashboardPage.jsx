@@ -163,6 +163,12 @@ const DashboardPage = () => {
     { title: 'Avg. R', value: `${stats.avgR >= 0 ? '+' : ''}${stats.avgR.toFixed(2)}R`, icon: <TrendingUp className="h-5 w-5" />, valueClass: stats.avgR >= 0 ? 'text-success' : 'text-destructive' },
     { title: 'Max DD', value: `${stats.maxDrawdownPct.toFixed(2)}%`, icon: <TrendingDown className="h-5 w-5" />, valueClass: stats.maxDrawdownPct > 10 ? 'text-destructive' : 'text-foreground' },
   ];
+  const commandTiles = [
+    { label: 'Win / Loss', value: `${stats.wins} / ${stats.losses}` },
+    { label: 'Best trade', value: formatEuro(stats.bestTrade), valueClass: 'text-success' },
+    { label: 'Worst trade', value: formatEuro(stats.worstTrade), valueClass: 'text-destructive' },
+    { label: 'Profit factor', value: formatProfitFactor(stats.profitFactor) },
+  ];
   const recentTrades = [...trades]
     .sort((a, b) => {
       const bDate = getTradeDate(b);
@@ -178,28 +184,49 @@ const DashboardPage = () => {
       </Helmet>
       <main className="desk-shell market-grid">
         <div className="desk-container">
-          <section className="command-panel rounded-lg p-5 sm:p-6 lg:p-7">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-3xl">
-                <p className="section-kicker mb-3">Live trading command</p>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <h1 className="text-3xl font-black tracking-normal sm:text-5xl">JournalOS Command</h1>
-                  <Badge className="w-fit border-primary/30 bg-primary/15 px-3 py-1.5 text-primary hover:bg-primary/20">
-                    {accountName}
-                  </Badge>
-                </div>
-                <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-                  Month performance, execution quality and trade flow in one focused workspace.
-                </p>
-              </div>
-              <div className="flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
-                <div className="rounded-md border border-white/10 bg-black/20 px-4 py-3">
-                  <p className="surface-label">Net month</p>
-                  <p className={`mt-1 text-2xl font-black ${stats.netPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
-                    {stats.netPnL >= 0 ? '+' : ''}{formatEuro(stats.netPnL)}
+          <section className="command-panel relative overflow-hidden rounded-lg">
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-accent to-info" />
+            <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_420px]">
+              <div className="relative min-h-[280px] border-b border-white/10 p-5 sm:p-7 lg:border-b-0 lg:border-r lg:p-8">
+                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,hsl(var(--primary)/0.13),transparent_34%,hsl(var(--accent)/0.08))]" />
+                <div className="relative max-w-3xl">
+                  <p className="section-kicker mb-4">Live trading command</p>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <h1 className="text-4xl font-black tracking-normal sm:text-6xl">JournalOS Command</h1>
+                    <Badge className="w-fit border-primary/30 bg-primary/15 px-3 py-1.5 text-primary hover:bg-primary/20">
+                      {accountName}
+                    </Badge>
+                  </div>
+                  <p className="mt-5 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+                    Month performance, execution quality and trade flow in one focused workspace.
                   </p>
+                  <div className="mt-8 grid max-w-3xl grid-cols-2 gap-3 md:grid-cols-4">
+                    {commandTiles.map((tile) => (
+                      <div key={tile.label} className="rounded-md border border-white/10 bg-black/25 px-4 py-3">
+                        <p className="surface-label">{tile.label}</p>
+                        <p className={`mt-2 truncate text-lg font-black ${tile.valueClass || 'text-foreground'}`}>{tile.value}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <Button onClick={handleSync} disabled={isSyncing || loading} className="h-auto gap-2 bg-primary px-5 py-4 font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90">
+              </div>
+              <div className="flex flex-col justify-between gap-5 bg-black/20 p-5 sm:p-7">
+                <div>
+                  <p className="section-kicker mb-4">Account state</p>
+                  <div className="rounded-md border border-white/10 bg-card/70 p-5">
+                    <p className="surface-label">Net month</p>
+                    <p className={`mt-2 text-4xl font-black ${stats.netPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
+                      {stats.netPnL >= 0 ? '+' : ''}{formatEuro(stats.netPnL)}
+                    </p>
+                    <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10">
+                      <div
+                        className={`h-full rounded-full ${stats.netPnL >= 0 ? 'bg-success' : 'bg-destructive'}`}
+                        style={{ width: `${Math.min(100, Math.max(10, Math.abs(stats.returnPercentage) * 12))}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <Button onClick={handleSync} disabled={isSyncing || loading} className="h-14 w-full gap-2 bg-primary font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90">
                   <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
                   Sync Desk
                 </Button>
@@ -365,29 +392,37 @@ const DashboardPage = () => {
                 <p className="section-kicker mb-2">Execution feed</p>
                 <CardTitle className="text-2xl font-black">Recent Trades</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 p-4">
+              <CardContent className="p-0">
                 {loading ? (
-                  Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-md bg-white/10" />)
+                  <div className="space-y-3 p-4">
+                    {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-md bg-white/10" />)}
+                  </div>
                 ) : recentTrades.length === 0 ? (
-                  <p className="rounded-md border border-white/10 bg-black/20 px-4 py-8 text-sm text-muted-foreground">No trades recorded for this month.</p>
+                  <p className="m-4 rounded-md border border-white/10 bg-black/20 px-4 py-8 text-sm text-muted-foreground">No trades recorded for this month.</p>
                 ) : (
-                  recentTrades.map((trade) => {
-                    const net = getTradeNetProfit(trade, originalBalances, currentBalancesMap);
-                    const tradeDate = trade.entryDate || trade.date;
-                    return (
-                      <div key={trade.id} className="rounded-md border border-white/10 bg-black/20 p-4 transition-colors hover:border-primary/30 hover:bg-primary/5">
-                        <div className="flex items-center justify-between gap-3">
-                          <div>
-                            <p className="text-base font-black">{trade.symbol || trade.instrument || 'Trade'}</p>
-                            <p className="text-xs text-muted-foreground">{tradeDate ? format(new Date(tradeDate), 'MMM dd') : 'No date'} · {Number(trade.rrSecured || 0).toFixed(2)}R</p>
+                  <div className="divide-y divide-white/10">
+                    <div className="grid grid-cols-[1fr_72px_96px] gap-3 bg-black/20 px-4 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">
+                      <span>Symbol</span>
+                      <span>R</span>
+                      <span className="text-right">Net</span>
+                    </div>
+                    {recentTrades.map((trade) => {
+                      const net = getTradeNetProfit(trade, originalBalances, currentBalancesMap);
+                      const tradeDate = trade.entryDate || trade.date;
+                      return (
+                        <div key={trade.id} className="grid grid-cols-[1fr_72px_96px] items-center gap-3 px-4 py-4 transition-colors hover:bg-primary/5">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-black">{trade.symbol || trade.instrument || 'Trade'}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">{tradeDate ? format(new Date(tradeDate), 'MMM dd') : 'No date'}</p>
                           </div>
-                          <p className={`text-sm font-black ${net > 0 ? 'text-success' : net < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                          <p className="text-sm font-black">{Number(trade.rrSecured || 0).toFixed(2)}R</p>
+                          <p className={`text-right text-sm font-black ${net > 0 ? 'text-success' : net < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
                             {net > 0 ? '+' : ''}{formatEuro(net)}
                           </p>
                         </div>
-                      </div>
-                    );
-                  })
+                      );
+                    })}
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -423,17 +458,20 @@ const RiskRow = ({ label, value, valueClass = 'text-foreground' }) => (
 );
 
 const StatCard = ({ title, value, icon, loading, valueClass = 'text-foreground' }) => (
-  <Card className="stat-surface rounded-lg">
-    <CardContent className="flex items-center gap-4 p-5">
-      <div className="grid h-11 w-11 place-items-center rounded-md border border-primary/20 bg-primary/10 text-primary">
-        {icon}
+  <Card className="group relative overflow-hidden rounded-lg border-white/10 bg-black/25 shadow-none transition-colors hover:border-primary/40 hover:bg-primary/5">
+    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/70 to-transparent opacity-60" />
+    <CardContent className="p-4">
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <p className="surface-label">{title}</p>
+        <div className="grid h-9 w-9 place-items-center rounded-md border border-white/10 bg-white/[0.04] text-primary transition-colors group-hover:border-primary/30 group-hover:bg-primary/10">
+          {icon}
+        </div>
       </div>
       <div className="min-w-0">
-        <p className="surface-label mb-1">{title}</p>
         {loading ? (
           <Skeleton className="h-8 w-24 bg-white/10" />
         ) : (
-          <h3 className={`truncate text-2xl font-black ${valueClass}`}>{value}</h3>
+          <h3 className={`truncate text-3xl font-black ${valueClass}`}>{value}</h3>
         )}
       </div>
     </CardContent>
