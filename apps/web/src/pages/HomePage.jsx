@@ -86,14 +86,17 @@ const faqItems = [
 const productPreviews = [
   {
     title: 'Detailed trade logging',
+    description: 'A structured entry workflow for risk, R-plan, timing and review context.',
     kind: 'logging',
   },
   {
     title: 'Advanced analytics',
+    description: 'Edge metrics, symbol performance and account-level quality signals.',
     kind: 'analytics',
   },
   {
     title: 'Visual insights',
+    description: 'Charts that make equity, outcomes and performance patterns easier to read.',
     kind: 'visuals',
   },
 ];
@@ -129,8 +132,9 @@ const ProductPreview = ({ kind }) => {
             <div className="h-2 w-3/4 rounded-full bg-white/10" />
           </div>
         </div>
-        <div className="mt-3 rounded-md bg-primary px-3 py-2 text-center text-xs font-black text-primary-foreground">
-          Add Trade to Journal
+        <div className="mt-3 flex items-center justify-between rounded-md border border-primary/20 bg-primary/10 px-3 py-2 text-xs">
+          <span className="font-bold text-primary">Ready to save</span>
+          <span className="font-black text-primary">+2.5R plan</span>
         </div>
       </div>
     );
@@ -350,32 +354,36 @@ const HomePage = () => {
 
         <section className="border-y border-border bg-card/45 px-4 py-24 sm:px-6 lg:px-8">
           <div className="container mx-auto max-w-7xl">
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-[0.85fr_1.15fr]">
-              <div>
-                <p className="section-kicker mb-3">Inside the journal</p>
-                <h2 className="text-3xl font-black md:text-5xl">A clear view of what users get</h2>
-                <p className="mt-5 leading-8 text-muted-foreground">
-                  Screens, metrics and workflows stay close together, so traders understand the value before creating an account.
-                </p>
-                <div className="mt-8 space-y-3">
-                  {['Trade entry with context links', 'Dashboard with risk and equity metrics', 'Charts for distribution and time-based performance'].map((item) => (
-                    <div key={item} className="flex items-center gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-success" />
-                      <span className="font-semibold">{item}</span>
-                    </div>
-                  ))}
+            <div className="mb-12 max-w-3xl">
+              <p className="section-kicker mb-3">Inside the journal</p>
+              <h2 className="text-3xl font-black md:text-5xl">A clear view of what users get</h2>
+              <p className="mt-5 leading-8 text-muted-foreground">
+                Screens, metrics and workflows stay close together, so traders understand the value before creating an account.
+              </p>
+            </div>
+
+            <div className="mb-8 grid grid-cols-1 gap-3 md:grid-cols-3">
+              {['Trade entry with context links', 'Dashboard with risk and equity metrics', 'Charts for distribution and time-based performance'].map((item) => (
+                <div key={item} className="flex items-center gap-3 rounded-md border border-white/10 bg-black/20 px-4 py-3">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-success" />
+                  <span className="text-sm font-semibold">{item}</span>
                 </div>
-              </div>
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-                {productPreviews.map((preview) => (
-                  <div key={preview.title} className="rounded-lg border border-border bg-background p-3">
-                    <div className="h-80 w-full rounded-md bg-muted/30 p-2">
-                      <ProductPreview kind={preview.kind} />
-                    </div>
-                    <p className="mt-3 px-1 text-sm font-bold">{preview.title}</p>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+              {productPreviews.map((preview) => (
+                <div key={preview.title} className="command-panel overflow-hidden rounded-lg p-0">
+                  <div className="border-b border-white/10 p-5">
+                    <p className="section-kicker mb-2">Product preview</p>
+                    <h3 className="text-xl font-black">{preview.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{preview.description}</p>
                   </div>
-                ))}
-              </div>
+                  <div className="h-[360px] w-full bg-muted/20 p-4">
+                    <ProductPreview kind={preview.kind} />
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </section>
