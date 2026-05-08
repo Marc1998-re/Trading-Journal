@@ -23,8 +23,11 @@ import {
   DollarSign, 
   Percent,
   Radar,
-  CalendarDays
+  CalendarDays,
+  LineChart,
+  ShieldCheck,
 } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -36,6 +39,7 @@ import pb from '@/lib/pocketbaseClient.js';
 import { 
   calculateReturnPercentage, 
   calculateAdvancedStats,
+  buildEquitySeries,
   getTradeDate,
   getTradeNetProfit
 } from '@/lib/tradeCalculations.js';
@@ -132,6 +136,33 @@ const DashboardPage = () => {
   const stats = calculateStats();
   const formatEuro = (val) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(val);
   const formatProfitFactor = (val) => val === Infinity ? '∞' : val.toFixed(2);
+  const equitySeries = buildEquitySeries(trades, totalCurrentBalance, originalBalances, currentBalancesMap);
+  const equityData = equitySeries.map((point) => ({
+    ...point,
+    pnl: point.cumulativePnL,
+    balance: point.balance,
+  }));
+  const endingBalance = equitySeries[equitySeries.length - 1]?.balance ?? totalCurrentBalance;
+  const riskMode = stats.maxDrawdownPct >= 10 || stats.avgRiskPct >= 2.5
+    ? 'Pressure'
+    : stats.maxDrawdownPct >= 5 || stats.avgRiskPct >= 1.5
+      ? 'Watch'
+      : 'Controlled';
+  const riskModeClass = riskMode === 'Pressure'
+    ? 'text-destructive'
+    : riskMode === 'Watch'
+      ? 'text-accent'
+      : 'text-success';
+  const primaryMetrics = [
+    { title: 'Return', value: `${stats.returnPercentage >= 0 ? '+' : ''}${stats.returnPercentage.toFixed(2)}%`, icon: <Percent className="h-5 w-5" />, valueClass: stats.returnPercentage >= 0 ? 'text-success' : 'text-destructive' },
+    { title: 'Net P/L', value: `${stats.monetaryGain >= 0 ? '+' : '-'}${formatEuro(Math.abs(stats.monetaryGain))}`, icon: <DollarSign className="h-5 w-5" />, valueClass: stats.monetaryGain >= 0 ? 'text-success' : 'text-destructive' },
+    { title: 'Trades', value: stats.tradeCount.toString(), icon: <Activity className="h-5 w-5" /> },
+    { title: 'Win Rate', value: `${stats.winRate.toFixed(1)}%`, icon: <Target className="h-5 w-5" /> },
+    { title: 'Profit Factor', value: formatProfitFactor(stats.profitFactor), icon: <Radar className="h-5 w-5" /> },
+    { title: 'Expectancy', value: formatEuro(stats.expectancy), icon: <Target className="h-5 w-5" />, valueClass: stats.expectancy >= 0 ? 'text-success' : 'text-destructive' },
+    { title: 'Avg. R', value: `${stats.avgR >= 0 ? '+' : ''}${stats.avgR.toFixed(2)}R`, icon: <TrendingUp className="h-5 w-5" />, valueClass: stats.avgR >= 0 ? 'text-success' : 'text-destructive' },
+    { title: 'Max DD', value: `${stats.maxDrawdownPct.toFixed(2)}%`, icon: <TrendingDown className="h-5 w-5" />, valueClass: stats.maxDrawdownPct > 10 ? 'text-destructive' : 'text-foreground' },
+  ];
   const recentTrades = [...trades]
     .sort((a, b) => {
       const bDate = getTradeDate(b);
@@ -183,18 +214,83 @@ const DashboardPage = () => {
           )}
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <StatCard title="Return" value={`${stats.returnPercentage >= 0 ? '+' : ''}${stats.returnPercentage.toFixed(2)}%`} icon={<Percent className="w-5 h-5" />} loading={loading} valueClass={stats.returnPercentage >= 0 ? 'text-success' : 'text-destructive'} />
-            <StatCard title="Monetary Gain" value={`${stats.monetaryGain >= 0 ? '+' : '-'}${formatEuro(Math.abs(stats.monetaryGain))}`} icon={<DollarSign className="w-5 h-5" />} loading={loading} valueClass={stats.monetaryGain >= 0 ? 'text-success' : 'text-destructive'} />
-            <StatCard title="Win Rate" value={`${stats.winRate.toFixed(1)}%`} icon={<Target className="w-5 h-5" />} loading={loading} />
-            <StatCard title="Profit Factor" value={formatProfitFactor(stats.profitFactor)} icon={<Radar className="w-5 h-5" />} loading={loading} />
-            <StatCard title="Best Trade" value={formatEuro(stats.bestTrade)} icon={<TrendingUp className="w-5 h-5" />} loading={loading} valueClass="text-success" />
-            <StatCard title="Worst Trade" value={formatEuro(stats.worstTrade)} icon={<TrendingDown className="w-5 h-5" />} loading={loading} valueClass="text-destructive" />
-            <StatCard title="Avg. Win" value={formatEuro(stats.avgWin)} icon={<DollarSign className="w-5 h-5" />} loading={loading} valueClass="text-success" />
-            <StatCard title="Avg. Loss" value={formatEuro(stats.avgLoss)} icon={<Activity className="w-5 h-5" />} loading={loading} valueClass="text-destructive" />
-            <StatCard title="Expectancy" value={formatEuro(stats.expectancy)} icon={<Target className="w-5 h-5" />} loading={loading} valueClass={stats.expectancy >= 0 ? 'text-success' : 'text-destructive'} />
-            <StatCard title="Avg. R" value={`${stats.avgR >= 0 ? '+' : ''}${stats.avgR.toFixed(2)}R`} icon={<Radar className="w-5 h-5" />} loading={loading} valueClass={stats.avgR >= 0 ? 'text-success' : 'text-destructive'} />
-            <StatCard title="Max Drawdown" value={formatEuro(stats.maxDrawdown)} icon={<TrendingDown className="w-5 h-5" />} loading={loading} valueClass="text-destructive" />
-            <StatCard title="Drawdown %" value={`${stats.maxDrawdownPct.toFixed(2)}%`} icon={<Activity className="w-5 h-5" />} loading={loading} valueClass={stats.maxDrawdownPct > 10 ? 'text-destructive' : 'text-foreground'} />
+            {primaryMetrics.map((metric) => (
+              <StatCard
+                key={metric.title}
+                title={metric.title}
+                value={metric.value}
+                icon={metric.icon}
+                loading={loading}
+                valueClass={metric.valueClass}
+              />
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
+            <Card className="command-panel overflow-hidden rounded-lg">
+              <CardHeader className="flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="section-kicker mb-2">Equity command</p>
+                  <CardTitle className="flex items-center gap-3 text-2xl font-black">
+                    <LineChart className="h-6 w-6 text-primary" />
+                    Balance Trajectory
+                  </CardTitle>
+                </div>
+                <div className="rounded-md border border-white/10 bg-black/20 px-4 py-3 text-right">
+                  <p className="surface-label">Ending balance</p>
+                  <p className="mt-1 text-xl font-black">{formatEuro(endingBalance)}</p>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 sm:p-6">
+                {loading ? (
+                  <Skeleton className="h-[320px] rounded-md bg-white/10" />
+                ) : (
+                  <div className="h-[320px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={equityData} margin={{ top: 12, right: 10, left: 0, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="dashboardEquityFill" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.38} />
+                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.45)" vertical={false} />
+                        <XAxis dataKey="label" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} tickLine={false} axisLine={false} minTickGap={18} />
+                        <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} tickLine={false} axisLine={false} width={72} tickFormatter={(value) => `€${Number(value).toLocaleString('en-US')}`} />
+                        <Tooltip content={<DashboardTooltip formatEuro={formatEuro} />} />
+                        <Area type="monotone" dataKey="balance" stroke="hsl(var(--primary))" strokeWidth={3} fill="url(#dashboardEquityFill)" activeDot={{ r: 5, strokeWidth: 0 }} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="glass-panel rounded-lg">
+              <CardHeader className="border-b border-white/10">
+                <p className="section-kicker mb-2">Risk pulse</p>
+                <CardTitle className="flex items-center gap-3 text-2xl font-black">
+                  <ShieldCheck className="h-6 w-6 text-primary" />
+                  Desk Control
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4 p-5">
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-md bg-white/10" />)
+                ) : (
+                  <>
+                    <div className="rounded-md border border-white/10 bg-black/20 p-4">
+                      <p className="surface-label">Mode</p>
+                      <p className={`mt-1 text-3xl font-black ${riskModeClass}`}>{riskMode}</p>
+                    </div>
+                    <RiskRow label="Avg. risk" value={`${stats.avgRiskPct.toFixed(2)}%`} />
+                    <RiskRow label="Avg. risk value" value={formatEuro(stats.avgStopLossAmount)} />
+                    <RiskRow label="Total R" value={`${stats.totalR >= 0 ? '+' : ''}${stats.totalR.toFixed(2)}R`} valueClass={stats.totalR >= 0 ? 'text-success' : 'text-destructive'} />
+                    <RiskRow label="Best / Worst" value={`${formatEuro(stats.bestTrade)} / ${formatEuro(stats.worstTrade)}`} />
+                  </>
+                )}
+              </CardContent>
+            </Card>
           </div>
 
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
@@ -301,6 +397,30 @@ const DashboardPage = () => {
     </>
   );
 };
+
+const DashboardTooltip = ({ active, payload, label, formatEuro }) => {
+  if (!active || !payload?.length) return null;
+
+  const point = payload[0].payload;
+
+  return (
+    <div className="rounded-md border border-white/10 bg-popover px-4 py-3 shadow-2xl">
+      <p className="text-sm font-black text-foreground">{label}</p>
+      <p className="mt-1 text-xs text-muted-foreground">Balance</p>
+      <p className="text-base font-black text-primary">{formatEuro(point.balance)}</p>
+      <p className={`mt-1 text-xs font-bold ${point.pnl >= 0 ? 'text-success' : 'text-destructive'}`}>
+        {point.pnl >= 0 ? '+' : ''}{formatEuro(point.pnl)} P/L
+      </p>
+    </div>
+  );
+};
+
+const RiskRow = ({ label, value, valueClass = 'text-foreground' }) => (
+  <div className="flex items-center justify-between gap-4 rounded-md border border-white/10 bg-white/[0.035] px-4 py-3">
+    <span className="surface-label">{label}</span>
+    <span className={`text-sm font-black ${valueClass}`}>{value}</span>
+  </div>
+);
 
 const StatCard = ({ title, value, icon, loading, valueClass = 'text-foreground' }) => (
   <Card className="stat-surface rounded-lg">
