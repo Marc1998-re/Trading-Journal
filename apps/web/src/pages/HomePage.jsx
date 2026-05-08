@@ -83,6 +83,139 @@ const faqItems = [
   ['What makes it different from a spreadsheet?', 'It combines structured trade capture, screenshots, account scope, dashboard metrics and visual analytics in one product experience.'],
 ];
 
+const productPreviews = [
+  {
+    title: 'Detailed trade logging',
+    kind: 'logging',
+  },
+  {
+    title: 'Advanced analytics',
+    kind: 'analytics',
+  },
+  {
+    title: 'Visual insights',
+    kind: 'visuals',
+  },
+];
+
+const ProductPreview = ({ kind }) => {
+  if (kind === 'logging') {
+    return (
+      <div className="h-full rounded-md border border-white/10 bg-black/25 p-4">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <p className="section-kicker mb-1">New execution</p>
+            <p className="text-lg font-black">Trade Entry</p>
+          </div>
+          <NotebookPen className="h-5 w-5 text-primary" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            ['Symbol', 'EUR/USD'],
+            ['Entry', '12:30'],
+            ['Risk', '1.0%'],
+            ['Plan', '2.5R'],
+          ].map(([label, value]) => (
+            <div key={label} className="rounded-md border border-white/10 bg-card/70 p-3">
+              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+              <p className="mt-2 text-sm font-black">{value}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 rounded-md border border-white/10 bg-card/70 p-3">
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-muted-foreground">Review notes</p>
+          <div className="mt-3 space-y-2">
+            <div className="h-2 rounded-full bg-white/20" />
+            <div className="h-2 w-3/4 rounded-full bg-white/10" />
+          </div>
+        </div>
+        <div className="mt-3 rounded-md bg-primary px-3 py-2 text-center text-xs font-black text-primary-foreground">
+          Add Trade to Journal
+        </div>
+      </div>
+    );
+  }
+
+  if (kind === 'analytics') {
+    return (
+      <div className="h-full rounded-md border border-white/10 bg-black/25 p-4">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <p className="section-kicker mb-1">Performance lab</p>
+            <p className="text-lg font-black">Edge Quality</p>
+          </div>
+          <Radar className="h-5 w-5 text-primary" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            ['Expectancy', '+0.24R', 'text-success'],
+            ['Payoff', '1.82', 'text-primary'],
+            ['Profit Factor', '1.74', 'text-foreground'],
+            ['Max DD', '4.8%', 'text-destructive'],
+          ].map(([label, value, color]) => (
+            <div key={label} className="rounded-md border border-white/10 bg-card/70 p-3">
+              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+              <p className={`mt-2 text-xl font-black ${color}`}>{value}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 space-y-2">
+          {[
+            ['EUR/USD', '+€420'],
+            ['NAS100', '+€310'],
+            ['XAU/USD', '-€90'],
+          ].map(([symbol, net]) => (
+            <div key={symbol} className="flex items-center justify-between rounded-md border border-white/10 bg-white/[0.035] px-3 py-2 text-xs">
+              <span className="font-bold">{symbol}</span>
+              <span className={`font-black ${net.startsWith('+') ? 'text-success' : 'text-destructive'}`}>{net}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full rounded-md border border-white/10 bg-black/25 p-4">
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <p className="section-kicker mb-1">Visual analytics</p>
+          <p className="text-lg font-black">Equity & Outcomes</p>
+        </div>
+        <LineChart className="h-5 w-5 text-primary" />
+      </div>
+      <div className="rounded-md border border-white/10 bg-card/70 p-4">
+        <div className="mb-3 flex items-center justify-between text-xs">
+          <span className="font-bold text-muted-foreground">Balance curve</span>
+          <span className="font-black text-success">+8.4%</span>
+        </div>
+        <div className="flex h-28 items-end gap-2">
+          {[28, 36, 34, 52, 48, 66, 72, 88].map((height, index) => (
+            <div key={index} className="flex-1 rounded-t-sm bg-primary/70" style={{ height: `${height}%` }} />
+          ))}
+        </div>
+      </div>
+      <div className="mt-4 grid grid-cols-[92px_1fr] gap-4">
+        <div className="grid h-20 w-20 place-items-center rounded-full border border-white/10" style={{ background: 'conic-gradient(hsl(var(--success)) 0 58%, hsl(var(--destructive)) 58% 82%, hsl(var(--info)) 82% 100%)' }}>
+          <div className="grid h-12 w-12 place-items-center rounded-full bg-background text-xs font-black">58%</div>
+        </div>
+        <div className="space-y-2 text-xs">
+          {[
+            ['Wins', '58%', 'bg-success'],
+            ['Losses', '24%', 'bg-destructive'],
+            ['BE', '18%', 'bg-info'],
+          ].map(([label, value, color]) => (
+            <div key={label} className="flex items-center justify-between">
+              <span className="flex items-center gap-2 text-muted-foreground"><span className={`h-2 w-2 rounded-full ${color}`} />{label}</span>
+              <span className="font-black">{value}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const HomePage = () => {
   return (
     <>
@@ -234,16 +367,12 @@ const HomePage = () => {
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-                {[
-                  ['Detailed trade logging', 'https://horizons-cdn.hostinger.com/beca7509-df6d-4f5b-8e63-e6689e9bba49/fd915ba37aa320362b3d57b8fa1f0586.png'],
-                  ['Advanced analytics', 'https://horizons-cdn.hostinger.com/beca7509-df6d-4f5b-8e63-e6689e9bba49/02e5bade5b08a1f4962edb18a8c254cd.png'],
-                  ['Visual insights', 'https://horizons-cdn.hostinger.com/beca7509-df6d-4f5b-8e63-e6689e9bba49/3c315c1c83632994cad0441825a6842e.png'],
-                ].map(([title, src]) => (
-                  <div key={title} className="rounded-lg border border-border bg-background p-3">
-                    <div className="flex h-64 w-full items-center justify-center rounded-md bg-muted/40 p-2">
-                      <img src={src} alt={`${title} preview`} className="h-full w-full object-contain" />
+                {productPreviews.map((preview) => (
+                  <div key={preview.title} className="rounded-lg border border-border bg-background p-3">
+                    <div className="h-80 w-full rounded-md bg-muted/30 p-2">
+                      <ProductPreview kind={preview.kind} />
                     </div>
-                    <p className="mt-3 px-1 text-sm font-bold">{title}</p>
+                    <p className="mt-3 px-1 text-sm font-bold">{preview.title}</p>
                   </div>
                 ))}
               </div>
