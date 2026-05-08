@@ -8,12 +8,12 @@ const CustomTooltip = ({ active, payload, label, startingBalance }) => {
     const safeStartingBalance = Math.max(startingBalance, 0.01); // Prevent division by zero
     const pct = ((val / safeStartingBalance) * 100).toFixed(2);
     const sign = val >= 0 ? '+' : '';
-    const colorClass = val >= 0 ? 'text-[#10b981]' : 'text-[#ef4444]';
+    const colorClass = val >= 0 ? 'text-success' : 'text-destructive';
     const formattedValue = new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(val);
 
     return (
-      <div className="bg-card border border-border p-3 rounded-lg shadow-lg">
-        <p className="text-muted-foreground text-sm mb-1">{label}</p>
+      <div className="min-w-[180px] rounded-md border border-white/10 bg-card p-3 shadow-lg">
+        <p className="mb-1 text-sm text-muted-foreground">{label}</p>
         <p className={`font-bold text-lg ${colorClass}`}>
           {formattedValue} <span className="text-sm font-medium opacity-80">({sign}{pct}%)</span>
         </p>
@@ -26,7 +26,7 @@ const CustomTooltip = ({ active, payload, label, startingBalance }) => {
 const EquityCurve = ({ trades, startingBalance = 10000, originalBalances = {}, currentBalances = {} }) => {
   if (!trades || trades.length === 0) {
     return (
-      <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+      <div className="flex h-[330px] items-center justify-center text-muted-foreground">
         No trade data available
       </div>
     );
@@ -52,21 +52,26 @@ const EquityCurve = ({ trades, startingBalance = 10000, originalBalances = {}, c
   const off = gradientOffset();
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+    <ResponsiveContainer width="100%" height={330}>
+      <AreaChart data={chartData} margin={{ top: 14, right: 14, left: 4, bottom: 4 }}>
         <defs>
           <linearGradient id="splitColor" x1="0" y1="0" x2="0" y2="1">
-            <stop offset={off} stopColor="#10b981" stopOpacity={0.3} />
-            <stop offset={off} stopColor="#ef4444" stopOpacity={0.3} />
+            <stop offset={off} stopColor="hsl(var(--success))" stopOpacity={0.28} />
+            <stop offset={off} stopColor="hsl(var(--destructive))" stopOpacity={0.28} />
           </linearGradient>
           <linearGradient id="splitStroke" x1="0" y1="0" x2="0" y2="1">
-            <stop offset={off} stopColor="#10b981" stopOpacity={1} />
-            <stop offset={off} stopColor="#ef4444" stopOpacity={1} />
+            <stop offset={off} stopColor="hsl(var(--success))" stopOpacity={1} />
+            <stop offset={off} stopColor="hsl(var(--destructive))" stopOpacity={1} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.55)" vertical={false} />
         <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} tickMargin={10} />
-        <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} tickFormatter={(val) => `€${val}`} />
+        <YAxis
+          stroke="hsl(var(--muted-foreground))"
+          tick={{ fontSize: 12 }}
+          tickFormatter={(val) => `€${val.toLocaleString()}`}
+          width={72}
+        />
         <Tooltip content={<CustomTooltip startingBalance={startingBalance} />} />
         <Area
           type="monotone"
@@ -74,7 +79,7 @@ const EquityCurve = ({ trades, startingBalance = 10000, originalBalances = {}, c
           stroke="url(#splitStroke)"
           strokeWidth={3}
           fill="url(#splitColor)"
-          activeDot={{ r: 6, strokeWidth: 0, fill: 'hsl(var(--foreground))' }}
+          activeDot={{ r: 6, strokeWidth: 2, stroke: 'hsl(var(--background))', fill: 'hsl(var(--primary))' }}
         />
       </AreaChart>
     </ResponsiveContainer>
