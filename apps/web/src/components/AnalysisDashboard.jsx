@@ -5,7 +5,11 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Filter, X } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
+  buildDayPerformance,
+  buildSymbolPerformance,
+  buildWeekdayPerformance,
   calculateAdvancedStats,
   calculateTotalCommissionCosts,
 } from '@/lib/tradeCalculations.js';
@@ -58,7 +62,7 @@ const MetricCard = ({ label, value, type = 'neutral' }) => {
       <TooltipTrigger asChild>
         <div className={`metric-card ${typeClasses[type]} cursor-help transition-all duration-200 hover:shadow-md`}>
           <p className="metric-label">{label}</p>
-          <p className="metric-value">{value}</p>
+          <p className="metric-value break-words">{value}</p>
         </div>
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-[250px] text-center">
@@ -78,6 +82,74 @@ const MetricSection = ({ title, metrics }) => (
     </div>
   </div>
 );
+
+const RankingBoard = ({ title, description, items }) => (
+  <Card className="glass-panel overflow-hidden rounded-lg">
+    <CardHeader className="border-b border-white/10">
+      <p className="section-kicker mb-2">Ranking board</p>
+      <CardTitle className="text-xl font-black">{title}</CardTitle>
+      <CardDescription>{description}</CardDescription>
+    </CardHeader>
+    <CardContent className="p-0">
+      {items.length === 0 ? (
+        <p className="px-5 py-8 text-sm text-muted-foreground">No ranking data available.</p>
+      ) : (
+        <div className="divide-y divide-white/10">
+          <div className="grid grid-cols-[1fr_64px_72px_96px] gap-3 bg-black/20 px-4 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">
+            <span>Name</span>
+            <span>Trades</span>
+            <span>Avg R</span>
+            <span className="text-right">Net</span>
+          </div>
+          {items.map((item) => (
+            <div key={item.key} className="grid grid-cols-[1fr_64px_72px_96px] items-center gap-3 px-4 py-4 text-sm">
+              <div className="min-w-0">
+                <p className="truncate font-black">{item.label}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{item.winRate.toFixed(1)}% win rate</p>
+              </div>
+              <p className="font-semibold">{item.trades}</p>
+              <p className={`font-black ${item.avgR >= 0 ? 'text-success' : 'text-destructive'}`}>
+                {item.avgR >= 0 ? '+' : ''}{item.avgR.toFixed(2)}R
+              </p>
+              <p className={`text-right font-black ${item.netPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
+                {item.netPnL >= 0 ? '+' : ''}{formatEuro(item.netPnL)}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </CardContent>
+  </Card>
+);
+
+const InsightPanel = ({ stats }) => {
+  const insights = [
+    { label: 'Best day', value: formatPerformanceLabel(stats.bestDay), type: 'positive' },
+    { label: 'Weakest day', value: formatPerformanceLabel(stats.worstDay), type: stats.worstDay?.netPnL < 0 ? 'negative' : 'neutral' },
+    { label: 'Best weekday', value: formatPerformanceLabel(stats.bestWeekday), type: 'positive' },
+    { label: 'Current streak', value: formatStreak(stats.currentStreakType, stats.currentStreakCount), type: stats.currentStreakType === 'loss' ? 'negative' : stats.currentStreakType === 'win' ? 'positive' : 'neutral' },
+  ];
+
+  return (
+    <Card className="command-panel rounded-lg">
+      <CardHeader className="border-b border-white/10">
+        <p className="section-kicker mb-2">Session intelligence</p>
+        <CardTitle className="text-xl font-black">Fast Read</CardTitle>
+        <CardDescription>The most important timing and discipline signals at a glance.</CardDescription>
+      </CardHeader>
+      <CardContent className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2 xl:grid-cols-4">
+        {insights.map((item) => (
+          <div key={item.label} className="rounded-md border border-white/10 bg-black/20 p-4">
+            <p className="surface-label">{item.label}</p>
+            <p className={`mt-2 text-lg font-black ${item.type === 'positive' ? 'text-success' : item.type === 'negative' ? 'text-destructive' : 'text-foreground'}`}>
+              {item.value}
+            </p>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+};
 
 const formatEuro = (value) => new Intl.NumberFormat('en-IE', {
   style: 'currency',
@@ -133,18 +205,44 @@ const AnalysisDashboard = ({ trades, accounts, originalBalances, selectedAccount
     };
   }, [trades, currentBalancesMap, originalBalances, totalCurrentBalance]);
 
+  const symbolRankings = useMemo(() => {
+    if (!trades || trades.length === 0) return [];
+    return buildSymbolPerformance(trades, originalBalances, currentBalancesMap).slice(0, 6);
+  }, [trades, currentBalancesMap, originalBalances]);
+
+  const weekdayRankings = useMemo(() => {
+    if (!trades || trades.length === 0) return [];
+    return [...buildWeekdayPerformance(trades, originalBalances, currentBalancesMap)]
+      .filter((item) => item.trades > 0)
+      .sort((a, b) => b.netPnL - a.netPnL);
+  }, [trades, currentBalancesMap, originalBalances]);
+
+  const dayRankings = useMemo(() => {
+    if (!trades || trades.length === 0) return [];
+    return buildDayPerformance(trades, originalBalances, currentBalancesMap).slice(0, 6);
+  }, [trades, currentBalancesMap, originalBalances]);
+
   const hasData = stats !== null;
 
   const balanceMetrics = hasData ? [
-    { label: "Net P&L", value: `${stats.netPnL >= 0 ? '+' : '-'}${formatEuro(Math.abs(stats.netPnL))}`, type: stats.netPnL >= 0 ? "positive" : "negative" },
     { label: "Total Wins (Net)", value: formatEuro(stats.grossProfit), type: "positive" },
     { label: "Total Losses", value: `-${formatEuro(stats.grossLoss)}`, type: "negative" },
     { label: "Total Commissions", value: formatEuro(stats.totalCommission), type: "negative" },
     { label: "Compounded Balance", value: formatEuro(stats.endingBalance), type: stats.endingBalance >= stats.totalCurrentBalance ? "positive" : "negative" },
-    { label: "Total Return", value: `${((stats.netPnL / Math.max(stats.totalCurrentBalance, 0.01)) * 100).toFixed(2)}%`, type: stats.netPnL >= 0 ? "positive" : "negative" },
   ] : [];
 
-  const sections = hasData ? [
+  const edgeMetrics = hasData ? [
+    { label: "Net P&L", value: `${stats.netPnL >= 0 ? '+' : '-'}${formatEuro(Math.abs(stats.netPnL))}`, type: stats.netPnL >= 0 ? "positive" : "negative" },
+    { label: "Total Return", value: `${((stats.netPnL / Math.max(stats.totalCurrentBalance, 0.01)) * 100).toFixed(2)}%`, type: stats.netPnL >= 0 ? "positive" : "negative" },
+    { label: "Expectancy R", value: `${stats.expectancyR > 0 ? '+' : ''}${stats.expectancyR.toFixed(2)}R`, type: stats.expectancyR >= 0 ? "positive" : "negative" },
+    { label: "Payoff Ratio", value: formatRatio(stats.payoffRatio), type: stats.payoffRatio >= 1.2 ? "positive" : (stats.payoffRatio >= 1 ? "neutral" : "negative") },
+    { label: "Profit Factor", value: formatRatio(stats.profitFactor), type: stats.profitFactor >= 1.5 ? "positive" : (stats.profitFactor >= 1 ? "neutral" : "negative") },
+    { label: "Max Drawdown %", value: `${stats.maxDrawdownPct.toFixed(2)}%`, type: stats.maxDrawdownPct > 20 ? "negative" : "neutral" },
+    { label: "Avg R / Trade", value: `${stats.avgR > 0 ? '+' : ''}${stats.avgR.toFixed(2)}R`, type: stats.avgR >= 0 ? "positive" : "negative" },
+    { label: "Win Rate", value: `${stats.winRate.toFixed(1)}%`, type: stats.winRate >= 50 ? "positive" : "negative" },
+  ] : [];
+
+  const detailSections = hasData ? [
     {
       title: "Trade Statistics",
       metrics: [
@@ -152,15 +250,6 @@ const AnalysisDashboard = ({ trades, accounts, originalBalances, selectedAccount
         { label: "Win Rate", value: `${stats.winRate.toFixed(1)}%`, type: stats.winRate >= 50 ? "positive" : "negative" },
         { label: "Loss Rate", value: `${stats.lossRate.toFixed(1)}%`, type: stats.lossRate > 50 ? "negative" : "positive" },
         { label: "Breakeven Rate", value: `${stats.breakevenRate.toFixed(1)}%`, type: "neutral" },
-      ]
-    },
-    {
-      title: "Edge Quality",
-      metrics: [
-        { label: "Expected Value", value: formatEuro(stats.expectancy), type: stats.expectancy > 0 ? "positive" : "negative" },
-        { label: "Expectancy R", value: `${stats.expectancyR > 0 ? '+' : ''}${stats.expectancyR.toFixed(2)}R`, type: stats.expectancyR >= 0 ? "positive" : "negative" },
-        { label: "Payoff Ratio", value: formatRatio(stats.payoffRatio), type: stats.payoffRatio >= 1.2 ? "positive" : (stats.payoffRatio >= 1 ? "neutral" : "negative") },
-        { label: "Profit Factor", value: formatRatio(stats.profitFactor), type: stats.profitFactor >= 1.5 ? "positive" : (stats.profitFactor >= 1 ? "neutral" : "negative") },
       ]
     },
     {
@@ -173,8 +262,9 @@ const AnalysisDashboard = ({ trades, accounts, originalBalances, selectedAccount
       ]
     },
     {
-      title: "R-Multiple Quality",
+      title: "Edge & Streak Details",
       metrics: [
+        { label: "Expected Value", value: formatEuro(stats.expectancy), type: stats.expectancy > 0 ? "positive" : "negative" },
         { label: "Avg Win R", value: `${stats.avgWinR.toFixed(2)}R`, type: stats.avgWinR >= 2 ? "positive" : "neutral" },
         { label: "Avg Loss R", value: `${stats.avgLossR.toFixed(2)}R`, type: "negative" },
         { label: "Win Streak", value: `${stats.longestWinStreak}`, type: "positive" },
@@ -188,15 +278,6 @@ const AnalysisDashboard = ({ trades, accounts, originalBalances, selectedAccount
         { label: "Max Drawdown €", value: formatEuro(stats.maxDrawdown), type: "negative" },
         { label: "Current Streak", value: formatStreak(stats.currentStreakType, stats.currentStreakCount), type: stats.currentStreakType === "loss" ? "negative" : stats.currentStreakType === "win" ? "positive" : "neutral" },
         { label: "Weakest Day", value: formatPerformanceLabel(stats.worstDay), type: stats.worstDay?.netPnL < 0 ? "negative" : "neutral" },
-      ]
-    },
-    {
-      title: "Market & Timing",
-      metrics: [
-        { label: "Best Symbol", value: formatPerformanceLabel(stats.bestSymbol), type: "positive" },
-        { label: "Weakest Symbol", value: formatPerformanceLabel(stats.worstSymbol), type: stats.worstSymbol?.netPnL < 0 ? "negative" : "neutral" },
-        { label: "Best Weekday", value: formatPerformanceLabel(stats.bestWeekday), type: "positive" },
-        { label: "Weakest Weekday", value: formatPerformanceLabel(stats.worstWeekday), type: stats.worstWeekday?.netPnL < 0 ? "negative" : "neutral" },
       ]
     }
   ] : [];
@@ -253,9 +334,35 @@ const AnalysisDashboard = ({ trades, accounts, originalBalances, selectedAccount
             )}
           </div>
         ) : (
-          sections.map((section, idx) => (
-            <MetricSection key={idx} title={section.title} metrics={section.metrics} />
-          ))
+          <>
+            <MetricSection title="Edge Overview" metrics={edgeMetrics} />
+
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+              <RankingBoard
+                title="Symbol Ranking"
+                description="Markets ordered by net performance in the selected data."
+                items={symbolRankings}
+              />
+              <RankingBoard
+                title="Weekday Ranking"
+                description="Which weekdays contribute most to your results."
+                items={weekdayRankings}
+              />
+              <RankingBoard
+                title="Trading Day Ranking"
+                description="Best individual trading days by net performance."
+                items={dayRankings}
+              />
+            </div>
+
+            <InsightPanel stats={stats} />
+
+            <div className="space-y-8">
+              {detailSections.map((section, idx) => (
+                <MetricSection key={idx} title={section.title} metrics={section.metrics} />
+              ))}
+            </div>
+          </>
         )}
       </div>
     </TooltipProvider>
