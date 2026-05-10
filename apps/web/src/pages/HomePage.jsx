@@ -104,35 +104,35 @@ const productPreviews = [
 const ProductPreview = ({ kind }) => {
   if (kind === 'logging') {
     return (
-      <div className="h-full rounded-md border border-white/10 bg-black/25 p-4">
-        <div className="mb-4 flex items-center justify-between">
+      <div className="flex h-full flex-col rounded-md border border-white/10 bg-black/25 p-4">
+        <div className="mb-3 flex items-center justify-between">
           <div>
             <p className="section-kicker mb-1">New execution</p>
             <p className="text-lg font-black">Trade Entry</p>
           </div>
           <NotebookPen className="h-5 w-5 text-primary" />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           {[
             ['Symbol', 'EUR/USD'],
             ['Entry', '12:30'],
             ['Risk', '1.0%'],
             ['Plan', '2.5R'],
           ].map(([label, value]) => (
-            <div key={label} className="rounded-md border border-white/10 bg-card/70 p-3">
+            <div key={label} className="rounded-md border border-white/10 bg-card/70 p-2.5">
               <p className="text-[10px] font-black uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
-              <p className="mt-2 text-sm font-black">{value}</p>
+              <p className="mt-1.5 text-sm font-black">{value}</p>
             </div>
           ))}
         </div>
-        <div className="mt-3 rounded-md border border-white/10 bg-card/70 p-3">
+        <div className="mt-2.5 rounded-md border border-white/10 bg-card/70 p-2.5">
           <p className="text-[10px] font-black uppercase tracking-[0.14em] text-muted-foreground">Review notes</p>
-          <div className="mt-3 space-y-2">
+          <div className="mt-2 space-y-1.5">
             <div className="h-2 rounded-full bg-white/20" />
             <div className="h-2 w-3/4 rounded-full bg-white/10" />
           </div>
         </div>
-        <div className="mt-3 flex items-center justify-between rounded-md border border-primary/20 bg-primary/10 px-3 py-2 text-xs">
+        <div className="mt-auto flex items-center justify-between rounded-md border border-primary/20 bg-primary/10 px-3 py-2 text-xs">
           <span className="font-bold text-primary">Ready to save</span>
           <span className="font-black text-primary">+2.5R plan</span>
         </div>
@@ -142,28 +142,28 @@ const ProductPreview = ({ kind }) => {
 
   if (kind === 'analytics') {
     return (
-      <div className="h-full rounded-md border border-white/10 bg-black/25 p-4">
-        <div className="mb-4 flex items-center justify-between">
+      <div className="flex h-full flex-col rounded-md border border-white/10 bg-black/25 p-4">
+        <div className="mb-3 flex items-center justify-between">
           <div>
             <p className="section-kicker mb-1">Performance lab</p>
             <p className="text-lg font-black">Edge Quality</p>
           </div>
           <Radar className="h-5 w-5 text-primary" />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           {[
             ['Expectancy', '+0.24R', 'text-success'],
             ['Payoff', '1.82', 'text-primary'],
             ['Profit Factor', '1.74', 'text-foreground'],
             ['Max DD', '4.8%', 'text-destructive'],
           ].map(([label, value, color]) => (
-            <div key={label} className="rounded-md border border-white/10 bg-card/70 p-3">
+            <div key={label} className="rounded-md border border-white/10 bg-card/70 p-2.5">
               <p className="text-[10px] font-black uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
-              <p className={`mt-2 text-xl font-black ${color}`}>{value}</p>
+              <p className={`mt-1.5 text-lg font-black ${color}`}>{value}</p>
             </div>
           ))}
         </div>
-        <div className="mt-4 space-y-2">
+        <div className="mt-auto space-y-1.5">
           {[
             ['EUR/USD', '+€420'],
             ['NAS100', '+€310'],
@@ -180,30 +180,30 @@ const ProductPreview = ({ kind }) => {
   }
 
   return (
-    <div className="h-full rounded-md border border-white/10 bg-black/25 p-4">
-      <div className="mb-4 flex items-center justify-between">
+    <div className="flex h-full flex-col rounded-md border border-white/10 bg-black/25 p-4">
+      <div className="mb-3 flex items-center justify-between">
         <div>
           <p className="section-kicker mb-1">Visual analytics</p>
           <p className="text-lg font-black">Equity & Outcomes</p>
         </div>
         <LineChart className="h-5 w-5 text-primary" />
       </div>
-      <div className="rounded-md border border-white/10 bg-card/70 p-4">
-        <div className="mb-3 flex items-center justify-between text-xs">
+      <div className="rounded-md border border-white/10 bg-card/70 p-3">
+        <div className="mb-2 flex items-center justify-between text-xs">
           <span className="font-bold text-muted-foreground">Balance curve</span>
           <span className="font-black text-success">+8.4%</span>
         </div>
-        <div className="flex h-28 items-end gap-2">
+        <div className="flex h-24 items-end gap-2">
           {[28, 36, 34, 52, 48, 66, 72, 88].map((height, index) => (
             <div key={index} className="flex-1 rounded-t-sm bg-primary/70" style={{ height: `${height}%` }} />
           ))}
         </div>
       </div>
-      <div className="mt-4 grid grid-cols-[92px_1fr] gap-4">
-        <div className="grid h-20 w-20 place-items-center rounded-full border border-white/10" style={{ background: 'conic-gradient(hsl(var(--success)) 0 58%, hsl(var(--destructive)) 58% 82%, hsl(var(--info)) 82% 100%)' }}>
-          <div className="grid h-12 w-12 place-items-center rounded-full bg-background text-xs font-black">58%</div>
+      <div className="mt-auto grid grid-cols-[72px_1fr] items-center gap-4">
+        <div className="grid h-16 w-16 place-items-center rounded-full border border-white/10" style={{ background: 'conic-gradient(hsl(var(--success)) 0 58%, hsl(var(--destructive)) 58% 82%, hsl(var(--info)) 82% 100%)' }}>
+          <div className="grid h-10 w-10 place-items-center rounded-full bg-background text-xs font-black">58%</div>
         </div>
-        <div className="space-y-2 text-xs">
+        <div className="space-y-1.5 text-xs">
           {[
             ['Wins', '58%', 'bg-success'],
             ['Losses', '24%', 'bg-destructive'],
