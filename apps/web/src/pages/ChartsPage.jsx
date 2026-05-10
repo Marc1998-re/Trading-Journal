@@ -16,19 +16,11 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Activity, CalendarDays, Filter, LineChart, PieChart as PieChartIcon, Target, TrendingUp, X, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  Cell,
-  Label
-} from 'recharts';
 import { getTradeDate, getTradeNetProfit } from '@/lib/tradeCalculations.js';
+
+const formatSignedEuro = (value) => (
+  `${value >= 0 ? '+' : '-'}€${Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+);
 
 const ChartsPage = () => {
   const { currentUser } = useAuth();
@@ -177,40 +169,6 @@ const ChartsPage = () => {
     };
   }, [trades.length, monthlyData, pieData, dayOfWeekData]);
 
-  const formatEuro = (value) => (
-    `${value >= 0 ? '+' : '-'}€${Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-  );
-
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="min-w-[180px] rounded-lg border border-white/10 bg-card p-3 shadow-lg">
-          <p className="mb-2 border-b border-white/10 pb-1 font-medium text-foreground">{label}</p>
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between gap-4 text-sm">
-              <span className="text-muted-foreground">Trades</span>
-              <span className="font-semibold text-foreground">{data.trades}</span>
-            </div>
-            <div className="flex items-center justify-between gap-4 text-sm">
-              <span className="text-muted-foreground">P&L (€)</span>
-              <span className={`font-semibold ${data.pnl >= 0 ? 'text-success' : 'text-destructive'}`}>
-                {data.pnl >= 0 ? '+' : '-'}€{Math.abs(data.pnl).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-              </span>
-            </div>
-            <div className="flex items-center justify-between gap-4 text-sm">
-              <span className="text-muted-foreground">P&L (%)</span>
-              <span className={`font-semibold ${data.pnlPct >= 0 ? 'text-success' : 'text-destructive'}`}>
-                {data.pnlPct >= 0 ? '+' : '-'}{Math.abs(data.pnlPct).toFixed(2)}%
-              </span>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
     <>
       <Helmet>
@@ -291,7 +249,7 @@ const ChartsPage = () => {
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
                   <ChartHighlight
                     title="Visual Net P/L"
-                    value={formatEuro(chartSummary.totalPnl)}
+                    value={formatSignedEuro(chartSummary.totalPnl)}
                     icon={<TrendingUp className="h-5 w-5" />}
                     meta={`${chartSummary.totalTrades} trades`}
                     valueClass={chartSummary.totalPnl >= 0 ? 'text-success' : 'text-destructive'}
@@ -307,13 +265,13 @@ const ChartsPage = () => {
                     title="Best Weekday"
                     value={chartSummary.bestWeekday ? chartSummary.bestWeekday.name : 'No data'}
                     icon={<CalendarDays className="h-5 w-5" />}
-                    meta={chartSummary.bestWeekday ? formatEuro(chartSummary.bestWeekday.pnl) : 'No trades yet'}
+                    meta={chartSummary.bestWeekday ? formatSignedEuro(chartSummary.bestWeekday.pnl) : 'No trades yet'}
                   />
                   <ChartHighlight
                     title="Best Month"
                     value={chartSummary.bestMonth ? chartSummary.bestMonth.name : 'No data'}
                     icon={<BarChart3 className="h-5 w-5" />}
-                    meta={chartSummary.bestMonth ? formatEuro(chartSummary.bestMonth.pnl) : 'No trades yet'}
+                    meta={chartSummary.bestMonth ? formatSignedEuro(chartSummary.bestMonth.pnl) : 'No trades yet'}
                   />
                 </div>
 
@@ -335,49 +293,8 @@ const ChartsPage = () => {
                       <CardTitle className="text-xl">Day of Week Performance</CardTitle>
                       <CardDescription>Profit and Loss breakdown by day of the week</CardDescription>
                     </CardHeader>
-                    <CardContent className="h-[390px] p-5">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={dayOfWeekData} barCategoryGap="32%" margin={{ top: 20, right: 24, left: 8, bottom: 20 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.55)" />
-                          <XAxis
-                            dataKey="name"
-                            tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                            dy={10}
-                          >
-                            <Label
-                              value="Day of the Week"
-                              offset={-15}
-                              position="insideBottom"
-                              style={{ fill: 'hsl(var(--muted-foreground))', fontSize: 13, fontWeight: 500 }}
-                            />
-                          </XAxis>
-                          <YAxis
-                            tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                            tickFormatter={(val) => `€${val}`}
-                          >
-                            <Label
-                              value="Profit / Loss (€)"
-                              angle={-90}
-                              position="insideLeft"
-                              offset={-10}
-                              style={{ textAnchor: 'middle', fill: 'hsl(var(--muted-foreground))', fontSize: 13, fontWeight: 500 }}
-                            />
-                          </YAxis>
-                          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--primary)/0.06)' }} />
-                          <Legend
-                            wrapperStyle={{ paddingTop: '20px' }}
-                            payload={[
-                              { value: 'Profit', type: 'square', color: '#10b981' },
-                              { value: 'Loss', type: 'square', color: '#ef4444' }
-                            ]}
-                          />
-                          <Bar dataKey="pnl" name="P&L (€)" maxBarSize={42} radius={[4, 4, 4, 4]}>
-                            {dayOfWeekData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.pnl >= 0 ? '#10b981' : '#ef4444'} />
-                            ))}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
+                    <CardContent className="p-5">
+                      <WeekdayPerformanceLanes data={dayOfWeekData} />
                     </CardContent>
                   </Card>
                 </div>
@@ -388,49 +305,8 @@ const ChartsPage = () => {
                     <CardTitle className="text-xl">Monthly Performance</CardTitle>
                     <CardDescription>Profit and Loss progression across the year</CardDescription>
                   </CardHeader>
-                  <CardContent className="h-[430px] p-5">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={monthlyData} barCategoryGap="38%" margin={{ top: 20, right: 24, left: 8, bottom: 20 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.55)" />
-                        <XAxis
-                          dataKey="name"
-                          tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                          dy={10}
-                        >
-                          <Label
-                            value="Month"
-                            offset={-15}
-                            position="insideBottom"
-                            style={{ fill: 'hsl(var(--muted-foreground))', fontSize: 13, fontWeight: 500 }}
-                          />
-                        </XAxis>
-                        <YAxis
-                          tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                          tickFormatter={(val) => `€${val}`}
-                        >
-                          <Label
-                            value="Profit / Loss (€)"
-                            angle={-90}
-                            position="insideLeft"
-                            offset={-10}
-                            style={{ textAnchor: 'middle', fill: 'hsl(var(--muted-foreground))', fontSize: 13, fontWeight: 500 }}
-                          />
-                        </YAxis>
-                        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--primary)/0.06)' }} />
-                        <Legend
-                          wrapperStyle={{ paddingTop: '20px' }}
-                          payload={[
-                            { value: 'Profit', type: 'square', color: '#10b981' },
-                            { value: 'Loss', type: 'square', color: '#ef4444' }
-                          ]}
-                        />
-                        <Bar dataKey="pnl" name="P&L (€)" maxBarSize={52} radius={[4, 4, 4, 4]}>
-                          {monthlyData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.pnl >= 0 ? '#10b981' : '#ef4444'} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
+                  <CardContent className="p-5">
+                    <MonthlyPerformanceGrid data={monthlyData} />
                   </CardContent>
                 </Card>
 
@@ -502,5 +378,157 @@ const ChartHighlight = ({ title, value, icon, meta, valueClass = 'text-foregroun
     </CardContent>
   </Card>
 );
+
+const getPerformanceTone = (value) => {
+  if (value > 0) {
+    return {
+      bar: 'bg-success',
+      border: 'border-success/20',
+      surface: 'bg-[hsl(var(--success)/0.06)]',
+      text: 'text-success',
+      label: 'Profit',
+    };
+  }
+
+  if (value < 0) {
+    return {
+      bar: 'bg-destructive',
+      border: 'border-destructive/20',
+      surface: 'bg-[hsl(var(--destructive)/0.06)]',
+      text: 'text-destructive',
+      label: 'Loss',
+    };
+  }
+
+  return {
+    bar: 'bg-muted-foreground',
+    border: 'border-white/10',
+    surface: 'bg-white/[0.03]',
+    text: 'text-muted-foreground',
+    label: 'Flat',
+  };
+};
+
+const WeekdayPerformanceLanes = ({ data }) => {
+  const maxAbs = Math.max(...data.map((item) => Math.abs(item.pnl)), 1);
+  const activeDays = data.filter((item) => item.trades > 0);
+  const strongest = activeDays.length > 0 ? [...activeDays].sort((a, b) => b.pnl - a.pnl)[0] : null;
+  const weakest = activeDays.length > 0 ? [...activeDays].sort((a, b) => a.pnl - b.pnl)[0] : null;
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <PerformanceSummary label="Strongest Day" item={strongest} />
+        <PerformanceSummary label="Weakest Day" item={weakest} />
+      </div>
+
+      <div className="space-y-2">
+        {data.map((item) => {
+          const tone = getPerformanceTone(item.pnl);
+          const laneWidth = item.pnl === 0 ? 0 : Math.max(8, (Math.abs(item.pnl) / maxAbs) * 50);
+
+          return (
+            <div key={item.name} className={`rounded-md border ${tone.border} bg-black/20 p-3`}>
+              <div className="grid grid-cols-[5.5rem_minmax(0,1fr)_6.75rem] items-center gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-black text-foreground">{item.name}</p>
+                  <p className="mt-1 text-xs font-semibold text-muted-foreground">{item.trades} trades</p>
+                </div>
+
+                <div className="relative h-8 overflow-hidden rounded-md border border-white/10 bg-white/[0.035]">
+                  <div className="absolute inset-y-1 left-1/2 w-px bg-white/25" />
+                  {item.pnl !== 0 && (
+                    <div
+                      className={`absolute top-2 h-4 rounded-full ${tone.bar}`}
+                      style={{
+                        width: `${laneWidth}%`,
+                        left: item.pnl > 0 ? '50%' : undefined,
+                        right: item.pnl < 0 ? '50%' : undefined,
+                      }}
+                    />
+                  )}
+                </div>
+
+                <div className="text-right">
+                  <p className={`text-sm font-black ${tone.text}`}>{formatSignedEuro(item.pnl)}</p>
+                  <p className="mt-1 text-xs font-semibold text-muted-foreground">
+                    {item.pnlPct >= 0 ? '+' : '-'}{Math.abs(item.pnlPct).toFixed(2)}%
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+const MonthlyPerformanceGrid = ({ data }) => {
+  const maxAbs = Math.max(...data.map((item) => Math.abs(item.pnl)), 1);
+  const activeMonths = data.filter((item) => item.trades > 0);
+  const total = data.reduce((sum, item) => sum + item.pnl, 0);
+  const best = activeMonths.length > 0 ? [...activeMonths].sort((a, b) => b.pnl - a.pnl)[0] : null;
+  const worst = activeMonths.length > 0 ? [...activeMonths].sort((a, b) => a.pnl - b.pnl)[0] : null;
+
+  return (
+    <div className="space-y-5">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <PerformanceSummary label="Year Net" item={{ name: 'Total', pnl: total, trades: data.reduce((sum, item) => sum + item.trades, 0) }} />
+        <PerformanceSummary label="Best Month" item={best} />
+        <PerformanceSummary label="Weakest Month" item={worst} />
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        {data.map((item) => {
+          const tone = getPerformanceTone(item.pnl);
+          const fillWidth = item.pnl === 0 ? 0 : Math.max(10, (Math.abs(item.pnl) / maxAbs) * 100);
+
+          return (
+            <div key={item.name} className={`relative overflow-hidden rounded-md border ${tone.border} ${tone.surface} p-4`}>
+              <div className="mb-5 flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-black text-foreground">{item.name.slice(0, 3)}</p>
+                  <p className="mt-1 text-xs font-semibold text-muted-foreground">{item.trades} trades</p>
+                </div>
+                <Badge className={`border-white/10 bg-black/20 px-2 py-0.5 text-[11px] ${tone.text}`}>
+                  {tone.label}
+                </Badge>
+              </div>
+
+              <p className={`truncate text-lg font-black ${tone.text}`}>{formatSignedEuro(item.pnl)}</p>
+              <p className="mt-1 text-xs font-semibold text-muted-foreground">
+                {item.pnlPct >= 0 ? '+' : '-'}{Math.abs(item.pnlPct).toFixed(2)}%
+              </p>
+
+              <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
+                {item.pnl !== 0 && (
+                  <div className={`h-full rounded-full ${tone.bar}`} style={{ width: `${fillWidth}%` }} />
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+const PerformanceSummary = ({ label, item }) => {
+  const tone = getPerformanceTone(item?.pnl || 0);
+
+  return (
+    <div className={`rounded-md border ${tone.border} ${tone.surface} p-4`}>
+      <p className="surface-label mb-2">{label}</p>
+      <div className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-base font-black text-foreground">{item ? item.name : 'No data'}</p>
+          <p className="mt-1 text-xs font-semibold text-muted-foreground">{item ? `${item.trades} trades` : 'No trades yet'}</p>
+        </div>
+        <p className={`shrink-0 text-sm font-black ${tone.text}`}>{item ? formatSignedEuro(item.pnl) : '-'}</p>
+      </div>
+    </div>
+  );
+};
 
 export default ChartsPage;
