@@ -96,20 +96,37 @@ const buildVerificationEmail = (verificationUrl, recipientAddress) => {
 </html>`;
 };
 
-onMailerRecordVerificationSend((e) => {
-  const recipientAddress = e.record ? e.record.get("email") : "";
-  const fallbackUrl = `${e.app.settings().meta.appUrl}/_/#/auth/confirm-verification/${e.meta.token}`;
-  const verificationUrl = extractFirstUrl(e.message) || fallbackUrl;
+const isVerificationMessage = (message) => {
+  const content = `${message.subject || ""} ${message.html || ""} ${message.text || ""}`.toLowerCase();
 
-  e.message.subject = "E-Mail bestaetigen - Marc's Trading Journal";
-  e.message.html = buildVerificationEmail(verificationUrl, recipientAddress);
-  e.message.text = [
-    "Willkommen bei Marc's Trading Journal.",
-    "Bitte bestaetige deine E-Mail-Adresse, um deinen Account zu aktivieren:",
-    verificationUrl,
-    "",
-    "Wenn du dieses Konto nicht erstellt hast, kannst du diese E-Mail ignorieren.",
-  ].join("\n");
+  return (
+    content.includes("verify") ||
+    content.includes("verification") ||
+    content.includes("confirm-verification")
+  ) && !content.includes("password reset");
+};
+
+onMailerSend((e) => {
+  try {
+    if (isVerificationMessage(e.message)) {
+      const verificationUrl = extractFirstUrl(e.message);
+      const recipientAddress = e.message.to && e.message.to.length > 0 ? e.message.to[0].address : "";
+
+      if (verificationUrl) {
+        e.message.subject = "E-Mail bestaetigen - Marc's Trading Journal";
+        e.message.html = buildVerificationEmail(verificationUrl, recipientAddress);
+        e.message.text = [
+          "Willkommen bei Marc's Trading Journal.",
+          "Bitte bestaetige deine E-Mail-Adresse, um deinen Account zu aktivieren:",
+          verificationUrl,
+          "",
+          "Wenn du dieses Konto nicht erstellt hast, kannst du diese E-Mail ignorieren.",
+        ].join("\n");
+      }
+    }
+  } catch (error) {
+    $app.logger().error("Could not customize verification email", "error", error);
+  }
 
   e.next();
 });
