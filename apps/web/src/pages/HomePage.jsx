@@ -54,28 +54,6 @@ const workflowSteps = [
   ['03', 'Review the pattern', 'Use dashboard, charts and analysis views to understand what actually drives your performance.'],
 ];
 
-const pricingTiers = [
-  {
-    name: 'Starter',
-    price: '€0',
-    description: 'For testing the workflow and building the first trade history.',
-    features: ['Trade ledger', 'Monthly dashboard', 'CSV export', 'Single-user workspace'],
-  },
-  {
-    name: 'Pro',
-    price: '€9',
-    description: 'For active traders who want a serious weekly review process.',
-    features: ['Advanced analytics', 'Risk pulse', 'Equity curve', 'Multiple accounts'],
-    highlighted: true,
-  },
-  {
-    name: 'Desk',
-    price: '€19',
-    description: 'For traders who want deeper review and a more complete performance workspace.',
-    features: ['Performance lab', 'Visual analytics', 'Priority roadmap', 'Extended exports'],
-  },
-];
-
 const faqItems = [
   ['Is this only for forex?', 'No. The journal is built around execution quality, risk and R-multiple, so it can support forex, indices, crypto and other active trading workflows.'],
   ['Can I use multiple accounts?', 'Yes. The app already supports account-based views so performance can be reviewed per account or across all accounts.'],
@@ -142,11 +120,11 @@ const ProductPreview = ({ kind }) => {
 
   if (kind === 'analytics') {
     return (
-      <div className="flex h-full flex-col rounded-md border border-white/10 bg-black/25 p-4">
-        <div className="mb-3 flex items-center justify-between">
+      <div className="flex h-full min-h-0 flex-col rounded-md border border-white/10 bg-black/25 p-3">
+        <div className="mb-2 flex items-center justify-between">
           <div>
             <p className="section-kicker mb-1">Performance lab</p>
-            <p className="text-lg font-black">Edge Quality</p>
+            <p className="text-base font-black">Edge Quality</p>
           </div>
           <Radar className="h-5 w-5 text-primary" />
         </div>
@@ -157,19 +135,19 @@ const ProductPreview = ({ kind }) => {
             ['Profit Factor', '1.74', 'text-foreground'],
             ['Max DD', '4.8%', 'text-destructive'],
           ].map(([label, value, color]) => (
-            <div key={label} className="rounded-md border border-white/10 bg-card/70 p-2.5">
-              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
-              <p className={`mt-1.5 text-lg font-black ${color}`}>{value}</p>
+            <div key={label} className="rounded-md border border-white/10 bg-card/70 p-2">
+              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+              <p className={`mt-1 text-base font-black ${color}`}>{value}</p>
             </div>
           ))}
         </div>
-        <div className="mt-auto space-y-1.5">
+        <div className="mt-2.5 space-y-1.5">
           {[
             ['EUR/USD', '+€420'],
             ['NAS100', '+€310'],
             ['XAU/USD', '-€90'],
           ].map(([symbol, net]) => (
-            <div key={symbol} className="flex items-center justify-between rounded-md border border-white/10 bg-white/[0.035] px-3 py-2 text-xs">
+            <div key={symbol} className="flex items-center justify-between rounded-md border border-white/10 bg-white/[0.035] px-3 py-1.5 text-xs">
               <span className="font-bold">{symbol}</span>
               <span className={`font-black ${net.startsWith('+') ? 'text-success' : 'text-destructive'}`}>{net}</span>
             </div>
@@ -411,44 +389,47 @@ const HomePage = () => {
 
         <section className="border-y border-border bg-black/20 px-4 py-24 sm:px-6 lg:px-8">
           <div className="container mx-auto max-w-7xl">
-            <div className="mb-12 max-w-3xl">
-              <p className="section-kicker mb-3">Pricing</p>
-              <h2 className="mb-4 text-3xl font-black md:text-5xl">Simple plans for different review habits</h2>
-              <p className="text-lg leading-8 text-muted-foreground">
-                Start free, then upgrade when advanced analytics and multi-account review become part of the weekly process.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-              {pricingTiers.map((tier) => (
-                <div
-                  key={tier.name}
-                  className={`rounded-lg border p-6 ${tier.highlighted ? 'border-primary/40 bg-primary/10 shadow-xl shadow-primary/10' : 'border-border bg-card'}`}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <p className="text-sm font-black text-primary">{tier.name}</p>
-                    {tier.highlighted && (
-                      <span className="rounded-md border border-primary/30 bg-primary/15 px-2 py-1 text-xs font-bold text-primary">Popular</span>
-                    )}
-                  </div>
-                  <p className="mt-4 text-4xl font-black">
-                    {tier.price}<span className="text-sm font-semibold text-muted-foreground"> / month</span>
+            <div className="command-panel overflow-hidden rounded-lg">
+              <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_360px]">
+                <div className="p-6 sm:p-8 lg:p-10">
+                  <p className="section-kicker mb-3">Early access</p>
+                  <h2 className="mb-5 text-3xl font-black md:text-5xl">Currently free to use</h2>
+                  <p className="max-w-3xl text-lg leading-8 text-muted-foreground">
+                    Marc's Trading Journal is currently available for free while the product is being refined. You can use the core workflow now, but access may not remain free forever as the journal grows.
                   </p>
-                  <p className="mt-4 min-h-[72px] text-sm leading-6 text-muted-foreground">{tier.description}</p>
-                  <div className="mt-6 space-y-3">
-                    {tier.features.map((item) => (
-                      <div key={item} className="flex items-center gap-3 text-sm">
-                        <CheckCircle2 className="h-4 w-4 text-success" />
-                        <span>{item}</span>
+                  <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                    <Link to="/signup">
+                      <Button className="w-full gap-2 px-6 py-6 text-base font-bold sm:w-auto">
+                        Start for free
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                    <Link to="/login">
+                      <Button className="w-full px-6 py-6 text-base font-bold sm:w-auto" variant="outline">
+                        Log in
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+                <div className="border-t border-white/10 bg-black/20 p-6 sm:p-8 lg:border-l lg:border-t-0">
+                  <p className="section-kicker mb-5">Included now</p>
+                  <div className="space-y-4">
+                    {[
+                      ['Full journal workflow', 'Trade logging, dashboards, charts and analysis views are currently included.'],
+                      ['Open product phase', 'Feedback can still shape what gets improved next.'],
+                      ['Transparent future pricing', 'If pricing changes later, it should be clear before it affects users.'],
+                    ].map(([title, copy]) => (
+                      <div key={title} className="flex gap-3">
+                        <CheckCircle2 className="mt-1 h-5 w-5 shrink-0 text-success" />
+                        <div>
+                          <p className="font-black">{title}</p>
+                          <p className="mt-1 text-sm leading-6 text-muted-foreground">{copy}</p>
+                        </div>
                       </div>
                     ))}
                   </div>
-                  <Link to="/signup">
-                    <Button className="mt-8 w-full font-bold" variant={tier.highlighted ? 'default' : 'outline'}>
-                      Choose {tier.name}
-                    </Button>
-                  </Link>
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </section>
