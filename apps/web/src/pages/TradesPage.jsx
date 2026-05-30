@@ -247,100 +247,161 @@ const TradesPage = () => {
                   </div>
                 </div>
               ) : (
-                <div className="terminal-table overflow-x-auto">
-                  <Table>
-                    <TableHeader className="bg-white/[0.04]">
-                      <TableRow>
-                        <TableHead>Symbol</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Time</TableHead>
-                        <TableHead>SL (%)</TableHead>
-                        <TableHead>SL (Pips)</TableHead>
-                        <TableHead>RR</TableHead>
-                        <TableHead>Commission</TableHead>
-                        <TableHead>Net P/L</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {trades.map((trade) => {
-                        const displayDate = trade.entryDate || trade.date;
-                        const displayTime = trade.entryTime || trade.time;
-                        const displaySymbol = trade.symbol || trade.instrument;
-                        const grossProfit = getTradeGrossProfit(trade, originalBalances, currentBalancesMap);
-                        const commission = calculateCommissionAmount(grossProfit, trade.commissionPercentage, originalBalances, currentBalancesMap);
-                        const netProfit = calculateNetProfit(grossProfit, trade.commissionPercentage, originalBalances, currentBalancesMap);
-                        const currBal = currentBalancesMap[trade.accountId] || 10000;
-                        const monetarySL = calculateStopLossInEuro(currBal, trade.stopLoss);
+                <>
+                  <div className="space-y-3 p-4 md:hidden">
+                    {trades.map((trade) => {
+                      const displayDate = trade.entryDate || trade.date;
+                      const displayTime = trade.entryTime || trade.time;
+                      const displaySymbol = trade.symbol || trade.instrument;
+                      const grossProfit = getTradeGrossProfit(trade, originalBalances, currentBalancesMap);
+                      const commission = calculateCommissionAmount(grossProfit, trade.commissionPercentage, originalBalances, currentBalancesMap);
+                      const netProfit = calculateNetProfit(grossProfit, trade.commissionPercentage, originalBalances, currentBalancesMap);
+                      const currBal = currentBalancesMap[trade.accountId] || 10000;
+                      const monetarySL = calculateStopLossInEuro(currBal, trade.stopLoss);
+                      const rrValue = Number(trade.rrSecured || 0);
+                      const hasDetails = trade.contextUrl || trade.validationUrl || trade.entryUrl || trade.notes;
 
-                        return (
-                          <React.Fragment key={trade.id}>
-                            <TableRow className="trade-row">
-                              <TableCell className="font-black text-foreground">{displaySymbol}</TableCell>
-                              <TableCell>{displayDate ? format(new Date(displayDate), 'MMM dd, yyyy') : '-'}</TableCell>
-                              <TableCell>{displayTime || '-'}</TableCell>
-                              <TableCell>
-                                <div className="flex flex-col">
-                                  <span>{trade.stopLoss}%</span>
-                                  <span className="text-xs text-muted-foreground">€{monetarySL.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-                                </div>
-                              </TableCell>
-                              <TableCell>{trade.stopLossPips || '-'}</TableCell>
-                              <TableCell className={`font-black ${(trade.rrSecured || 0) > 0 ? 'text-success' : (trade.rrSecured || 0) < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                                {Number(trade.rrSecured || 0).toFixed(2)}R
-                              </TableCell>
-                              <TableCell className="text-muted-foreground">€{commission.toFixed(2)}</TableCell>
-                              <TableCell className={netProfit > 0 ? 'text-success font-black' : netProfit < 0 ? 'text-destructive font-black' : 'text-muted-foreground'}>
-                                {netProfit > 0 ? '+' : netProfit < 0 ? '-' : ''}€{Math.abs(netProfit).toFixed(2)}
-                              </TableCell>
-                              <TableCell>{getStatusBadge(trade)}</TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex items-center justify-end gap-1">
-                                  <Button variant="ghost" size="icon" onClick={() => setEditingTrade(trade)} title="Edit Trade" className="hover:bg-white/[0.06]">
-                                    <Edit className="w-4 h-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" onClick={() => handleDelete(trade.id)} className="text-destructive hover:bg-destructive/10 hover:text-destructive" title="Delete Trade">
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                  {(trade.contextUrl || trade.validationUrl || trade.entryUrl || trade.notes) && (
-                                    <Button variant="ghost" size="icon" onClick={() => toggleExpandRow(trade.id)} title="View Details" className="hover:bg-white/[0.06]">
-                                      {expandedRow === trade.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      return (
+                        <article key={trade.id} className="rounded-lg border border-white/10 bg-black/25 p-4 shadow-sm">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="text-lg font-black text-foreground">{displaySymbol || '-'}</p>
+                              <p className="mt-1 text-xs font-semibold text-muted-foreground">
+                                {displayDate ? format(new Date(displayDate), 'MMM dd, yyyy') : '-'}
+                                {displayTime ? ` - ${displayTime}` : ''}
+                              </p>
+                            </div>
+                            {getStatusBadge(trade)}
+                          </div>
+
+                          <div className="mt-4 grid grid-cols-2 gap-2">
+                            <MobileTradeMetric
+                              label="Net P/L"
+                              value={`${netProfit > 0 ? '+' : netProfit < 0 ? '-' : ''}€${Math.abs(netProfit).toFixed(2)}`}
+                              valueClass={netProfit > 0 ? 'text-success' : netProfit < 0 ? 'text-destructive' : 'text-muted-foreground'}
+                            />
+                            <MobileTradeMetric
+                              label="R Multiple"
+                              value={`${rrValue.toFixed(2)}R`}
+                              valueClass={rrValue > 0 ? 'text-success' : rrValue < 0 ? 'text-destructive' : 'text-muted-foreground'}
+                            />
+                            <MobileTradeMetric
+                              label="Stop"
+                              value={`${trade.stopLoss || 0}%`}
+                              subValue={`€${monetarySL.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                            />
+                            <MobileTradeMetric
+                              label="Pips"
+                              value={trade.stopLossPips || '-'}
+                              subValue={`Fee €${commission.toFixed(2)}`}
+                            />
+                          </div>
+
+                          <div className="mt-4 flex items-center justify-between gap-2 border-t border-white/10 pt-3">
+                            <p className="text-xs font-semibold text-muted-foreground">
+                              {hasDetails ? 'Review context available' : 'No extra context'}
+                            </p>
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="icon" onClick={() => setEditingTrade(trade)} title="Edit Trade" className="h-9 w-9 hover:bg-white/[0.06]">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => handleDelete(trade.id)} className="h-9 w-9 text-destructive hover:bg-destructive/10 hover:text-destructive" title="Delete Trade">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                              {hasDetails && (
+                                <Button variant="ghost" size="icon" onClick={() => toggleExpandRow(trade.id)} title="View Details" className="h-9 w-9 hover:bg-white/[0.06]">
+                                  {expandedRow === trade.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+
+                          {expandedRow === trade.id && (
+                            <TradeDetailsPanel trade={trade} />
+                          )}
+                        </article>
+                      );
+                    })}
+                  </div>
+
+                  <div className="terminal-table hidden overflow-x-auto md:block">
+                    <Table>
+                      <TableHeader className="bg-white/[0.04]">
+                        <TableRow>
+                          <TableHead>Symbol</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Time</TableHead>
+                          <TableHead>SL (%)</TableHead>
+                          <TableHead>SL (Pips)</TableHead>
+                          <TableHead>RR</TableHead>
+                          <TableHead>Commission</TableHead>
+                          <TableHead>Net P/L</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {trades.map((trade) => {
+                          const displayDate = trade.entryDate || trade.date;
+                          const displayTime = trade.entryTime || trade.time;
+                          const displaySymbol = trade.symbol || trade.instrument;
+                          const grossProfit = getTradeGrossProfit(trade, originalBalances, currentBalancesMap);
+                          const commission = calculateCommissionAmount(grossProfit, trade.commissionPercentage, originalBalances, currentBalancesMap);
+                          const netProfit = calculateNetProfit(grossProfit, trade.commissionPercentage, originalBalances, currentBalancesMap);
+                          const currBal = currentBalancesMap[trade.accountId] || 10000;
+                          const monetarySL = calculateStopLossInEuro(currBal, trade.stopLoss);
+
+                          return (
+                            <React.Fragment key={trade.id}>
+                              <TableRow className="trade-row">
+                                <TableCell className="font-black text-foreground">{displaySymbol}</TableCell>
+                                <TableCell>{displayDate ? format(new Date(displayDate), 'MMM dd, yyyy') : '-'}</TableCell>
+                                <TableCell>{displayTime || '-'}</TableCell>
+                                <TableCell>
+                                  <div className="flex flex-col">
+                                    <span>{trade.stopLoss}%</span>
+                                    <span className="text-xs text-muted-foreground">€{monetarySL.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>{trade.stopLossPips || '-'}</TableCell>
+                                <TableCell className={`font-black ${(trade.rrSecured || 0) > 0 ? 'text-success' : (trade.rrSecured || 0) < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                                  {Number(trade.rrSecured || 0).toFixed(2)}R
+                                </TableCell>
+                                <TableCell className="text-muted-foreground">€{commission.toFixed(2)}</TableCell>
+                                <TableCell className={netProfit > 0 ? 'text-success font-black' : netProfit < 0 ? 'text-destructive font-black' : 'text-muted-foreground'}>
+                                  {netProfit > 0 ? '+' : netProfit < 0 ? '-' : ''}€{Math.abs(netProfit).toFixed(2)}
+                                </TableCell>
+                                <TableCell>{getStatusBadge(trade)}</TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex items-center justify-end gap-1">
+                                    <Button variant="ghost" size="icon" onClick={() => setEditingTrade(trade)} title="Edit Trade" className="hover:bg-white/[0.06]">
+                                      <Edit className="w-4 h-4" />
                                     </Button>
-                                  )}
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                            {expandedRow === trade.id && (
-                              <TableRow className="expanded-row">
-                                <TableCell colSpan={10} className="bg-black/20">
-                                  <div className="space-y-4 px-2 py-4">
-                                    {(trade.contextUrl || trade.validationUrl || trade.entryUrl) && (
-                                      <div>
-                                        <h4 className="mb-2 text-sm font-semibold text-foreground/80">Screenshots</h4>
-                                        <div className="flex flex-wrap gap-3">
-                                          {trade.contextUrl && <a href={trade.contextUrl} target="_blank" rel="noopener noreferrer" className="screenshot-link"><ExternalLink className="w-4 h-4" />Context</a>}
-                                          {trade.validationUrl && <a href={trade.validationUrl} target="_blank" rel="noopener noreferrer" className="screenshot-link"><ExternalLink className="w-4 h-4" />Validation</a>}
-                                          {trade.entryUrl && <a href={trade.entryUrl} target="_blank" rel="noopener noreferrer" className="screenshot-link"><ExternalLink className="w-4 h-4" />Entry</a>}
-                                        </div>
-                                      </div>
-                                    )}
-                                    {trade.notes && (
-                                      <div>
-                                        <h4 className="mb-2 text-sm font-semibold text-foreground/80">Notes</h4>
-                                        <p className="rounded-md border border-white/10 bg-black/25 p-3 text-sm text-muted-foreground">{trade.notes}</p>
-                                      </div>
+                                    <Button variant="ghost" size="icon" onClick={() => handleDelete(trade.id)} className="text-destructive hover:bg-destructive/10 hover:text-destructive" title="Delete Trade">
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                    {(trade.contextUrl || trade.validationUrl || trade.entryUrl || trade.notes) && (
+                                      <Button variant="ghost" size="icon" onClick={() => toggleExpandRow(trade.id)} title="View Details" className="hover:bg-white/[0.06]">
+                                        {expandedRow === trade.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                      </Button>
                                     )}
                                   </div>
                                 </TableCell>
                               </TableRow>
-                            )}
-                          </React.Fragment>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
+                              {expandedRow === trade.id && (
+                                <TableRow className="expanded-row">
+                                  <TableCell colSpan={10} className="bg-black/20">
+                                    <TradeDetailsPanel trade={trade} />
+                                  </TableCell>
+                                </TableRow>
+                              )}
+                            </React.Fragment>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>
@@ -375,6 +436,35 @@ const LedgerMetric = ({ title, value, icon, loading, valueClass = 'text-foregrou
       </div>
     </CardContent>
   </Card>
+);
+
+const MobileTradeMetric = ({ label, value, subValue, valueClass = 'text-foreground' }) => (
+  <div className="rounded-md border border-white/10 bg-white/[0.035] p-3">
+    <p className="surface-label mb-2">{label}</p>
+    <p className={`truncate text-lg font-black ${valueClass}`}>{value}</p>
+    {subValue && <p className="mt-1 truncate text-xs font-semibold text-muted-foreground">{subValue}</p>}
+  </div>
+);
+
+const TradeDetailsPanel = ({ trade }) => (
+  <div className="mt-4 space-y-4 rounded-md border border-white/10 bg-black/20 p-3 md:mt-0 md:border-0 md:bg-transparent md:p-0">
+    {(trade.contextUrl || trade.validationUrl || trade.entryUrl) && (
+      <div>
+        <h4 className="mb-2 text-sm font-semibold text-foreground/80">Screenshots</h4>
+        <div className="flex flex-wrap gap-3">
+          {trade.contextUrl && <a href={trade.contextUrl} target="_blank" rel="noopener noreferrer" className="screenshot-link"><ExternalLink className="w-4 h-4" />Context</a>}
+          {trade.validationUrl && <a href={trade.validationUrl} target="_blank" rel="noopener noreferrer" className="screenshot-link"><ExternalLink className="w-4 h-4" />Validation</a>}
+          {trade.entryUrl && <a href={trade.entryUrl} target="_blank" rel="noopener noreferrer" className="screenshot-link"><ExternalLink className="w-4 h-4" />Entry</a>}
+        </div>
+      </div>
+    )}
+    {trade.notes && (
+      <div>
+        <h4 className="mb-2 text-sm font-semibold text-foreground/80">Notes</h4>
+        <p className="rounded-md border border-white/10 bg-black/25 p-3 text-sm text-muted-foreground">{trade.notes}</p>
+      </div>
+    )}
+  </div>
 );
 
 export default TradesPage;

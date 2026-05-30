@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { SymbolCombobox } from '@/components/SymbolCombobox.jsx';
 import { toast } from 'sonner';
-import { Plus, AlertTriangle } from 'lucide-react';
+import { Plus, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { calculateStopLossInEuro } from '@/lib/tradeCalculations.js';
 
 const TradeEntryForm = ({ onTradeAdded }) => {
@@ -39,6 +39,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
   const [duplicateWarning, setDuplicateWarning] = useState('');
   const [startingBalance, setStartingBalance] = useState(10000);
   const [globalCommission, setGlobalCommission] = useState(0);
+  const [isMobileFormOpen, setIsMobileFormOpen] = useState(false);
 
   // Initialize selected account
   useEffect(() => {
@@ -248,11 +249,26 @@ const TradeEntryForm = ({ onTradeAdded }) => {
   return (
     <Card className="glass-panel rounded-lg">
       <CardHeader className="border-b border-white/10 pb-4">
-        <p className="section-kicker mb-2">New execution</p>
-        <CardTitle className="text-2xl font-black">Add New Trade</CardTitle>
-        <CardDescription>Capture the trade, risk and review context in one pass</CardDescription>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="section-kicker mb-2">New execution</p>
+            <CardTitle className="text-2xl font-black">Add New Trade</CardTitle>
+            <CardDescription>Capture the trade, risk and review context in one pass</CardDescription>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 shrink-0 sm:hidden"
+            onClick={() => setIsMobileFormOpen((value) => !value)}
+            aria-expanded={isMobileFormOpen}
+            aria-label={isMobileFormOpen ? 'Hide trade form' : 'Show trade form'}
+          >
+            {isMobileFormOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
+        </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className={`${isMobileFormOpen ? 'block' : 'hidden'} sm:block`}>
         <form onSubmit={handleSubmit} className="space-y-5">
           {duplicateWarning && (
             <Alert variant="warning" className="bg-amber-500/10 text-amber-600 border-amber-500/20">
