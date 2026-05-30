@@ -262,16 +262,16 @@ const TradesPage = () => {
                       const hasDetails = trade.contextUrl || trade.validationUrl || trade.entryUrl || trade.notes;
 
                       return (
-                        <article key={trade.id} className="rounded-lg border border-white/10 bg-black/25 p-4 shadow-sm">
+                        <article key={trade.id} className="overflow-hidden rounded-lg border border-white/10 bg-black/25 p-4 shadow-sm">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
-                              <p className="text-lg font-black text-foreground">{displaySymbol || '-'}</p>
+                              <p className="break-words text-lg font-black leading-tight text-foreground">{displaySymbol || '-'}</p>
                               <p className="mt-1 text-xs font-semibold text-muted-foreground">
                                 {displayDate ? format(new Date(displayDate), 'MMM dd, yyyy') : '-'}
                                 {displayTime ? ` - ${displayTime}` : ''}
                               </p>
                             </div>
-                            {getStatusBadge(trade)}
+                            <div className="shrink-0">{getStatusBadge(trade)}</div>
                           </div>
 
                           <div className="mt-4 grid grid-cols-2 gap-2">
@@ -298,7 +298,7 @@ const TradesPage = () => {
                           </div>
 
                           <div className="mt-4 flex items-center justify-between gap-2 border-t border-white/10 pt-3">
-                            <p className="text-xs font-semibold text-muted-foreground">
+                            <p className="min-w-0 truncate text-xs font-semibold text-muted-foreground">
                               {hasDetails ? 'Review context available' : 'No extra context'}
                             </p>
                             <div className="flex items-center gap-1">
@@ -441,8 +441,8 @@ const LedgerMetric = ({ title, value, icon, loading, valueClass = 'text-foregrou
 const MobileTradeMetric = ({ label, value, subValue, valueClass = 'text-foreground' }) => (
   <div className="rounded-md border border-white/10 bg-white/[0.035] p-3">
     <p className="surface-label mb-2">{label}</p>
-    <p className={`truncate text-lg font-black ${valueClass}`}>{value}</p>
-    {subValue && <p className="mt-1 truncate text-xs font-semibold text-muted-foreground">{subValue}</p>}
+    <p className={`break-words text-base font-black leading-tight sm:text-lg ${valueClass}`}>{value}</p>
+    {subValue && <p className="mt-1 break-words text-xs font-semibold leading-tight text-muted-foreground">{subValue}</p>}
   </div>
 );
 

@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { SymbolCombobox } from '@/components/SymbolCombobox.jsx';
 import { toast } from 'sonner';
-import { Plus, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, AlertTriangle, ChevronUp } from 'lucide-react';
 import { calculateStopLossInEuro } from '@/lib/tradeCalculations.js';
 
 const TradeEntryForm = ({ onTradeAdded }) => {
@@ -219,6 +219,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
       setEntryUrl('');
       setNotes('');
       setDuplicateWarning('');
+      setIsMobileFormOpen(false);
 
       if (onTradeAdded) onTradeAdded();
     } catch (err) {
@@ -264,7 +265,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
             aria-expanded={isMobileFormOpen}
             aria-label={isMobileFormOpen ? 'Hide trade form' : 'Show trade form'}
           >
-            {isMobileFormOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            {isMobileFormOpen ? <ChevronUp className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
           </Button>
         </div>
       </CardHeader>
