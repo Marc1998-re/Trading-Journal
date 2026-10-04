@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useGoogleAnalytics } from '@/hooks/useGoogleAnalytics.js';
+import { useGoogleAnalytics, GA_MEASUREMENT_ID } from '@/hooks/useGoogleAnalytics.js';
 
 const CookieConsentBanner = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -33,7 +33,7 @@ const CookieConsentBanner = () => {
     setTimeout(() => setIsVisible(false), 300);
   };
 
-  if (!isVisible) return null;
+  if (!isVisible || !GA_MEASUREMENT_ID) return null;
 
   return (
     <div 
@@ -43,8 +43,8 @@ const CookieConsentBanner = () => {
     >
       <Card className="max-w-5xl mx-auto p-5 sm:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-2xl border-border/50 bg-card/95 backdrop-blur-md text-card-foreground rounded-2xl">
         <div className="text-sm text-muted-foreground flex-1 leading-relaxed">
-          <p className="text-base font-semibold text-foreground mb-2 tracking-tight">We value your privacy</p>
-          We use cookies to enhance your browsing experience, serve personalized content, and analyze our traffic using Google Analytics. By clicking "Accept", you consent to our use of cookies for these marketing and analytical purposes.
+          <p className="text-base font-semibold text-foreground mb-2 tracking-tight">Deine Privatsphäre ist uns wichtig</p>
+          Wir verwenden Cookies, um die Nutzung der Website zu analysieren und die Erfahrung zu verbessern. Mit „Akzeptieren“ stimmst du der Nutzung von Analyse-Cookies zu. Essenzielle Cookies für Anmeldung und Sicherheit bleiben aktiv.
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
           <Button 
@@ -52,13 +52,13 @@ const CookieConsentBanner = () => {
             onClick={handleReject}
             className="w-full sm:w-auto font-medium"
           >
-            Reject All
+            Alle ablehnen
           </Button>
           <Button 
             onClick={handleAccept}
             className="w-full sm:w-auto font-medium shadow-md"
           >
-            Accept All
+            Akzeptieren
           </Button>
         </div>
       </Card>

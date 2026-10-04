@@ -1,66 +1,16 @@
-import { useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
-
-export const GA_MEASUREMENT_ID = 'G-ZD34FSE1G2';
-
-export const useGoogleAnalytics = () => {
-  const location = useLocation();
-
-  const initGA = useCallback(() => {
-    const consent = localStorage.getItem('cookieConsent');
-    if (consent === 'accepted') {
-      // Inject script if not exists
-      let script = document.getElementById('ga-script');
-      if (!script) {
-        script = document.createElement('script');
-        script.id = 'ga-script';
-        script.async = true;
-        script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
-        document.head.appendChild(script);
-      }
-
-      window.dataLayer = window.dataLayer || [];
-      function gtag() { window.dataLayer.push(arguments); }
-      window.gtag = gtag;
-      
-      // Only initialize if not already initialized
-      if (!window.gaInitialized) {
-        gtag('js', new Date());
-        gtag('config', GA_MEASUREMENT_ID, {
-          page_path: window.location.pathname,
-        });
-        window.gaInitialized = true;
-      }
-    }
-  }, []);
-
-  const trackPageView = useCallback((path) => {
-    if (window.gtag && localStorage.getItem('cookieConsent') === 'accepted') {
-      window.gtag('config', GA_MEASUREMENT_ID, {
-        page_path: path,
-      });
-    }
-  }, []);
-
-  const trackEvent = useCallback(({ action, category, label, value }) => {
-    if (window.gtag && localStorage.getItem('cookieConsent') === 'accepted') {
-      window.gtag('event', action, {
-        event_category: category,
-        event_label: label,
-        value: value,
-      });
-    }
-  }, []);
-
-  // Initialize GA on mount if consent is already given
-  useEffect(() => {
-    initGA();
-  }, [initGA]);
-
-  // Track page views on route change
-  useEffect(() => {
-    trackPageView(location.pathname + location.search);
-  }, [location, trackPageView]);
-
-  return { initGA, trackPageView, trackEvent };
+import {useCallback} from 'react';
+export const GA_MEASUREMENT_ID=import.meta.env.VITE_GA_MEASUREMENT_ID||'';
+// Auth and journal routes never send URLs, tokens, or financial data to analytics.
+export const useGoogleAnalytics=()=>{
+ const initGA=useCallback(()=>{
+   if(!GA_MEASUREMENT_ID||location.hostname==='localhost'||location.hostname==='127.0.0.1'||location.pathname!=='/'||localStorage.getItem('cookieConsent')!=='accepted')return;
+   if(document.getElementById('ga-script'))return;
+   window.dataLayer=window.dataLayer||[];
+   window.gtag=function(){window.dataLayer.push(arguments);};
+   window.gtag('js',new Date());
+   window.gtag('config',GA_MEASUREMENT_ID,{send_page_view:false,allow_google_signals:false,allow_ad_personalization_signals:false});
+   window.gtag('event','page_view',{page_location:location.origin+'/',page_path:'/'});
+   const script=document.createElement('script');script.id='ga-script';script.async=true;script.src='https://www.googletagmanager.com/gtag/js?id='+encodeURIComponent(GA_MEASUREMENT_ID);document.head.appendChild(script);
+ },[]);
+ return {initGA,trackPageView:()=>{},trackEvent:()=>{}};
 };

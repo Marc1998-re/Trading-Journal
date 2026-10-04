@@ -1,0 +1,273 @@
+@layer components {
+  /* The public palette stays separate from the journal's saved theme. */
+  .landing-theme {
+    color-scheme: light;
+    --background: 0 0% 100%;
+    --foreground: 170 38% 14%;
+    --card: 0 0% 100%;
+    --card-foreground: 170 38% 14%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 170 38% 14%;
+    --primary: 166 55% 29%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 155 25% 92%;
+    --secondary-foreground: 170 38% 14%;
+    --muted: 155 20% 95%;
+    --muted-foreground: 170 12% 37%;
+    --accent: 51 91% 78%;
+    --accent-foreground: 170 38% 14%;
+    --destructive: 12 65% 52%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 166 55% 29%;
+    --success-foreground: 0 0% 100%;
+    --border: 161 16% 82%;
+    --input: 161 16% 82%;
+    --ring: 166 55% 29%;
+    @apply bg-background text-foreground;
+  }
+  .market-capture-light { @apply bg-secondary; }
+  .public-header.landing-header { @apply absolute inset-x-0 top-0 z-20 mx-0 border-0; max-width: none; padding: 22px 5%; min-height: 84px; }
+  .landing-header .journal-brand { @apply text-xs; }
+  .trading-app.landing-theme .brand-mark { @apply h-11 w-11 border-0 bg-foreground text-primary-foreground; font-size: 22px; box-shadow: none; border-radius: 3px; }
+  .landing-header nav { @apply gap-6; }
+  .landing-nav-link { @apply text-sm text-muted-foreground transition-colors hover:text-foreground; }
+  .landing-header nav > a:last-child { @apply h-11 rounded-sm px-5 shadow-none; }
+  .trading-landing { @apply min-w-0; }
+  .trading-landing em { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
+  .landing-section { @apply mx-auto; width: 90%; max-width: 1280px; }
+  .landing-hero { @apply relative isolate overflow-hidden bg-secondary; height: min(930px, calc(100svh - 76px)); min-height: 720px; }
+  .desk-sculpture { @apply absolute; inset: 140px 0 150px; }
+  .desk-sculpture canvas { @apply relative block h-full w-full; }
+  .sculpture-fallback { @apply absolute inset-0; }
+  .sculpture-fallback img { @apply h-full w-full object-contain; }
+  .desk-sculpture.is-ready .sculpture-fallback { @apply invisible; }
+  .hero-heading { @apply pointer-events-none absolute inset-x-0 text-center; top: 122px; padding-inline: 5%; }
+  .landing-eyebrow { @apply mb-5 text-xs font-medium text-primary; }
+  .hero-heading .landing-eyebrow { @apply mb-3 text-sm; }
+  .hero-heading h1 { font-size: 100px; font-weight: 500; line-height: 1.05; white-space: nowrap; }
+  .hero-heading h1 em { @apply text-primary; }
+  .hero-bottom { @apply absolute inset-x-0 flex items-end justify-between gap-10; bottom: 72px; padding-inline: 5%; }
+  .hero-introduction p { @apply text-lg leading-7; }
+  .hero-introduction strong { @apply font-medium; }
+  .hero-actions { @apply flex flex-col items-start; }
+  .landing-cta { @apply h-12 gap-6 rounded-sm px-6 text-sm font-medium shadow-none; }
+  .hero-access { @apply mt-3 block text-xs text-muted-foreground; }
+  .hero-study-label { @apply absolute left-0 text-muted-foreground; top: 49%; margin-left: 5%; font-size: 10px; writing-mode: vertical-rl; transform: rotate(180deg); }
+  .hero-scroll { @apply absolute bottom-5 left-0 flex h-9 w-9 items-center justify-center border border-foreground/20 rounded-full transition-colors hover:bg-background; margin-left: 5%; }
+  .landing-hero .scene-toggle { @apply absolute bottom-5 right-0 h-9 w-9 rounded-full border border-foreground/20 text-foreground hover:bg-background; margin-right: 5%; }
+  .landing-index { @apply grid grid-cols-3 border-b bg-background; padding-inline: 5%; min-height: 88px; }
+  .landing-index > span { @apply flex flex-wrap content-center items-center gap-x-2 gap-y-1 py-5 text-xs text-muted-foreground; }
+  .landing-index svg { @apply mr-2 shrink-0 text-primary; }
+  .landing-index b { @apply font-medium text-foreground; }
+  .landing-product { @apply py-24; scroll-margin-top: 24px; }
+  .section-intro { @apply grid gap-x-20 gap-y-6; grid-template-columns: minmax(0,1.2fr) minmax(0,1fr); }
+  .section-intro > .landing-eyebrow { @apply col-span-2 mb-0; }
+  .section-intro h2 { font-size: 62px; line-height: 1.08; font-weight: 500; }
+  .section-intro h2 em { @apply text-primary; }
+  .section-intro > p:last-child { @apply max-w-md self-end text-base leading-7 text-muted-foreground; }
+  .product-tabs { @apply mt-12; }
+  .product-tabs-bar { @apply flex flex-wrap items-center justify-between gap-4 border-b; }
+  .product-tab-list { @apply h-auto justify-start gap-0 rounded-none bg-transparent p-0; }
+  .product-tab-list button { @apply gap-3 rounded-none border-b-2 border-transparent px-5 py-4 text-sm font-medium text-muted-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none; }
+  .product-tab-list button:first-child { @apply pl-0; }
+  .tab-arrow { @apply ml-4 opacity-0; }
+  .product-tab-list button[data-state=active] .tab-arrow { @apply opacity-100; }
+  .product-demo-note { @apply mt-3 text-xs leading-5 text-muted-foreground; }
+  .product-theme-switch { @apply flex shrink-0 gap-1 border rounded-sm p-1; }
+  .product-theme-switch button { @apply h-9 w-9 rounded-sm text-muted-foreground; }
+  .product-theme-switch button[aria-pressed=true] { @apply bg-secondary text-primary; }
+  .product-panel { @apply mt-0; }
+  .product-caption { @apply flex items-center justify-between gap-6 py-6; }
+  .product-caption h3 { @apply text-sm font-medium; }
+  .landing-text-link { @apply inline-flex shrink-0 items-center gap-3 text-sm font-medium underline-offset-4 hover:underline; }
+  .product-screen { @apply block overflow-hidden rounded border bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring; box-shadow: 0 16px 40px hsl(var(--foreground) / .09); aspect-ratio: 1.44; }
+  .product-screen picture { @apply block h-full w-full; }
+  .product-screen img { @apply block h-full w-full object-contain; }
+  .product-summary { @apply mt-6 grid gap-6; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
+  .product-context { @apply max-w-2xl text-sm leading-6 text-muted-foreground; }
+  .product-feature-list { @apply space-y-2 text-sm; }
+  .product-feature-list li { @apply flex items-start gap-2 leading-6; }
+  .product-feature-list svg { @apply mt-1 shrink-0 text-primary; }
+  .product-facts { @apply mt-14 grid grid-cols-3 gap-10 border-t pt-9; }
+  .product-facts svg { @apply mb-4 h-6 w-6 text-primary; stroke-width: 1.5; }
+  .product-facts h3 { @apply text-base font-medium; }
+  .product-facts p { @apply mt-2 max-w-xs text-sm leading-6 text-muted-foreground; }
+  .landing-method {
+    --background: 170 36% 18%;
+    --foreground: 155 25% 96%;
+    --primary: 153 45% 76%;
+    --muted-foreground: 159 20% 77%;
+    --border: 169 22% 36%;
+    @apply bg-background text-foreground;
+    scroll-margin-top: 0;
+  }
+  .method-layout { @apply grid gap-20 py-24; grid-template-columns: minmax(0,1fr) minmax(0,1.1fr); }
+  .method-title h2 { font-size: 48px; font-weight: 500; line-height: 1.13; }
+  .method-title h2 em { @apply text-primary; }
+  .method-title > p:not(.landing-eyebrow) { @apply mt-7 max-w-sm text-base leading-7 text-muted-foreground; }
+  .method-title > a { @apply mt-8; }
+  .method-aside { @apply mt-16 block border-l border-primary/40 pl-4 text-xs leading-6 text-muted-foreground; }
+  .method-rows article { @apply grid gap-6 border-t py-8; grid-template-columns: 52px minmax(0,1fr); }
+  .method-rows article:first-child { @apply border-t-0 pt-0; }
+  .method-rows article:last-child { @apply pb-0; }
+  .method-number { @apply text-primary; font-family: Georgia, 'Times New Roman', serif; font-size: 40px; font-style: italic; line-height: 1; }
+  .method-rows h3 { @apply text-xl font-medium; }
+  .method-rows p { @apply mt-3 text-sm leading-6 text-muted-foreground; }
+  .method-equation { @apply mt-6 flex items-center gap-6 text-sm text-primary; }
+  .equation-fraction { @apply grid gap-2 text-center text-xs; }
+  .equation-fraction > span:first-child { @apply border-b border-primary/40 pb-2; }
+  .method-tags { @apply mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-primary; }
+  .method-tags span { @apply border-b border-primary/40 pb-1; }
+  .method-note { @apply mt-5 flex items-center gap-3 text-xs text-primary; }
+  .landing-access { @apply bg-accent; }
+  .access-layout { @apply grid gap-20 py-20; grid-template-columns: minmax(0,1.3fr) minmax(0,1fr); }
+  .landing-access h2 { font-size: 54px; font-weight: 500; line-height: 1.13; }
+  .access-copy { @apply self-center; }
+  .access-status { @apply flex items-center gap-2 text-xs font-medium; }
+  .access-copy > p:not(.access-fineprint) { @apply my-5 max-w-sm text-lg leading-7; }
+  .access-fineprint { @apply mt-5 max-w-sm text-xs leading-5 text-muted-foreground; }
+  .landing-faq { @apply grid gap-20 py-24; grid-template-columns: minmax(0,1fr) minmax(0,1.2fr); scroll-margin-top: 20px; }
+  .landing-faq h2 { font-size: 40px; line-height: 1.15; font-weight: 500; }
+  .landing-faq h2 em { @apply text-primary; }
+  .landing-faq > div > p:not(.landing-eyebrow) { @apply mt-5 text-sm leading-6 text-muted-foreground; }
+  .faq-row { @apply border-b; }
+  .faq-row:first-child { @apply border-t; }
+  .faq-row button { @apply flex w-full items-center justify-between gap-6 py-5 text-left text-sm font-medium leading-6; }
+  .faq-row button svg { @apply shrink-0 text-primary; }
+  .faq-row p { @apply pb-6 pr-8 text-sm leading-6 text-muted-foreground; }
+  .landing-signoff { @apply flex flex-wrap items-end justify-between gap-6 border-t py-12; }
+  .landing-signoff > a { @apply inline-flex items-center gap-3; font-size: 32px; line-height: 1.2; }
+  .landing-signoff > a svg { @apply ml-3 h-7 w-7 text-primary; }
+  .landing-signoff p { @apply text-xs leading-5 text-muted-foreground; }
+  .landing-theme > footer { max-width: none; padding-inline: 5%; }
+  .landing-theme .journal-footer { @apply mx-auto; max-width: 1280px; }
+
+  @media (min-width: 1600px) {
+    .hero-heading h1 { font-size: 116px; }
+    .hero-heading { top: 140px; }
+    .desk-sculpture { inset: 175px 0 155px; }
+    .hero-bottom { padding-inline: 8%; }
+  }
+  @media (max-width: 1099px) {
+    .hero-heading h1 { font-size: 80px; }
+    .hero-heading { top: 126px; }
+    .landing-header nav { gap: 14px; }
+    .hero-introduction p { font-size: 16px; }
+    .hero-actions .landing-cta { gap: 16px; }
+    .hero-access { font-size: 10px; }
+    .hero-bottom { gap: 24px; }
+    .landing-index > span { column-gap: 6px; }
+    .landing-index svg { display: none; }
+    .section-intro { gap: 24px 48px; }
+    .section-intro h2 { font-size: 50px; }
+    .method-layout, .landing-faq, .access-layout { gap: 40px; }
+    .method-title h2, .landing-access h2 { font-size: 40px; }
+    .method-rows article { grid-template-columns: 36px minmax(0,1fr); gap: 16px; }
+    .method-number { font-size: 30px; }
+  }
+  @media (max-width: 767px) {
+    .public-header.landing-header { min-height: 76px; padding: 18px 5%; }
+    .landing-header nav { gap: 0; }
+    .landing-header nav > a:last-child { display: none; }
+    .public-header.landing-header .journal-brand > span:last-child { display: inline; font-size: 11px; }
+    .landing-hero { height: calc(100svh - 64px); min-height: 754px; max-height: 890px; }
+    .hero-heading { top: 105px; }
+    .hero-heading .landing-eyebrow { font-size: 11px; margin-bottom: 15px; }
+    .hero-heading h1 { font-size: 57px; line-height: .99; white-space: normal; }
+    .hero-heading h1 span { display: block; }
+    .hero-heading h1 em { display: block; font-size: 68px; }
+    .desk-sculpture { inset: 233px -8% auto; height: 275px; }
+    .hero-study-label { display: none; }
+    .hero-bottom { bottom: 73px; flex-direction: column; align-items: center; text-align: center; gap: 24px; }
+    .hero-introduction p { font-size: 15px; line-height: 24px; }
+    .hero-actions { align-items: center; }
+    .hero-actions .landing-cta { min-width: 250px; justify-content: space-between; }
+    .hero-access { font-size: 10px; }
+    .hero-scroll, .scene-toggle { bottom: 20px; }
+    .landing-index { min-height: 84px; gap: 16px; }
+    .landing-index > span { display: block; font-size: 10px; line-height: 17px; }
+    .landing-index b { display: block; font-size: 11px; }
+    .landing-product, .method-layout, .landing-faq { padding-block: 60px; }
+    .section-intro { grid-template-columns: minmax(0,1fr); gap: 20px; }
+    .section-intro > .landing-eyebrow { grid-column: auto; }
+    .section-intro h2 { font-size: 43px; }
+    .section-intro > p:last-child { font-size: 14px; line-height: 24px; }
+    .landing-eyebrow { font-size: 11px; }
+    .product-tabs { margin-top: 30px; }
+    .product-tabs-bar { display: flex; gap: 12px; }
+    .product-tab-list { width: 100%; order: 1; }
+    .product-theme-switch { margin-left: auto; }
+    .product-screen { aspect-ratio: 390 / 844; width: 100%; max-width: 390px; margin-inline: auto; }
+    .product-tab-list button { flex: 1; gap: 8px; padding-inline: 8px; font-size: 12px; }
+    .product-tab-list button:first-child { padding-left: 8px; }
+    .product-tab-list button svg { width: 16px; }
+    .tab-arrow { display: none; }
+    .product-caption { align-items: start; gap: 15px; padding-block: 20px; }
+    .product-caption h3 { font-size: 12px; }
+    .product-caption a { font-size: 11px; gap: 4px; }
+    .product-context { font-size: 13px; }
+    .product-summary { grid-template-columns: minmax(0,1fr); gap: 18px; }
+    .product-feature-list { font-size: 13px; }
+    .product-facts { grid-template-columns: minmax(0,1fr); gap: 24px; margin-top: 32px; padding-top: 28px; }
+    .product-facts > div { display: grid; grid-template-columns: 28px minmax(0,1fr); gap: 4px 16px; }
+    .product-facts svg { grid-row: span 2; margin: 0; width: 22px; }
+    .product-facts p { margin-top: 0; font-size: 13px; }
+    .product-facts h3 { font-size: 15px; }
+    .method-layout, .landing-faq, .access-layout { grid-template-columns: minmax(0,1fr); gap: 36px; }
+    .method-title h2 { font-size: 38px; }
+    .method-title > p:not(.landing-eyebrow) { margin-top: 20px; font-size: 14px; line-height: 24px; }
+    .method-title > a { margin-top: 20px; }
+    .method-aside { display: none; }
+    .method-rows article:first-child { border-top-width: 1px; padding-top: 28px; }
+    .method-rows h3 { font-size: 18px; }
+    .method-rows p { font-size: 13px; }
+    .access-layout { padding-block: 56px; gap: 30px; }
+    .landing-access h2 { font-size: 37px; }
+    .access-copy > p:not(.access-fineprint) { font-size: 17px; }
+    .landing-faq h2 { font-size: 37px; }
+    .landing-faq { gap: 30px; }
+    .landing-signoff { padding-block: 32px; }
+    .landing-signoff > a { font-size: 28px; gap: 6px; }
+    .landing-signoff > a svg { width: 24px; margin-left: 5px; }
+    .landing-theme .journal-footer { gap: 20px; }
+  }
+  @media (max-width: 359px) {
+    .hero-heading h1 { font-size: 49px; }
+    .hero-heading h1 em { font-size: 61px; }
+    .hero-introduction p { font-size: 13px; }
+    .section-intro h2 { font-size: 38px; }
+    .method-title h2, .landing-access h2, .landing-faq h2 { font-size: 32px; }
+    .product-tab-list button { gap: 5px; font-size: 11px; }
+    .method-equation { gap: 16px; }
+    .landing-signoff > a { font-size: 25px; }
+  }
+  @media (min-width: 768px) and (max-height: 740px) {
+    .landing-hero { min-height: 540px; height: calc(100svh - 60px); }
+    .hero-heading { top: 100px; }
+    .hero-heading h1 { font-size: 74px; }
+    .desk-sculpture { inset: 155px 0 130px; }
+    .hero-bottom { bottom: 62px; }
+    .hero-introduction p { font-size: 15px; line-height: 24px; }
+  }
+  @media (max-width: 767px) and (max-height: 740px) {
+    .landing-hero { min-height: 0; height: calc(100svh - 60px); }
+    .hero-heading { top: 90px; }
+    .hero-heading h1 { font-size: 46px; }
+    .hero-heading h1 em { font-size: 56px; }
+    .hero-heading .landing-eyebrow { font-size: 10px; margin-bottom: 10px; }
+    .desk-sculpture { inset: 200px -8% auto; height: 180px; }
+    .hero-bottom { bottom: 60px; gap: 14px; }
+    .hero-introduction p { font-size: 13px; line-height: 20px; }
+    .hero-actions .landing-cta { height: 44px; }
+    .hero-access { margin-top: 8px; font-size: 9px; }
+    .hero-scroll, .landing-hero .scene-toggle { bottom: 14px; }
+  }
+  @media (max-width: 767px) and (max-height: 620px) {
+    .hero-heading { top: 83px; }
+    .hero-heading h1 { font-size: 40px; }
+    .hero-heading h1 em { font-size: 48px; }
+    .desk-sculpture { inset: 170px -8% auto; height: 160px; }
+    .hero-introduction p { font-size: 12px; }
+    .hero-bottom { bottom: 52px; gap: 12px; }
+  }
+}

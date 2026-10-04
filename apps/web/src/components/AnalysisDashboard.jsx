@@ -15,37 +15,37 @@ import {
 } from '@/lib/tradeCalculations.js';
 
 const metricDescriptions = {
-  "Net P&L": "Total profit or loss after deducting all commissions and fees.",
-  "Total Wins (Net)": "Total profit from all winning trades, minus commissions.",
-  "Total Losses": "Total amount lost from all losing trades.",
-  "Total Commissions": "Total fees paid to the broker for executing trades.",
-  "Compounded Balance": "Current account balance including starting capital and Net P&L.",
-  "Total Return": "Percentage return on the initial starting balance.",
-  "Total Trades": "Total number of trades executed.",
-  "Win Rate": "Percentage of trades that resulted in a profit.",
-  "Loss Rate": "Percentage of trades that resulted in a loss.",
-  "Breakeven Rate": "Percentage of trades that resulted in neither profit nor loss.",
-  "R Secured": "Total Risk (R) multiples gained or lost across all trades.",
-  "Avg R / Trade": "Average Risk (R) multiple gained or lost per trade.",
-  "Risk Per Trade": "Average percentage of account balance risked per trade.",
-  "Expected Value": "Average expected monetary return per trade based on historical performance.",
-  "Expectancy R": "Average expected R multiple per trade. This is one of the cleanest edge metrics.",
-  "Payoff Ratio": "Average winning trade divided by the average losing trade.",
-  "Profit Factor": "Ratio of gross profit to gross loss. A value above 1 indicates a profitable system.",
-  "Avg Win R": "Average Risk (R) multiple gained on winning trades.",
-  "Avg Loss R": "Average Risk (R) multiple lost on losing trades.",
-  "Avg Stop Size": "Average monetary amount risked per trade.",
-  "Max Drawdown %": "Largest percentage drop from a peak balance to a subsequent trough.",
-  "Max Drawdown €": "Largest monetary drop from a peak balance to a subsequent trough.",
-  "Win Streak": "Longest sequence of profitable trades.",
-  "Loss Streak": "Longest sequence of losing trades.",
-  "Current Streak": "Current active sequence based on the latest trades.",
-  "Best Symbol": "Most profitable symbol in the selected data.",
-  "Weakest Symbol": "Least profitable symbol in the selected data.",
-  "Best Day": "Most profitable trading day in the selected data.",
-  "Weakest Day": "Least profitable trading day in the selected data.",
-  "Best Weekday": "Most profitable weekday in the selected data.",
-  "Weakest Weekday": "Least profitable weekday in the selected data."
+  "Netto P&L": "Gesamter Gewinn oder Verlust nach Abzug aller Gebühren.",
+  "Gewinne gesamt (Netto)": "Gesamter Gewinn aller positiven Trades nach Gebühren.",
+  "Verluste gesamt": "Gesamtsumme aller Verlust-Trades.",
+  "Gebühren gesamt": "Alle an den Broker gezahlten Gebühren für ausgeführte Trades.",
+  "Kontostand inkl. P&L": "Aktueller Kontostand inklusive Startkapital und Netto P&L.",
+  "Gesamtrendite": "Prozentuale Rendite auf die ursprüngliche Kontogröße.",
+  "Trades gesamt": "Gesamtzahl der erfassten Trades.",
+  "Trefferquote": "Anteil der Trades, die mit Gewinn geschlossen wurden.",
+  "Verlustquote": "Anteil der Trades, die mit Verlust geschlossen wurden.",
+  "Break-even-Quote": "Anteil der Trades ohne Gewinn oder Verlust.",
+  "Gesichertes R": "Summe aller gewonnenen oder verlorenen R-Multiples.",
+  "Ø R / Trade": "Durchschnittliches R-Multiple pro Trade.",
+  "Risiko pro Trade": "Durchschnittlich riskierter Anteil des Kontos pro Trade.",
+  "Erwartungswert": "Durchschnittlich erwarteter monetärer Ertrag pro Trade auf Basis deiner Historie.",
+  "Erwartungswert R": "Durchschnittlich erwartetes R-Multiple pro Trade. Eine der saubersten Edge-Kennzahlen.",
+  "Payoff-Ratio": "Durchschnittlicher Gewinn-Trade geteilt durch durchschnittlichen Verlust-Trade.",
+  "Profit-Faktor": "Verhältnis von Bruttogewinn zu Bruttoverlust. Werte über 1 zeigen ein profitables System an.",
+  "Ø Gewinn R": "Durchschnittliches R-Multiple gewonnener Trades.",
+  "Ø Verlust R": "Durchschnittliches R-Multiple verlorener Trades.",
+  "Ø Stop-Größe": "Durchschnittlicher monetärer Betrag, der pro Trade riskiert wurde.",
+  "Max. Drawdown %": "Größter prozentualer Rückgang von einem Kontostand-Hoch zum folgenden Tief.",
+  "Max. Drawdown €": "Größter monetärer Rückgang von einem Kontostand-Hoch zum folgenden Tief.",
+  "Gewinnserie": "Längste Serie profitabler Trades.",
+  "Verlustserie": "Längste Serie verlorener Trades.",
+  "Aktuelle Serie": "Aktuelle Serie auf Basis der letzten Trades.",
+  "Bestes Symbol": "Profitabelstes Symbol in der ausgewählten Datenmenge.",
+  "Schwächstes Symbol": "Schwächstes Symbol in der ausgewählten Datenmenge.",
+  "Bester Tag": "Profitabelster Trading-Tag in der ausgewählten Datenmenge.",
+  "Schwächster Tag": "Schwächster Trading-Tag in der ausgewählten Datenmenge.",
+  "Bester Wochentag": "Profitabelster Wochentag in der ausgewählten Datenmenge.",
+  "Schwächster Wochentag": "Schwächster Wochentag in der ausgewählten Datenmenge."
 };
 
 const MetricCard = ({ label, value, type = 'neutral' }) => {
@@ -55,7 +55,7 @@ const MetricCard = ({ label, value, type = 'neutral' }) => {
     neutral: 'metric-card-neutral',
   };
 
-  const description = metricDescriptions[label] || "Metric description not available.";
+  const description = metricDescriptions[label] || "Keine Beschreibung verfügbar.";
 
   return (
     <Tooltip>
@@ -86,26 +86,26 @@ const MetricSection = ({ title, metrics }) => (
 const RankingBoard = ({ title, description, items }) => (
   <Card className="glass-panel overflow-hidden rounded-lg">
     <CardHeader className="border-b border-white/10">
-      <p className="section-kicker mb-2">Ranking board</p>
+      <p className="section-kicker mb-2">Ranking</p>
       <CardTitle className="text-xl font-black">{title}</CardTitle>
       <CardDescription>{description}</CardDescription>
     </CardHeader>
     <CardContent className="p-0">
       {items.length === 0 ? (
-        <p className="px-5 py-8 text-sm text-muted-foreground">No ranking data available.</p>
+        <p className="px-5 py-8 text-sm text-muted-foreground">Keine Ranking-Daten verfügbar.</p>
       ) : (
         <div className="divide-y divide-white/10">
           <div className="grid grid-cols-[1fr_64px_72px_96px] gap-3 bg-black/20 px-4 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">
             <span>Name</span>
             <span>Trades</span>
-            <span>Avg R</span>
-            <span className="text-right">Net</span>
+            <span>Ø R</span>
+            <span className="text-right">Netto</span>
           </div>
           {items.map((item) => (
             <div key={item.key} className="grid grid-cols-[1fr_64px_72px_96px] items-center gap-3 px-4 py-4 text-sm">
               <div className="min-w-0">
                 <p className="truncate font-black">{item.label}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{item.winRate.toFixed(1)}% win rate</p>
+                <p className="mt-1 text-xs text-muted-foreground">{item.winRate.toFixed(1)}% Trefferquote</p>
               </div>
               <p className="font-semibold">{item.trades}</p>
               <p className={`font-black ${item.avgR >= 0 ? 'text-success' : 'text-destructive'}`}>
@@ -124,18 +124,18 @@ const RankingBoard = ({ title, description, items }) => (
 
 const InsightPanel = ({ stats }) => {
   const insights = [
-    { label: 'Best day', value: formatPerformanceLabel(stats.bestDay), type: 'positive' },
-    { label: 'Weakest day', value: formatPerformanceLabel(stats.worstDay), type: stats.worstDay?.netPnL < 0 ? 'negative' : 'neutral' },
-    { label: 'Best weekday', value: formatPerformanceLabel(stats.bestWeekday), type: 'positive' },
-    { label: 'Current streak', value: formatStreak(stats.currentStreakType, stats.currentStreakCount), type: stats.currentStreakType === 'loss' ? 'negative' : stats.currentStreakType === 'win' ? 'positive' : 'neutral' },
+    { label: 'Bester Tag', value: formatPerformanceLabel(stats.bestDay), type: 'positive' },
+    { label: 'Schwächster Tag', value: formatPerformanceLabel(stats.worstDay), type: stats.worstDay?.netPnL < 0 ? 'negative' : 'neutral' },
+    { label: 'Bester Wochentag', value: formatPerformanceLabel(stats.bestWeekday), type: 'positive' },
+    { label: 'Aktuelle Serie', value: formatStreak(stats.currentStreakType, stats.currentStreakCount), type: stats.currentStreakType === 'loss' ? 'negative' : stats.currentStreakType === 'win' ? 'positive' : 'neutral' },
   ];
 
   return (
     <Card className="command-panel rounded-lg">
       <CardHeader className="border-b border-white/10">
-        <p className="section-kicker mb-2">Session intelligence</p>
-        <CardTitle className="text-xl font-black">Fast Read</CardTitle>
-        <CardDescription>The most important timing and discipline signals at a glance.</CardDescription>
+        <p className="section-kicker mb-2">Session-Intelligenz</p>
+        <CardTitle className="text-xl font-black">Schnellcheck</CardTitle>
+        <CardDescription>Die wichtigsten Timing- und Disziplin-Signale auf einen Blick.</CardDescription>
       </CardHeader>
       <CardContent className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2 xl:grid-cols-4">
         {insights.map((item) => (
@@ -151,7 +151,7 @@ const InsightPanel = ({ stats }) => {
   );
 };
 
-const formatEuro = (value) => new Intl.NumberFormat('en-IE', {
+const formatEuro = (value) => new Intl.NumberFormat('de-DE', {
   style: 'currency',
   currency: 'EUR',
 }).format(Number(value) || 0);
@@ -159,14 +159,14 @@ const formatEuro = (value) => new Intl.NumberFormat('en-IE', {
 const formatRatio = (value) => value === Infinity ? '∞' : Number(value || 0).toFixed(2);
 
 const formatPerformanceLabel = (item) => {
-  if (!item) return 'No data';
+  if (!item) return 'Keine Daten';
   const sign = item.netPnL >= 0 ? '+' : '';
   return `${item.label} ${sign}${formatEuro(item.netPnL)}`;
 };
 
 const formatStreak = (type, count) => {
-  if (!count || type === 'none' || type === 'breakeven') return 'No active streak';
-  return `${count} ${type === 'win' ? 'wins' : 'losses'}`;
+  if (!count || type === 'none' || type === 'breakeven') return 'Keine aktive Serie';
+  return `${count} ${type === 'win' ? 'Gewinne' : 'Verluste'}`;
 };
 
 const AnalysisDashboard = ({ trades, accounts, originalBalances, selectedAccountId, onUpdateBalance }) => {
@@ -181,14 +181,15 @@ const AnalysisDashboard = ({ trades, accounts, originalBalances, selectedAccount
   const getFilterDescription = () => {
     const parts = [];
     if (filters.symbol) parts.push(filters.symbol.toUpperCase());
-    if (filters.status !== 'All') parts.push(filters.status);
+    const statusLabels = { Win: 'Gewinn', Loss: 'Verlust', Breakeven: 'Break-even' };
+    if (filters.status !== 'All') parts.push(statusLabels[filters.status] || filters.status);
     
     if (filters.startDate && filters.endDate) {
-      parts.push(`${filters.startDate} to ${filters.endDate}`);
+      parts.push(`${filters.startDate} bis ${filters.endDate}`);
     } else if (filters.startDate) {
-      parts.push(`From ${filters.startDate}`);
+      parts.push(`Ab ${filters.startDate}`);
     } else if (filters.endDate) {
-      parts.push(`Until ${filters.endDate}`);
+      parts.push(`Bis ${filters.endDate}`);
     }
     
     return parts.join(' • ');
@@ -225,59 +226,59 @@ const AnalysisDashboard = ({ trades, accounts, originalBalances, selectedAccount
   const hasData = stats !== null;
 
   const balanceMetrics = hasData ? [
-    { label: "Total Wins (Net)", value: formatEuro(stats.grossProfit), type: "positive" },
-    { label: "Total Losses", value: `-${formatEuro(stats.grossLoss)}`, type: "negative" },
-    { label: "Total Commissions", value: formatEuro(stats.totalCommission), type: "negative" },
-    { label: "Compounded Balance", value: formatEuro(stats.endingBalance), type: stats.endingBalance >= stats.totalCurrentBalance ? "positive" : "negative" },
+    { label: "Gewinne gesamt (Netto)", value: formatEuro(stats.grossProfit), type: "positive" },
+    { label: "Verluste gesamt", value: `-${formatEuro(stats.grossLoss)}`, type: "negative" },
+    { label: "Gebühren gesamt", value: formatEuro(stats.totalCommission), type: "negative" },
+    { label: "Kontostand inkl. P&L", value: formatEuro(stats.endingBalance), type: stats.endingBalance >= stats.totalCurrentBalance ? "positive" : "negative" },
   ] : [];
 
   const edgeMetrics = hasData ? [
-    { label: "Net P&L", value: `${stats.netPnL >= 0 ? '+' : '-'}${formatEuro(Math.abs(stats.netPnL))}`, type: stats.netPnL >= 0 ? "positive" : "negative" },
-    { label: "Total Return", value: `${((stats.netPnL / Math.max(stats.totalCurrentBalance, 0.01)) * 100).toFixed(2)}%`, type: stats.netPnL >= 0 ? "positive" : "negative" },
-    { label: "Expectancy R", value: `${stats.expectancyR > 0 ? '+' : ''}${stats.expectancyR.toFixed(2)}R`, type: stats.expectancyR >= 0 ? "positive" : "negative" },
-    { label: "Payoff Ratio", value: formatRatio(stats.payoffRatio), type: stats.payoffRatio >= 1.2 ? "positive" : (stats.payoffRatio >= 1 ? "neutral" : "negative") },
-    { label: "Profit Factor", value: formatRatio(stats.profitFactor), type: stats.profitFactor >= 1.5 ? "positive" : (stats.profitFactor >= 1 ? "neutral" : "negative") },
-    { label: "Max Drawdown %", value: `${stats.maxDrawdownPct.toFixed(2)}%`, type: stats.maxDrawdownPct > 20 ? "negative" : "neutral" },
-    { label: "Avg R / Trade", value: `${stats.avgR > 0 ? '+' : ''}${stats.avgR.toFixed(2)}R`, type: stats.avgR >= 0 ? "positive" : "negative" },
-    { label: "Win Rate", value: `${stats.winRate.toFixed(1)}%`, type: stats.winRate >= 50 ? "positive" : "negative" },
+    { label: "Netto P&L", value: `${stats.netPnL >= 0 ? '+' : '-'}${formatEuro(Math.abs(stats.netPnL))}`, type: stats.netPnL >= 0 ? "positive" : "negative" },
+    { label: "Gesamtrendite", value: `${((stats.netPnL / Math.max(stats.totalCurrentBalance, 0.01)) * 100).toFixed(2)}%`, type: stats.netPnL >= 0 ? "positive" : "negative" },
+    { label: "Erwartungswert R", value: `${stats.expectancyR > 0 ? '+' : ''}${stats.expectancyR.toFixed(2)}R`, type: stats.expectancyR >= 0 ? "positive" : "negative" },
+    { label: "Payoff-Ratio", value: formatRatio(stats.payoffRatio), type: stats.payoffRatio >= 1.2 ? "positive" : (stats.payoffRatio >= 1 ? "neutral" : "negative") },
+    { label: "Profit-Faktor", value: formatRatio(stats.profitFactor), type: stats.profitFactor >= 1.5 ? "positive" : (stats.profitFactor >= 1 ? "neutral" : "negative") },
+    { label: "Max. Drawdown %", value: `${stats.maxDrawdownPct.toFixed(2)}%`, type: stats.maxDrawdownPct > 20 ? "negative" : "neutral" },
+    { label: "Ø R / Trade", value: `${stats.avgR > 0 ? '+' : ''}${stats.avgR.toFixed(2)}R`, type: stats.avgR >= 0 ? "positive" : "negative" },
+    { label: "Trefferquote", value: `${stats.winRate.toFixed(1)}%`, type: stats.winRate >= 50 ? "positive" : "negative" },
   ] : [];
 
   const detailSections = hasData ? [
     {
-      title: "Trade Statistics",
+      title: "Trade-Statistiken",
       metrics: [
-        { label: "Total Trades", value: stats.totalTrades, type: "neutral" },
-        { label: "Win Rate", value: `${stats.winRate.toFixed(1)}%`, type: stats.winRate >= 50 ? "positive" : "negative" },
-        { label: "Loss Rate", value: `${stats.lossRate.toFixed(1)}%`, type: stats.lossRate > 50 ? "negative" : "positive" },
-        { label: "Breakeven Rate", value: `${stats.breakevenRate.toFixed(1)}%`, type: "neutral" },
+        { label: "Trades gesamt", value: stats.totalTrades, type: "neutral" },
+        { label: "Trefferquote", value: `${stats.winRate.toFixed(1)}%`, type: stats.winRate >= 50 ? "positive" : "negative" },
+        { label: "Verlustquote", value: `${stats.lossRate.toFixed(1)}%`, type: stats.lossRate > 50 ? "negative" : "positive" },
+        { label: "Break-even-Quote", value: `${stats.breakevenRate.toFixed(1)}%`, type: "neutral" },
       ]
     },
     {
-      title: "Risk Metrics",
+      title: "Risiko-Kennzahlen",
       metrics: [
-        { label: "R Secured", value: `${stats.totalR > 0 ? '+' : ''}${stats.totalR.toFixed(2)}R`, type: stats.totalR >= 0 ? "positive" : "negative" },
-        { label: "Avg R / Trade", value: `${stats.avgR > 0 ? '+' : ''}${stats.avgR.toFixed(2)}R`, type: stats.avgR >= 0 ? "positive" : "negative" },
-        { label: "Risk Per Trade", value: `${stats.avgRiskPct.toFixed(2)}%`, type: stats.avgRiskPct > 2 ? "negative" : "neutral" },
-        { label: "Avg Stop Size", value: formatEuro(stats.avgStopLossAmount), type: "neutral" },
+        { label: "Gesichertes R", value: `${stats.totalR > 0 ? '+' : ''}${stats.totalR.toFixed(2)}R`, type: stats.totalR >= 0 ? "positive" : "negative" },
+        { label: "Ø R / Trade", value: `${stats.avgR > 0 ? '+' : ''}${stats.avgR.toFixed(2)}R`, type: stats.avgR >= 0 ? "positive" : "negative" },
+        { label: "Risiko pro Trade", value: `${stats.avgRiskPct.toFixed(2)}%`, type: stats.avgRiskPct > 2 ? "negative" : "neutral" },
+        { label: "Ø Stop-Größe", value: formatEuro(stats.avgStopLossAmount), type: "neutral" },
       ]
     },
     {
-      title: "Edge & Streak Details",
+      title: "Edge & Serien",
       metrics: [
-        { label: "Expected Value", value: formatEuro(stats.expectancy), type: stats.expectancy > 0 ? "positive" : "negative" },
-        { label: "Avg Win R", value: `${stats.avgWinR.toFixed(2)}R`, type: stats.avgWinR >= 2 ? "positive" : "neutral" },
-        { label: "Avg Loss R", value: `${stats.avgLossR.toFixed(2)}R`, type: "negative" },
-        { label: "Win Streak", value: `${stats.longestWinStreak}`, type: "positive" },
-        { label: "Loss Streak", value: `${stats.longestLossStreak}`, type: stats.longestLossStreak >= 4 ? "negative" : "neutral" },
+        { label: "Erwartungswert", value: formatEuro(stats.expectancy), type: stats.expectancy > 0 ? "positive" : "negative" },
+        { label: "Ø Gewinn R", value: `${stats.avgWinR.toFixed(2)}R`, type: stats.avgWinR >= 2 ? "positive" : "neutral" },
+        { label: "Ø Verlust R", value: `${stats.avgLossR.toFixed(2)}R`, type: "negative" },
+        { label: "Gewinnserie", value: `${stats.longestWinStreak}`, type: "positive" },
+        { label: "Verlustserie", value: `${stats.longestLossStreak}`, type: stats.longestLossStreak >= 4 ? "negative" : "neutral" },
       ]
     },
     {
-      title: "Drawdown Metrics",
+      title: "Drawdown-Kennzahlen",
       metrics: [
-        { label: "Max Drawdown %", value: `${stats.maxDrawdownPct.toFixed(2)}%`, type: stats.maxDrawdownPct > 20 ? "negative" : "neutral" },
-        { label: "Max Drawdown €", value: formatEuro(stats.maxDrawdown), type: "negative" },
-        { label: "Current Streak", value: formatStreak(stats.currentStreakType, stats.currentStreakCount), type: stats.currentStreakType === "loss" ? "negative" : stats.currentStreakType === "win" ? "positive" : "neutral" },
-        { label: "Weakest Day", value: formatPerformanceLabel(stats.worstDay), type: stats.worstDay?.netPnL < 0 ? "negative" : "neutral" },
+        { label: "Max. Drawdown %", value: `${stats.maxDrawdownPct.toFixed(2)}%`, type: stats.maxDrawdownPct > 20 ? "negative" : "neutral" },
+        { label: "Max. Drawdown €", value: formatEuro(stats.maxDrawdown), type: "negative" },
+        { label: "Aktuelle Serie", value: formatStreak(stats.currentStreakType, stats.currentStreakCount), type: stats.currentStreakType === "loss" ? "negative" : stats.currentStreakType === "win" ? "positive" : "neutral" },
+        { label: "Schwächster Tag", value: formatPerformanceLabel(stats.worstDay), type: stats.worstDay?.netPnL < 0 ? "negative" : "neutral" },
       ]
     }
   ] : [];
@@ -290,18 +291,18 @@ const AnalysisDashboard = ({ trades, accounts, originalBalances, selectedAccount
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4" />
               <AlertDescription className="font-medium">
-                Showing filtered results: <span className="opacity-80 font-normal">{getFilterDescription()}</span>
+                Gefilterte Ergebnisse: <span className="opacity-80 font-normal">{getFilterDescription()}</span>
               </AlertDescription>
             </div>
             <Button variant="outline" size="sm" onClick={clearFilters} className="h-8 gap-1 shrink-0">
               <X className="w-3 h-3" />
-              Clear Filters
+              Filter löschen
             </Button>
           </Alert>
         )}
 
         <div className="space-y-4">
-          <h3 className="text-xl font-semibold tracking-tight border-b border-border pb-2">Account Configuration & Balance</h3>
+          <h3 className="text-xl font-semibold tracking-tight border-b border-border pb-2">Kontoeinstellungen & Balance</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             <EditableStartingBalance 
               accounts={accounts} 
@@ -321,36 +322,36 @@ const AnalysisDashboard = ({ trades, accounts, originalBalances, selectedAccount
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold mb-2">No trading data yet</h3>
+            <h3 className="text-xl font-semibold mb-2">Noch keine Trading-Daten</h3>
             <p className="text-muted-foreground max-w-md">
               {isFiltersActive() 
-                ? "No trades match your current filters. Try adjusting them." 
-                : "Your starting balance is set. Log your first trade to unlock comprehensive analytics and performance metrics."}
+                ? "Keine Trades passen zu deinen aktuellen Filtern. Passe sie an."
+                : "Dein Startkapital ist gesetzt. Erfasse deinen ersten Trade, um umfassende Analysen und Performance-Kennzahlen freizuschalten."}
             </p>
             {isFiltersActive() && (
               <Button variant="outline" className="mt-6" onClick={clearFilters}>
-                Clear Filters
+                Filter löschen
               </Button>
             )}
           </div>
         ) : (
           <>
-            <MetricSection title="Edge Overview" metrics={edgeMetrics} />
+            <MetricSection title="Edge-Überblick" metrics={edgeMetrics} />
 
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
               <RankingBoard
-                title="Symbol Ranking"
-                description="Markets ordered by net performance in the selected data."
+                title="Symbol-Ranking"
+                description="Märkte sortiert nach Netto-Performance in der ausgewählten Datenmenge."
                 items={symbolRankings}
               />
               <RankingBoard
-                title="Weekday Ranking"
-                description="Which weekdays contribute most to your results."
+                title="Wochentags-Ranking"
+                description="Welche Wochentage am stärksten zu deinen Ergebnissen beitragen."
                 items={weekdayRankings}
               />
               <RankingBoard
-                title="Trading Day Ranking"
-                description="Best individual trading days by net performance."
+                title="Trading-Tage-Ranking"
+                description="Beste einzelne Trading-Tage nach Netto-Performance."
                 items={dayRankings}
               />
             </div>

@@ -37,18 +37,18 @@ const CookiePreferencesModal = ({ isOpen, onClose }) => {
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
               <Shield className="w-6 h-6 text-primary" />
             </div>
-            <DialogTitle className="text-2xl font-semibold tracking-tight">Cookie Preferences</DialogTitle>
+            <DialogTitle className="text-2xl font-semibold tracking-tight">Cookie-Einstellungen</DialogTitle>
             <DialogDescription className="text-base mt-2">
-              Manage your cookie settings. We use Google Analytics to measure traffic and improve our website experience.
+              Verwalte deine Cookie-Einstellungen. Wir nutzen Google Analytics, um Traffic zu messen und die Website-Erfahrung zu verbessern.
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-6 py-2">
             <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border/50">
               <div>
-                <p className="font-medium text-foreground">Current Status</p>
+                <p className="font-medium text-foreground">Aktueller Status</p>
                 <p className="text-sm text-muted-foreground capitalize mt-1">
-                  {status === 'pending' ? 'Not Set' : status}
+                  {status === 'pending' ? 'Nicht gesetzt' : status === 'accepted' ? 'Akzeptiert' : 'Abgelehnt'}
                 </p>
               </div>
               {status === 'accepted' && <CheckCircle2 className="w-6 h-6 text-success" />}
@@ -56,9 +56,9 @@ const CookiePreferencesModal = ({ isOpen, onClose }) => {
             </div>
             
             <div className="space-y-3">
-              <h4 className="font-medium text-foreground">What data is collected?</h4>
+              <h4 className="font-medium text-foreground">Welche Daten werden erfasst?</h4>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Accepting cookies allows us to collect anonymized data about your visit, such as pages viewed, time spent on site, and general location. Rejecting will disable Google Analytics tracking entirely. Essential cookies required for the site to function (like authentication) cannot be disabled.
+                Wenn du Analyse-Cookies akzeptierst, können wir anonymisierte Daten zu deinem Besuch erfassen, zum Beispiel aufgerufene Seiten, Verweildauer und grobe Region. Bei Ablehnung wird Google Analytics deaktiviert. Essenzielle Cookies für Anmeldung und Seitenfunktion können nicht deaktiviert werden.
               </p>
             </div>
           </div>
@@ -67,10 +67,10 @@ const CookiePreferencesModal = ({ isOpen, onClose }) => {
         <div className="p-6 sm:p-8 bg-muted/30 border-t border-border/50">
           <DialogFooter className="flex flex-col sm:flex-row gap-3 sm:justify-end">
             <Button variant="outline" onClick={() => handleSave('rejected')} className="w-full sm:w-auto">
-              Reject Analytics
+              Analyse ablehnen
             </Button>
             <Button onClick={() => handleSave('accepted')} className="w-full sm:w-auto">
-              Accept Analytics
+              Analyse akzeptieren
             </Button>
           </DialogFooter>
         </div>

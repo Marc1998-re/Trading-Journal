@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Helmet } from 'react-helmet';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   Scale, 
@@ -21,8 +20,6 @@ import {
 } from 'lucide-react';
 
 const TermsOfServicePage = () => {
-  const [lang, setLang] = useState('en');
-
   const content = {
     en: {
       title: 'Terms of Service',
@@ -34,7 +31,7 @@ const TermsOfServicePage = () => {
           icon: <Scale className="w-5 h-5 text-primary" />,
           content: (
             <p>
-              These Terms of Service apply to the use of the "Marc's Trading Journal" application. By registering and using the platform, you agree to these terms. Deviating conditions of the user are not recognized unless expressly agreed to in writing.
+              These Terms of Service apply to the use of the "The Trading Desk" application. By registering and using the platform, you agree to these terms. Deviating conditions of the user are not recognized unless expressly agreed to in writing.
             </p>
           ),
         },
@@ -44,7 +41,7 @@ const TermsOfServicePage = () => {
           icon: <BookOpen className="w-5 h-5 text-primary" />,
           content: (
             <p>
-              Marc's Trading Journal is a digital platform for recording, analyzing, and managing trading activities. The service includes features for logging trades, calculating performance metrics, and generating visual analytics. The platform is provided "as is" and we reserve the right to modify, expand, or discontinue features at any time.
+              The Trading Desk is a digital platform for recording, analyzing, and managing trading activities. The service includes features for logging trades, calculating performance metrics, and generating visual analytics. The platform is provided "as is" and we reserve the right to modify, expand, or discontinue features at any time.
             </p>
           ),
         },
@@ -180,7 +177,7 @@ const TermsOfServicePage = () => {
           icon: <Scale className="w-5 h-5 text-primary" />,
           content: (
             <p>
-              Diese Nutzungsbedingungen gelten für die Nutzung der Anwendung "Marc's Trading Journal". Mit der Registrierung und Nutzung der Plattform stimmen Sie diesen Bedingungen zu. Abweichende Bedingungen des Nutzers werden nicht anerkannt, es sei denn, es wurde ausdrücklich schriftlich zugestimmt.
+              Diese Nutzungsbedingungen gelten für die Nutzung der Anwendung "The Trading Desk". Mit der Registrierung und Nutzung der Plattform stimmen Sie diesen Bedingungen zu. Abweichende Bedingungen des Nutzers werden nicht anerkannt, es sei denn, es wurde ausdrücklich schriftlich zugestimmt.
             </p>
           ),
         },
@@ -190,7 +187,7 @@ const TermsOfServicePage = () => {
           icon: <BookOpen className="w-5 h-5 text-primary" />,
           content: (
             <p>
-              Marc's Trading Journal ist eine digitale Plattform zur Erfassung, Analyse und Verwaltung von Handelsaktivitäten. Der Service umfasst Funktionen zur Protokollierung von Trades, Berechnung von Leistungskennzahlen und Erstellung visueller Analysen. Die Plattform wird "wie besehen" bereitgestellt und wir behalten uns das Recht vor, Funktionen jederzeit zu ändern, zu erweitern oder einzustellen.
+              The Trading Desk ist eine digitale Plattform zur Erfassung, Analyse und Verwaltung von Handelsaktivitäten. Der Service umfasst Funktionen zur Protokollierung von Trades, Berechnung von Leistungskennzahlen und Erstellung visueller Analysen. Die Plattform wird "wie besehen" bereitgestellt und wir behalten uns das Recht vor, Funktionen jederzeit zu ändern, zu erweitern oder einzustellen.
             </p>
           ),
         },
@@ -318,40 +315,22 @@ const TermsOfServicePage = () => {
     },
   };
 
-  const currentContent = content[lang];
+  const currentContent = content.de;
 
   return (
     <>
       <Helmet>
         <title>{`${currentContent.title} - Trading Journal`}</title>
-        <meta name="description" content="Terms of Service and Platform Usage Rules" />
+        <meta name="description" content="Nutzungsbedingungen und Regeln zur Plattformnutzung" />
       </Helmet>
 
       <div className="min-h-screen bg-background py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
-          {/* Header & Toggle */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-6">
+          {/* Header */}
+          <div className="mb-12">
             <div>
               <h1 className="text-4xl font-bold tracking-tight mb-2">{currentContent.title}</h1>
               <p className="text-muted-foreground">{currentContent.subtitle}</p>
-            </div>
-            <div className="flex items-center bg-muted p-1 rounded-lg border border-border/50 shadow-sm">
-              <Button
-                variant={lang === 'de' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setLang('de')}
-                className={`rounded-md px-4 transition-all ${lang === 'de' ? 'shadow-sm' : ''}`}
-              >
-                DE
-              </Button>
-              <Button
-                variant={lang === 'en' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setLang('en')}
-                className={`rounded-md px-4 transition-all ${lang === 'en' ? 'shadow-sm' : ''}`}
-              >
-                EN
-              </Button>
             </div>
           </div>
 
@@ -359,7 +338,7 @@ const TermsOfServicePage = () => {
           <div className="space-y-8">
             <AnimatePresence mode="wait">
               <motion.div
-                key={lang}
+                key="de"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
@@ -392,9 +371,7 @@ const TermsOfServicePage = () => {
           {/* Footer Note */}
           <div className="mt-16 text-center text-sm text-muted-foreground">
             <p>
-              {lang === 'en' 
-                ? 'If you have any questions about these Terms of Service, please contact us.'
-                : 'Wenn Sie Fragen zu diesen Nutzungsbedingungen haben, kontaktieren Sie uns bitte.'}
+              Wenn Sie Fragen zu diesen Nutzungsbedingungen haben, kontaktieren Sie uns bitte.
             </p>
           </div>
         </div>

@@ -1,0 +1,154 @@
+@layer components {
+  .trading-app { --radius: 0.25rem; }
+  .trading-app .journal-sidebar { @apply bg-card px-4 py-6; width: 224px; }
+  .trading-app .journal-brand { @apply gap-3; }
+  .trading-app .brand-mark { @apply flex h-10 w-10 items-center justify-center rounded-sm bg-primary text-primary-foreground; }
+  .trading-app .brand-mark > span { @apply hidden; }
+  .trading-app .journal-sidebar .journal-brand { @apply mb-12; }
+  .trading-app .sidebar-label { @apply mb-2 text-muted-foreground; font-size: 10px; }
+  .trading-app .sidebar-link { @apply relative my-1 rounded-sm py-3; }
+  .trading-app .sidebar-link.is-active { @apply bg-secondary text-primary; box-shadow: inset 2px 0 hsl(var(--primary)); }
+  .trading-app .nav-index { @apply ml-auto font-mono text-muted-foreground; font-size: 10px; }
+  .trading-app .sidebar-caption { @apply text-xs; }
+  .trading-app .demo-label { @apply border-primary/20 bg-primary/5 text-primary; font-size: 10px; }
+  .trading-app .workspace-header { @apply hidden h-16 items-center justify-between gap-4 border-b bg-background px-8; margin-left: 224px; }
+  .workspace-breadcrumb { @apply flex items-center gap-3 text-xs; }
+  .workspace-breadcrumb a, .workspace-breadcrumb > span:first-of-type { @apply text-muted-foreground; }
+  .theme-switch { @apply inline-flex shrink-0 items-center gap-0.5 rounded-md border bg-card p-0.5; }
+  .theme-switch button { @apply h-8 w-8 rounded-sm text-muted-foreground; }
+  .theme-switch button[aria-pressed="true"] { @apply bg-primary text-primary-foreground; }
+  .theme-switch button[aria-pressed="false"]:hover { @apply bg-secondary text-foreground; }
+  .trading-app .workspace-main { @apply bg-background; min-height: calc(100svh - 64px); }
+  .trading-app .journal-page { padding: 30px 32px 48px; max-width: 1520px; }
+  .trading-app .journal-heading { @apply mb-6 gap-4; }
+  .trading-app .journal-heading h1 { font-family: Georgia, 'Times New Roman', serif; font-size: 38px; font-weight: 400; line-height: 1.15; }
+  .trading-app .journal-heading > div { @apply min-w-0; }
+  .trading-app .journal-heading > div > p:first-child { @apply text-primary; font-size: 11px; }
+  .trading-app .journal-toolbar { @apply mb-6 border-y py-3; }
+  .trading-app .period-switch { @apply shrink-0 rounded-md bg-card; }
+  .trading-app .period-switch button { @apply rounded-sm; }
+  .trading-app .period-switch button[aria-pressed="true"] { @apply bg-secondary text-foreground; }
+  .trading-app .metric-strip { @apply mb-8 border-y bg-card; }
+  .trading-app .metric-strip .journal-metric { @apply px-5 py-5; }
+  .trading-app .metric-number { @apply font-medium; font-size: 28px; line-height: 1.25; }
+  .trading-app .journal-metric::after { content: none; }
+  .trading-app .section-heading { @apply mb-5; }
+  .trading-app .section-heading h2 { @apply text-sm font-semibold; }
+  .trading-app .section-heading h2 > span { @apply text-primary; font-size: 10px; }
+  .trading-app .journal-columns { gap: 32px; grid-template-columns: minmax(0, 1fr) 260px; }
+  .trading-app .capital-readout { @apply mb-5 flex flex-wrap items-baseline gap-x-3 gap-y-1; }
+  .trading-app .capital-readout strong { @apply text-3xl font-medium; }
+  .trading-app .capital-readout span { @apply text-xs text-muted-foreground; }
+  .trading-app .performance-chart { @apply border-y bg-card/40; }
+  .trading-app .chart-tooltip { @apply rounded-md border bg-popover text-popover-foreground shadow-md; }
+  .trading-app .chart-tooltip strong { @apply text-primary; }
+  .trading-app .review-focus { @apply self-stretch border-l border-primary/20 bg-card py-5 pl-5 pr-5; }
+  .trading-app .review-focus h3 { @apply mt-5 text-xl leading-snug font-medium; }
+  .trading-app .review-focus .focus-number { @apply text-foreground; font-family: Georgia, 'Times New Roman', serif; font-size: 54px; line-height: 1; }
+  .trading-app .review-focus .focus-readout { @apply my-5 flex items-center gap-4 border-y py-5; }
+  .trading-app .focus-readout p { @apply m-0 max-w-28 text-xs leading-5; }
+  .trading-app .review-focus > p { @apply text-xs leading-6; }
+  .outcome-strip { @apply mt-5 grid grid-cols-3 gap-3; }
+  .outcome-strip > div { @apply min-w-0; }
+  .outcome-strip span { @apply block text-xs text-muted-foreground; }
+  .outcome-strip strong { @apply mt-1 block text-base font-medium; }
+  .outcome-bar { @apply mt-3 flex h-1 w-full overflow-hidden bg-secondary; }
+  .outcome-bar > i { @apply block h-full; }
+  .trading-app .dashboard-detail-grid { @apply mt-8 grid min-w-0 gap-8 border-t; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+  .trading-app .dashboard-detail-grid .journal-section { @apply border-b-0 pt-6; }
+  .review-pending { @apply inline-block rounded-sm bg-accent px-2 py-1 text-xs text-accent-foreground; }
+  .year-grid button[aria-pressed="true"] { @apply bg-secondary; box-shadow: inset 0 -2px hsl(var(--primary)); }
+  .review-queue button[aria-pressed="true"] { @apply bg-secondary; }
+  .review-layout > section { @apply min-w-0; }
+  .trade-ledger:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 3px; }
+  .trade-ledger .journal-table th:first-child, .trade-ledger .journal-table td:first-child { @apply sticky left-0 z-10 bg-background; }
+  .trade-ledger .journal-table th:first-child { @apply bg-card; }
+  .trading-app .performance-row { @apply py-4; }
+  .trading-app .performance-row > div:last-child strong { @apply font-medium; }
+  .trading-app .diverging-track { @apply h-5 bg-secondary/50; }
+  .trading-app .diverging-track b { @apply top-1 h-3 rounded-sm bg-success; }
+  .trading-app .diverging-track b.negative { @apply bg-destructive; }
+  .trading-app .journal-table th { @apply bg-card px-3 py-3 text-xs font-medium; }
+  .trading-app .journal-table td { @apply px-3 py-4; }
+  .trading-app .journal-table td:first-child { @apply pl-3; }
+  .trading-app .journal-table tbody tr:hover { @apply bg-secondary/40; }
+  .trading-app .dashboard-trades .journal-table { @apply text-xs; }
+  .trading-app .dashboard-trades td { @apply px-2 py-4; }
+  .trading-app .dashboard-trades td:first-child { @apply pl-3; }
+  .trading-app .calendar-grid { @apply gap-1; }
+  .trading-app .calendar-cell { @apply relative border border-border/60 bg-card; min-height: 64px; padding: 6px; }
+  .trading-app .calendar-cell.positive { @apply border-success/20 bg-success/5; }
+  .trading-app .calendar-cell.negative { @apply border-destructive/20 bg-destructive/5; }
+  .trading-app .calendar-cell.has-trades::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: hsl(var(--success) / .5); }
+  .trading-app .calendar-cell.negative::after { background: hsl(var(--destructive) / .5); }
+  .trading-app .calendar-cell[aria-pressed="true"] { outline: 2px solid hsl(var(--primary)); outline-offset: 1px; }
+  .trading-app .calendar-cell strong { @apply font-medium; font-size: 10px; }
+  .trading-app .calendar-cell small { font-size: 9px; }
+  .trading-app .workspace-mobile-header { @apply bg-background px-5; }
+  .workspace-mobile-account { @apply border-b px-5 py-3; }
+  .trading-app .mobile-bottom-nav { @apply bg-background; }
+  .trading-app .mobile-bottom-nav a.is-active { @apply bg-secondary text-primary; box-shadow: inset 0 2px hsl(var(--primary)); }
+  .trading-app .trade-preview { @apply bg-card p-4; }
+  .trading-app .trade-preview strong { @apply font-medium; }
+  .trading-app .form-field input, .trading-app .form-field textarea, .trading-app .form-field select { @apply rounded-md bg-background; }
+  .settings-section { @apply grid gap-6 border-t py-8; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+  .settings-section h2 { @apply text-base font-semibold; }
+  .settings-section header p { @apply mt-2 max-w-xs text-sm leading-6 text-muted-foreground; }
+  .settings-section > div { @apply min-w-0; }
+  .settings-danger { @apply mt-0 rounded-none border-x-0 border-b-0 bg-transparent shadow-none; }
+  .settings-danger > div { @apply px-0; }
+  .trading-app .public-header:not(.landing-header) { max-width: none; padding-inline: 4.5%; }
+  .trading-app .auth-layout { max-width: 1240px; min-height: calc(100svh - 190px); padding-top: 80px; }
+  .trading-app .auth-form { @apply self-center; }
+  .trading-app .auth-form h1 { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
+  .trading-app .auth-aside { @apply relative self-center; }
+  .trading-app .auth-market-image { @apply mb-5 w-full; aspect-ratio: 1.6; object-fit: contain; }
+  .trading-app .auth-note { @apply border-0 pl-0; }
+  .trading-app .auth-note h2 { @apply text-3xl font-medium; }
+  @media (min-width: 1024px) {
+    .trading-app .workspace-header { display: flex; }
+    .trading-app .workspace-main { margin-left: 224px; }
+    .workspace-mobile-account { display: none; }
+  }
+  @media (max-width: 1279px) {
+    .trading-app .dashboard-detail-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .trading-app .journal-columns { grid-template-columns: minmax(0, 1fr) 230px; gap: 24px; }
+    .trading-app .metric-number { font-size: 24px; }
+  }
+  @media (max-width: 1023px) {
+    .trading-app .journal-page { padding: 26px 24px 40px; }
+    .trading-app .journal-columns { grid-template-columns: minmax(0, 1fr); }
+    .trading-app .review-focus { @apply border-l-0 border-t px-5 py-5; }
+    .trading-app .review-focus h3 br { display: none; }
+    .trading-app .review-queue { max-height: 240px; }
+    .trading-app .journal-heading h1 { font-size: 34px; }
+    .settings-section { grid-template-columns: minmax(0, 1fr); }
+    .trading-app .auth-layout { padding-top: 40px; min-height: auto; }
+  }
+  @media (max-width: 639px) {
+    .trading-app .journal-page { padding: 24px 16px 32px; }
+    .trading-app .journal-heading { align-items: flex-start; }
+    .trading-app .journal-heading h1 { font-size: 32px; }
+    .trading-app .journal-heading > a, .trading-app .journal-heading > button { @apply w-full; }
+    .trading-app .journal-toolbar { @apply gap-3; }
+    .trading-app .journal-toolbar > div:last-child { @apply flex-wrap; }
+    .trade-filters > div:first-child { flex-basis: 100%; max-width: none; }
+    .trade-filters > select { flex: 1; min-width: 0; }
+    .trading-app .month-control { @apply ml-auto; }
+    .trading-app .month-control > span { width: 105px; }
+    .trading-app .month-control[data-range="week"] > span { width: 152px; }
+    .trading-app .month-control button { @apply h-8 w-8; }
+    .trading-app .period-switch button { @apply px-2; }
+    .trading-app .metric-strip .journal-metric { @apply px-3 py-5; }
+    .trading-app .metric-number { font-size: 23px; }
+    .trading-app .capital-readout strong { font-size: 27px; }
+    .trading-app .calendar-cell { min-height: 57px; padding: 5px 3px; }
+    .trading-app .calendar-cell strong { font-size: 9px; }
+    .trading-app .calendar-grid { gap: 3px; }
+    .trading-app .performance-row { gap: 10px; grid-template-columns: minmax(76px, 1fr) minmax(32px, .65fr) minmax(100px, 1fr); }
+  }
+  @media (max-width: 379px) {
+    .trading-app .metric-strip .journal-metric { padding-inline: 8px; }
+    .trading-app .metric-number { font-size: 18px; }
+  }
+}

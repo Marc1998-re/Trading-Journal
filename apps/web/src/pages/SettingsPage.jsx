@@ -7,18 +7,19 @@ import pb from '@/lib/pocketbaseClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Save, Settings as SettingsIcon, Percent, Wallet, User, Lock, Moon, Sun, AlertTriangle, Trash2 } from 'lucide-react';
+import { Save, Percent, User, Lock, AlertTriangle, Trash2 } from 'lucide-react';
+import ThemeSwitch from '@/components/journal/ThemeSwitch';
+import { PageHeading } from '@/components/journal/JournalUI';
 import SettingsSection from '@/components/SettingsSection.jsx';
 import DeleteAccountModal from '@/components/DeleteAccountModal.jsx';
 
 const SettingsPage = () => {
   const navigate = useNavigate();
   const { currentUser, userSettings, refreshUserSettings } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   
@@ -61,9 +62,9 @@ const SettingsPage = () => {
     setSavingProfile(true);
     try {
       await pb.collection('users').update(currentUser.id, { name }, { $autoCancel: false });
-      toast.success('Profile updated successfully');
+      toast.success('Profil erfolgreich aktualisiert.');
     } catch (err) {
-      toast.error(err.message || 'Failed to update profile');
+      toast.error(err.message || 'Profil konnte nicht aktualisiert werden.');
     } finally {
       setSavingProfile(false);
     }
@@ -73,7 +74,7 @@ const SettingsPage = () => {
     e.preventDefault();
     
     if (newPassword !== confirmPassword) {
-      toast.error('New passwords do not match');
+      toast.error('Die neuen Passwörter stimmen nicht überein.');
       return;
     }
     
@@ -85,13 +86,13 @@ const SettingsPage = () => {
         passwordConfirm: confirmPassword
       }, { $autoCancel: false });
       
-      toast.success('Password updated successfully');
+      toast.success('Passwort erfolgreich aktualisiert.');
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err) {
-      const errorMsg = err.response?.data?.oldPassword?.message || err.message || 'Failed to update password';
-      toast.error(`Password update failed: ${errorMsg}`);
+      const errorMsg = err.response?.data?.oldPassword?.message || err.message || 'Passwort konnte nicht aktualisiert werden.';
+      toast.error(`Passwort-Update fehlgeschlagen: ${errorMsg}`);
     } finally {
       setSavingPassword(false);
     }
@@ -104,7 +105,7 @@ const SettingsPage = () => {
     if (commissionInput.trim() !== '') {
       newCommission = Number(commissionInput);
       if (isNaN(newCommission) || newCommission < 0 || newCommission > 100) {
-        toast.error('Please enter a valid percentage between 0 and 100.');
+        toast.error('Bitte gib einen gültigen Prozentwert zwischen 0 und 100 ein.');
         return;
       }
     }
@@ -125,10 +126,10 @@ const SettingsPage = () => {
 
       await refreshUserSettings();
       setCommissionInput(newCommission.toString());
-      toast.success('Global commission updated successfully');
+      toast.success('Globale Gebühr erfolgreich aktualisiert.');
     } catch (err) {
       console.error('Failed to update commission:', err);
-      toast.error('Failed to update commission preferences');
+      toast.error('Gebühren-Einstellungen konnten nicht aktualisiert werden.');
     } finally {
       setSavingCommission(false);
     }
@@ -136,16 +137,16 @@ const SettingsPage = () => {
 
   const handleDeleteSuccess = () => {
     setIsDeleteModalOpen(false);
-    toast.success('Account deleted successfully');
+    toast.success('Konto erfolgreich gelöscht.');
     navigate('/login');
   };
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-12 max-w-3xl space-y-8">
+      <div className="journal-page space-y-8">
         <Skeleton className="h-10 w-1/3 mb-8" />
         {[1, 2, 3].map(i => (
-          <Skeleton key={i} className="h-64 w-full rounded-2xl" />
+          <Skeleton key={i} className="h-64 w-full rounded-md" />
         ))}
       </div>
     );
@@ -154,57 +155,34 @@ const SettingsPage = () => {
   return (
     <>
       <Helmet>
-        <title>Settings - Trading Journal</title>
-        <meta name="description" content="Manage your trading journal settings" />
+        <title>Einstellungen · The Trading Desk</title>
+        <meta name="description" content="Verwalte deine Trading-Journal-Einstellungen" />
       </Helmet>
       
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 max-w-4xl space-y-10">
-        <div>
-          <h1 className="text-4xl font-extrabold mb-3 flex items-center gap-3 tracking-tight">
-            <SettingsIcon className="w-8 h-8 text-primary" />
-            Settings
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl">
-            Manage your personal profile, security credentials, and app preferences.
-          </p>
-        </div>
+      <div className="journal-page">
+        <PageHeading eyebrow="Dein Arbeitsplatz" title="Einstellungen">Profil, Sicherheit und persönliche Vorgaben.</PageHeading>
 
-        <div className="grid gap-8">
+        <div>
           {/* Appearance Section */}
           <SettingsSection 
-            title="Appearance" 
-            description="Customize how the application looks on your device."
+            title="Darstellung"
+            description="Passe an, wie die Anwendung auf deinem Gerät aussieht."
           >
-            <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl border border-border/50">
-              <div className="flex items-center gap-4">
-                <div className="p-2 bg-background rounded-lg shadow-sm border border-border">
-                  {theme === 'dark' ? <Moon className="w-5 h-5 text-primary" /> : <Sun className="w-5 h-5 text-primary" />}
-                </div>
-                <div>
-                  <Label className="text-base font-semibold cursor-pointer" htmlFor="theme-toggle">Dark Mode</Label>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {theme === 'dark' ? 'Dark theme is currently active.' : 'Light theme is currently active.'}
-                  </p>
-                </div>
-              </div>
-              <Switch 
-                id="theme-toggle"
-                checked={theme === 'dark'} 
-                onCheckedChange={toggleTheme} 
-                className="scale-110 data-[state=checked]:bg-primary"
-              />
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <span className="text-sm">{theme === 'dark' ? 'Dunkles Design' : 'Helles Design'}</span>
+              <ThemeSwitch/>
             </div>
           </SettingsSection>
 
           {/* Profile Section */}
           <SettingsSection 
-            title="Profile Information" 
-            description="Update your personal details. Note that email addresses cannot be changed directly."
+            title="Profilinformationen"
+            description="Aktualisiere deine persönlichen Daten. E-Mail-Adressen können aktuell nicht direkt geändert werden."
           >
             <form onSubmit={handleProfileUpdate} className="space-y-6">
               <div className="grid sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-muted-foreground font-semibold uppercase text-xs tracking-wider">Email Address</Label>
+                  <Label htmlFor="email" className="text-muted-foreground font-semibold uppercase text-xs tracking-wider">E-Mail-Adresse</Label>
                   <div className="relative">
                     <Input 
                       id="email" 
@@ -216,12 +194,12 @@ const SettingsPage = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="font-semibold uppercase text-xs tracking-wider">Display Name</Label>
+                  <Label htmlFor="name" className="font-semibold uppercase text-xs tracking-wider">Anzeigename</Label>
                   <Input 
                     id="name" 
                     value={name} 
                     onChange={e => setName(e.target.value)} 
-                    placeholder="E.g. Maya Chen"
+                    placeholder="z. B. Max Mustermann"
                     className="bg-background"
                   />
                 </div>
@@ -232,19 +210,19 @@ const SettingsPage = () => {
                 ) : (
                   <Save className="w-4 h-4" />
                 )}
-                Save Profile
+                Profil speichern
               </Button>
             </form>
           </SettingsSection>
 
           {/* Security Section */}
           <SettingsSection 
-            title="Security" 
-            description="Update your password to keep your account secure."
+            title="Sicherheit"
+            description="Aktualisiere dein Passwort, um dein Konto zu schützen."
           >
             <form onSubmit={handlePasswordUpdate} className="space-y-5 max-w-md">
               <div className="space-y-2">
-                <Label htmlFor="oldPassword">Current Password</Label>
+                <Label htmlFor="oldPassword">Aktuelles Passwort</Label>
                 <div className="relative">
                   <Input 
                     id="oldPassword" 
@@ -258,7 +236,7 @@ const SettingsPage = () => {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password</Label>
+                <Label htmlFor="newPassword">Neues Passwort</Label>
                 <Input 
                   id="newPassword" 
                   type="password" 
@@ -270,7 +248,7 @@ const SettingsPage = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <Label htmlFor="confirmPassword">Neues Passwort bestätigen</Label>
                 <Input 
                   id="confirmPassword" 
                   type="password" 
@@ -287,27 +265,20 @@ const SettingsPage = () => {
                 ) : (
                   <Lock className="w-4 h-4" />
                 )}
-                Update Password
+                Passwort aktualisieren
               </Button>
             </form>
           </SettingsSection>
 
           {/* Trading Preferences */}
           <SettingsSection 
-            title="Trading Preferences" 
-            description="Configure default values for your trading journal entries."
+            title="Trading-Einstellungen"
+            description="Konfiguriere Standardwerte für neue Journal-Einträge."
           >
-            <div className="mb-6 p-4 bg-primary/5 rounded-xl border border-primary/10 flex items-start gap-3">
-              <Wallet className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-              <p className="text-sm text-foreground/80 leading-relaxed">
-                <span className="font-medium text-foreground">Tip:</span> Starting Balance is now editable directly from your Dashboard for real-time metric updates. You don't need to change it here.
-              </p>
-            </div>
-
             <form onSubmit={handleUpdateCommission} className="space-y-4">
               <div className="space-y-2 max-w-sm">
-                <Label htmlFor="commissionPercentage" className="font-semibold uppercase text-xs tracking-wider">Global Commission Rate (%)</Label>
-                <p className="text-xs text-muted-foreground mb-2">Default commission applied to new trades. Can be overridden per trade.</p>
+                <Label htmlFor="commissionPercentage" className="font-semibold uppercase text-xs tracking-wider">Globale Gebühr (%)</Label>
+                <p className="text-xs text-muted-foreground mb-2">Standardgebühr für neue Trades. Kann pro Trade überschrieben werden.</p>
                 <div className="relative">
                   <Input
                     id="commissionPercentage"
@@ -318,7 +289,7 @@ const SettingsPage = () => {
                     value={commissionInput}
                     onChange={(e) => setCommissionInput(e.target.value)}
                     className="bg-background text-lg pl-10 h-12"
-                    placeholder="e.g. 0.1"
+                    placeholder="z. B. 0.1"
                   />
                   <Percent className="w-5 h-5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
                 </div>
@@ -329,26 +300,26 @@ const SettingsPage = () => {
                 ) : (
                   <Save className="w-4 h-4" />
                 )}
-                Save Preferences
+                Einstellungen speichern
               </Button>
             </form>
           </SettingsSection>
 
           {/* Danger Zone Section */}
-          <Card className="border-destructive/30 bg-destructive/5 rounded-2xl overflow-hidden mt-8 transition-all">
+          <Card className="settings-danger border-destructive/30">
             <CardHeader className="border-b border-destructive/10 pb-6">
               <CardTitle className="text-xl tracking-tight text-destructive flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5" />
-                Danger Zone
+                Gefahrenbereich
               </CardTitle>
               <CardDescription className="text-base mt-2 text-destructive/80">
-                Permanently delete your account and all associated data.
+                Lösche dein Konto und alle zugehörigen Daten dauerhaft.
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <p className="text-sm text-foreground/80 max-w-lg leading-relaxed">
-                  Once you delete your account, there is no going back. Please be certain before proceeding with this action.
+                  Wenn du dein Konto löschst, kann diese Aktion nicht rückgängig gemacht werden. Bitte sei sicher, bevor du fortfährst.
                 </p>
                 <Button 
                   variant="destructive" 
@@ -356,7 +327,7 @@ const SettingsPage = () => {
                   className="w-full sm:w-auto h-11 shadow-sm whitespace-nowrap"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
-                  Delete Account
+                  Konto löschen
                 </Button>
               </div>
             </CardContent>

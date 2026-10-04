@@ -1,27 +1,20 @@
 /// <reference path="../pb_data/types.d.ts" />
-onRecordAfterCreateSuccess((e) => {
-  // This hook runs after a trade is created
-  // If accountId is not set, assign it to the user's default account
-  
-  if (!e.record.get("accountId")) {
-    const userId = e.record.get("userId");
-    
-    // Find or create default account for this user
-    let defaultAccount = $app.findFirstRecordByData("tradingAccounts", "accountName", "Default Account");
-    
-    if (!defaultAccount || defaultAccount.get("userId") !== userId) {
-      // Create default account if it doesn't exist for this user
-      defaultAccount = new Record("tradingAccounts");
-      defaultAccount.set("accountName", "Default Account");
-      defaultAccount.set("userId", userId);
-      defaultAccount.set("status", "active");
-      $app.save(defaultAccount);
-    }
-    
-    // Update the trade with the default account ID
-    e.record.set("accountId", defaultAccount.id);
-    $app.save(e.record);
+// Validate account ownership; never silently attach a trade to somebody else's account.
+onRecordCreateRequest((e) => {
+  const accountId=e.record.getString('accountId');
+  if(!accountId) throw new BadRequestError('Bitte wähle ein Handelskonto.');
+  let account;
+  try { account=e.app.findRecordById('tradingAccounts',accountId); }
+  catch { throw new BadRequestError('Handelskonto nicht gefunden.'); }
+  if(!e.auth || account.getString('userId')!==e.auth.id || e.record.getString('userId')!==e.auth.id) {
+    throw new ForbiddenError('Dieses Handelskonto gehört nicht zu deinem Benutzer.');
   }
-  
   e.next();
-}, "trades");
+}, 'trades');
+onRecordUpdateRequest((e) => {
+  const account=e.app.findRecordById('tradingAccounts',e.record.getString('accountId'));
+  if(!e.auth || account.getString('userId')!==e.auth.id || e.record.getString('userId')!==e.auth.id) {
+    throw new ForbiddenError('Dieses Handelskonto gehört nicht zu deinem Benutzer.');
+  }
+  e.next();
+}, 'trades');

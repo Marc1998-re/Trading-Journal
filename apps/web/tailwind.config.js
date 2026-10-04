@@ -16,7 +16,10 @@ module.exports = {
       },
     },
     extend: {
+      opacity: { 15: '0.15', 35: '0.35', 82: '0.82' },
       colors: {
+        success: { DEFAULT: 'hsl(var(--success) / <alpha-value>)', foreground: 'hsl(var(--success-foreground) / <alpha-value>)' },
+        info: { DEFAULT: 'hsl(var(--info) / <alpha-value>)', foreground: 'hsl(var(--info-foreground) / <alpha-value>)' },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

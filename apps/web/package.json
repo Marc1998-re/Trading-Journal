@@ -4,13 +4,14 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "vite --host :: --port 3000",
-    "build": "node tools/generate-llms.js || true && vite build --outDir ../../dist/apps/web",
-    "start": "vite preview --outDir ../../dist/apps/web --host :: --port 3000",
+    "dev": "vite --host 127.0.0.1 --port 3000",
+    "build": "vite build --outDir ../../dist/apps/web",
+    "start": "vite preview --outDir ../../dist/apps/web --host 127.0.0.1 --port 3000",
     "lint": "eslint . --quiet",
     "lint:warn": "eslint ."
   },
   "dependencies": {
+    "@fontsource/dm-sans": "^5.3.0",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -59,6 +60,7 @@
     "sonner": "^1.7.3",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "three": "^0.186.0",
     "vaul": "^1.1.2",
     "zod": "^4.3.6"
   },

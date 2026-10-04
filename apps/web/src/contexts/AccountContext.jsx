@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import pb from '@/lib/pocketbaseClient';
 import { useAuth } from '@/contexts/AuthContext.jsx';
 import { toast } from 'sonner';
+import { useNavigationGuard } from '@/contexts/NavigationGuardContext';
 
 const AccountContext = createContext(null);
 
@@ -14,6 +15,7 @@ export const useAccount = () => {
 };
 
 export const AccountProvider = ({ children }) => {
+  const { confirmNavigation } = useNavigationGuard();
   const { currentUser } = useAuth();
   const [accounts, setAccounts] = useState([]);
   const [originalBalances, setOriginalBalances] = useState({});
@@ -54,7 +56,7 @@ export const AccountProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Error fetching accounts:', error);
-      toast.error('Failed to load trading accounts');
+      toast.error('Trading-Konten konnten nicht geladen werden.');
     } finally {
       setIsLoading(false);
     }
@@ -71,6 +73,7 @@ export const AccountProvider = ({ children }) => {
   }, [currentUser, fetchAccounts]);
 
   const selectAccount = (accountId) => {
+    if (accountId === selectedAccountId || !confirmNavigation()) return;
     setSelectedAccountId(accountId);
     if (accountId) {
       localStorage.setItem('selectedAccountId', accountId);
@@ -90,10 +93,10 @@ export const AccountProvider = ({ children }) => {
       }, { $autoCancel: false });
       
       setAccounts(prev => prev.map(a => a.id === accountId ? record : a));
-      toast.success('Account balance updated');
+      toast.success('Kontostand aktualisiert.');
     } catch (error) {
       console.error('Error updating balance:', error);
-      toast.error('Failed to update balance');
+      toast.error('Kontostand konnte nicht aktualisiert werden.');
       throw error;
     }
   };
@@ -110,11 +113,11 @@ export const AccountProvider = ({ children }) => {
 
       setAccounts(prev => [record, ...prev]);
       setOriginalBalances(prev => ({ ...prev, [record.id]: record.startingBalance }));
-      toast.success('Account created successfully');
+      toast.success('Konto erfolgreich erstellt.');
       return record;
     } catch (error) {
       console.error('Error creating account:', error);
-      toast.error('Failed to create account');
+      toast.error('Konto konnte nicht erstellt werden.');
       throw error;
     }
   };
@@ -126,10 +129,10 @@ export const AccountProvider = ({ children }) => {
       }, { $autoCancel: false });
       
       setAccounts(prev => prev.map(acc => acc.id === accountId ? record : acc));
-      toast.success('Account renamed successfully');
+      toast.success('Konto erfolgreich umbenannt.');
     } catch (error) {
       console.error('Error renaming account:', error);
-      toast.error('Failed to rename account');
+      toast.error('Konto konnte nicht umbenannt werden.');
       throw error;
     }
   };
@@ -142,7 +145,7 @@ export const AccountProvider = ({ children }) => {
       });
 
       if (tradesToReassign.length > 0) {
-        toast.info(`Reassigning ${tradesToReassign.length} trades...`);
+        toast.info(`${tradesToReassign.length} Trades werden neu zugewiesen...`);
         await Promise.all(
           tradesToReassign.map(trade => 
             pb.collection('trades').update(trade.id, { accountId: targetAccountId }, { $autoCancel: false })
@@ -157,10 +160,10 @@ export const AccountProvider = ({ children }) => {
         selectAccount(targetAccountId);
       }
       
-      toast.success('Account deleted successfully');
+      toast.success('Konto erfolgreich gelöscht.');
     } catch (error) {
       console.error('Error deleting account:', error);
-      toast.error('Failed to delete account');
+      toast.error('Konto konnte nicht gelöscht werden.');
       throw error;
     }
   };

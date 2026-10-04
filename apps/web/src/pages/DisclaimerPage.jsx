@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Helmet } from 'react-helmet';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   AlertTriangle, 
@@ -15,8 +14,6 @@ import {
 } from 'lucide-react';
 
 const DisclaimerPage = () => {
-  const [lang, setLang] = useState('en');
-
   const content = {
     en: {
       title: 'Disclaimer',
@@ -28,7 +25,7 @@ const DisclaimerPage = () => {
           icon: <AlertTriangle className="w-5 h-5 text-primary" />,
           content: (
             <p>
-              The information, analysis, and tools provided on Marc's Trading Journal do not constitute financial, investment, trading, or any other type of professional advice. All content is for informational and educational purposes only. You should not make any financial decisions based solely on the information provided by this platform.
+              The information, analysis, and tools provided on The Trading Desk do not constitute financial, investment, trading, or any other type of professional advice. All content is for informational and educational purposes only. You should not make any financial decisions based solely on the information provided by this platform.
             </p>
           ),
         },
@@ -105,7 +102,7 @@ const DisclaimerPage = () => {
       ],
     },
     de: {
-      title: 'Haftungsausschluss (Disclaimer)',
+      title: 'Haftungsausschluss',
       subtitle: 'Zuletzt aktualisiert: 23. März 2026',
       sections: [
         {
@@ -114,7 +111,7 @@ const DisclaimerPage = () => {
           icon: <AlertTriangle className="w-5 h-5 text-primary" />,
           content: (
             <p>
-              Die auf Marc's Trading Journal bereitgestellten Informationen, Analysen und Tools stellen keine Finanz-, Anlage-, Handels- oder sonstige professionelle Beratung dar. Alle Inhalte dienen ausschließlich Informations- und Bildungszwecken. Sie sollten keine finanziellen Entscheidungen ausschließlich auf Grundlage der von dieser Plattform bereitgestellten Informationen treffen.
+              Die auf The Trading Desk bereitgestellten Informationen, Analysen und Tools stellen keine Finanz-, Anlage-, Handels- oder sonstige professionelle Beratung dar. Alle Inhalte dienen ausschließlich Informations- und Bildungszwecken. Sie sollten keine finanziellen Entscheidungen ausschließlich auf Grundlage der von dieser Plattform bereitgestellten Informationen treffen.
             </p>
           ),
         },
@@ -192,40 +189,22 @@ const DisclaimerPage = () => {
     },
   };
 
-  const currentContent = content[lang];
+  const currentContent = content.de;
 
   return (
     <>
       <Helmet>
         <title>{`${currentContent.title} - Trading Journal`}</title>
-        <meta name="description" content="Legal Disclaimer and Limitation of Liability" />
+        <meta name="description" content="Haftungsausschluss und Begrenzung der Haftung" />
       </Helmet>
 
       <div className="min-h-screen bg-background py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
-          {/* Header & Toggle */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-6">
+          {/* Header */}
+          <div className="mb-12">
             <div>
               <h1 className="text-4xl font-bold tracking-tight mb-2">{currentContent.title}</h1>
               <p className="text-muted-foreground">{currentContent.subtitle}</p>
-            </div>
-            <div className="flex items-center bg-muted p-1 rounded-lg border border-border/50 shadow-sm">
-              <Button
-                variant={lang === 'de' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setLang('de')}
-                className={`rounded-md px-4 transition-all ${lang === 'de' ? 'shadow-sm' : ''}`}
-              >
-                DE
-              </Button>
-              <Button
-                variant={lang === 'en' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setLang('en')}
-                className={`rounded-md px-4 transition-all ${lang === 'en' ? 'shadow-sm' : ''}`}
-              >
-                EN
-              </Button>
             </div>
           </div>
 
@@ -233,7 +212,7 @@ const DisclaimerPage = () => {
           <div className="space-y-8">
             <AnimatePresence mode="wait">
               <motion.div
-                key={lang}
+                key="de"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
@@ -266,9 +245,7 @@ const DisclaimerPage = () => {
           {/* Footer Note */}
           <div className="mt-16 text-center text-sm text-muted-foreground">
             <p>
-              {lang === 'en' 
-                ? 'By using this platform, you acknowledge that you have read, understood, and agree to this disclaimer.'
-                : 'Durch die Nutzung dieser Plattform erkennen Sie an, dass Sie diesen Haftungsausschluss gelesen und verstanden haben und ihm zustimmen.'}
+              Durch die Nutzung dieser Plattform erkennen Sie an, dass Sie diesen Haftungsausschluss gelesen und verstanden haben und ihm zustimmen.
             </p>
           </div>
         </div>

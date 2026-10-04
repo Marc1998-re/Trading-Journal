@@ -1,491 +1,58 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
-import { 
-  format, 
-  addMonths, 
-  subMonths, 
-  startOfMonth, 
-  endOfMonth, 
-  eachDayOfInterval, 
-  isSameMonth, 
-  isSameDay, 
-  startOfWeek, 
-  endOfWeek,
-} from 'date-fns';
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  RefreshCw, 
-  TrendingUp, 
-  TrendingDown, 
-  Target, 
-  Activity, 
-  DollarSign, 
-  Percent,
-  Radar,
-  CalendarDays,
-  LineChart,
-  ShieldCheck,
-} from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowUpRight, Plus, NotebookPen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/AuthContext.jsx';
-import { useAccount } from '@/contexts/AccountContext.jsx';
-import pb from '@/lib/pocketbaseClient.js';
-import { 
-  calculateReturnPercentage, 
-  calculateAdvancedStats,
-  buildEquitySeries,
-  getTradeDate,
-  getTradeNetProfit
-} from '@/lib/tradeCalculations.js';
+import { useJournalData } from '@/hooks/useJournalData';
+import { usePerformanceUnit } from '@/hooks/usePerformanceUnit';
+import { buildEquitySeries, buildProcessedTrades, buildDayPerformance, dayKey } from '@/lib/tradeCalculations';
+import { money, shortMoney, percent, rValue } from '@/lib/format';
+import { PageHeading, PeriodToolbar, PerformanceUnitSwitch, MetricStrip, SectionTitle, DataState, SignedValue } from '@/components/journal/JournalUI';
+import PerformanceChart from '@/components/journal/PerformanceChart';
+import { reviewStatus, reviewStatusLabels, summarizeReviews } from '@/lib/review';
 
-const DashboardPage = () => {
-  const { currentUser } = useAuth();
-  const { selectedAccountId, accounts, originalBalances } = useAccount();
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [trades, setTrades] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [isSyncing, setIsSyncing] = useState(false);
-
-  const selectedAccount = accounts.find(a => a.id === selectedAccountId);
-  const accountName = selectedAccount ? selectedAccount.accountName : 'All Accounts';
-
-  const currentBalancesMap = accounts.reduce((acc, a) => { acc[a.id] = a.startingBalance; return acc; }, {});
-  const totalCurrentBalance = !selectedAccountId
-    ? accounts.reduce((sum, a) => sum + (a.startingBalance || 0), 0)
-    : (accounts.find(a => a.id === selectedAccountId)?.startingBalance || 10000);
-
-  const fetchTrades = useCallback(async (date) => {
-    if (!currentUser) return;
-    
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const start = format(startOfMonth(date), 'yyyy-MM-dd');
-      const end = format(endOfMonth(date), 'yyyy-MM-dd');
-      
-      let filterString = `userId = "${currentUser.id}" && ((entryDate >= "${start} 00:00:00.000Z" && entryDate <= "${end} 23:59:59.999Z") || (date >= "${start} 00:00:00.000Z" && date <= "${end} 23:59:59.999Z"))`;
-      if (selectedAccountId) {
-        filterString += ` && accountId = "${selectedAccountId}"`;
-      }
-
-      const records = await pb.collection('trades').getFullList({
-        filter: filterString,
-        sort: '-entryDate',
-        $autoCancel: false
-      });
-      
-      setTrades(records);
-    } catch (err) {
-      console.error('Error fetching trades:', err);
-      setError('Failed to load trades. Please try again.');
-    } finally {
-      setLoading(false);
-      setIsSyncing(false);
-    }
-  }, [currentUser, selectedAccountId]);
-
-  useEffect(() => {
-    fetchTrades(currentDate);
-  }, [currentDate, fetchTrades]);
-
-  const handleSync = () => {
-    setIsSyncing(true);
-    fetchTrades(currentDate);
-  };
-
-  const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
-  const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
-
-  const monthStart = startOfMonth(currentDate);
-  const monthEnd = endOfMonth(monthStart);
-  const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
-  const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
-  const calendarDays = eachDayOfInterval({ start: startDate, end: endDate });
-
-  const getDayData = (day) => {
-    const dayTrades = trades.filter(t => {
-      const tradeDate = getTradeDate(t);
-      return tradeDate ? isSameDay(tradeDate, day) : false;
-    });
-    const pnl = dayTrades.reduce((sum, t) => {
-      return sum + getTradeNetProfit(t, originalBalances, currentBalancesMap);
-    }, 0);
-    return { count: dayTrades.length, pnl };
-  };
-
-  const calculateStats = () => {
-    const advancedStats = calculateAdvancedStats(trades, totalCurrentBalance, originalBalances, currentBalancesMap);
-    const returnPercentage = calculateReturnPercentage(advancedStats.netPnL, totalCurrentBalance);
-
-    return {
-      ...advancedStats,
-      returnPercentage,
-      monetaryGain: advancedStats.netPnL,
-      tradeCount: advancedStats.totalTrades
-    };
-  };
-
-  const stats = calculateStats();
-  const formatEuro = (val) => new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(val);
-  const formatProfitFactor = (val) => val === Infinity ? '∞' : val.toFixed(2);
-  const formatRatio = (val) => val === Infinity ? '∞' : Number(val || 0).toFixed(2);
-  const formatPerformanceLabel = (item) => {
-    if (!item) return 'No data';
-    return `${item.label} ${item.netPnL >= 0 ? '+' : ''}${formatEuro(item.netPnL)}`;
-  };
-  const formatStreak = (type, count) => {
-    if (!count || type === 'none' || type === 'breakeven') return 'No active streak';
-    return `${count} ${type === 'win' ? 'wins' : 'losses'}`;
-  };
-  const equitySeries = buildEquitySeries(trades, totalCurrentBalance, originalBalances, currentBalancesMap);
-  const equityData = equitySeries.map((point) => ({
-    ...point,
-    pnl: point.cumulativePnL,
-    balance: point.balance,
-  }));
-  const endingBalance = equitySeries[equitySeries.length - 1]?.balance ?? totalCurrentBalance;
-  const riskMode = stats.maxDrawdownPct >= 10 || stats.avgRiskPct >= 2.5
-    ? 'Pressure'
-    : stats.maxDrawdownPct >= 5 || stats.avgRiskPct >= 1.5
-      ? 'Watch'
-      : 'Controlled';
-  const riskModeClass = riskMode === 'Pressure'
-    ? 'text-destructive'
-    : riskMode === 'Watch'
-      ? 'text-accent'
-      : 'text-success';
-  const primaryMetrics = [
-    { title: 'Return', value: `${stats.returnPercentage >= 0 ? '+' : ''}${stats.returnPercentage.toFixed(2)}%`, icon: <Percent className="h-5 w-5" />, valueClass: stats.returnPercentage >= 0 ? 'text-success' : 'text-destructive' },
-    { title: 'Net P/L', value: `${stats.monetaryGain >= 0 ? '+' : '-'}${formatEuro(Math.abs(stats.monetaryGain))}`, icon: <DollarSign className="h-5 w-5" />, valueClass: stats.monetaryGain >= 0 ? 'text-success' : 'text-destructive' },
-    { title: 'Avg. R', value: `${stats.avgR >= 0 ? '+' : ''}${stats.avgR.toFixed(2)}R`, icon: <TrendingUp className="h-5 w-5" />, valueClass: stats.avgR >= 0 ? 'text-success' : 'text-destructive' },
-    { title: 'Expectancy R', value: `${stats.expectancyR >= 0 ? '+' : ''}${stats.expectancyR.toFixed(2)}R`, icon: <Target className="h-5 w-5" />, valueClass: stats.expectancyR >= 0 ? 'text-success' : 'text-destructive' },
-    { title: 'Win Rate', value: `${stats.winRate.toFixed(1)}%`, icon: <Target className="h-5 w-5" /> },
-    { title: 'Payoff', value: formatRatio(stats.payoffRatio), icon: <Activity className="h-5 w-5" />, valueClass: stats.payoffRatio >= 1.2 ? 'text-success' : stats.payoffRatio >= 1 ? 'text-foreground' : 'text-destructive' },
-    { title: 'Profit Factor', value: formatProfitFactor(stats.profitFactor), icon: <Radar className="h-5 w-5" /> },
-    { title: 'Max DD', value: `${stats.maxDrawdownPct.toFixed(2)}%`, icon: <TrendingDown className="h-5 w-5" />, valueClass: stats.maxDrawdownPct > 10 ? 'text-destructive' : 'text-foreground' },
-  ];
-  const commandTiles = [
-    { label: 'Trades', value: stats.tradeCount.toString() },
-    { label: 'Current streak', value: formatStreak(stats.currentStreakType, stats.currentStreakCount), valueClass: stats.currentStreakType === 'loss' ? 'text-destructive' : stats.currentStreakType === 'win' ? 'text-success' : 'text-foreground' },
-    { label: 'Best symbol', value: stats.bestSymbol ? stats.bestSymbol.label : 'No data', valueClass: 'text-success' },
-    { label: 'Loss streak', value: stats.longestLossStreak.toString(), valueClass: stats.longestLossStreak >= 4 ? 'text-destructive' : 'text-foreground' },
-  ];
-  const recentTrades = [...trades]
-    .sort((a, b) => {
-      const bDate = getTradeDate(b);
-      const aDate = getTradeDate(a);
-      return (bDate ? bDate.getTime() : 0) - (aDate ? aDate.getTime() : 0);
-    })
-    .slice(0, 5);
-
-  return (
-    <>
-      <Helmet>
-        <title>Command - Trading Journal</title>
-      </Helmet>
-      <main className="desk-shell market-grid">
-        <div className="desk-container">
-          <section className="command-panel relative overflow-hidden rounded-lg">
-            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-accent to-info" />
-            <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_420px]">
-              <div className="relative min-h-[280px] border-b border-white/10 p-5 sm:p-7 lg:border-b-0 lg:border-r lg:p-8">
-                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,hsl(var(--primary)/0.13),transparent_34%,hsl(var(--accent)/0.08))]" />
-                <div className="relative max-w-3xl">
-                  <p className="section-kicker mb-4">Live trading command</p>
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <h1 className="text-4xl font-black tracking-normal sm:text-6xl">JournalOS Command</h1>
-                    <Badge className="w-fit border-primary/30 bg-primary/15 px-3 py-1.5 text-primary hover:bg-primary/20">
-                      {accountName}
-                    </Badge>
-                  </div>
-                  <p className="mt-5 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-                    Month performance, execution quality and trade flow in one focused workspace.
-                  </p>
-                  <div className="mt-8 grid max-w-3xl grid-cols-2 gap-3 md:grid-cols-4">
-                    {commandTiles.map((tile) => (
-                      <div key={tile.label} className="rounded-md border border-white/10 bg-black/25 px-4 py-3">
-                        <p className="surface-label">{tile.label}</p>
-                        <p className={`mt-2 truncate text-lg font-black ${tile.valueClass || 'text-foreground'}`}>{tile.value}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-col justify-between gap-5 bg-black/20 p-5 sm:p-7">
-                <div>
-                  <p className="section-kicker mb-4">Account state</p>
-                  <div className="rounded-md border border-white/10 bg-card/70 p-5">
-                    <p className="surface-label">Net month</p>
-                    <p className={`mt-2 text-4xl font-black ${stats.netPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
-                      {stats.netPnL >= 0 ? '+' : ''}{formatEuro(stats.netPnL)}
-                    </p>
-                    <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10">
-                      <div
-                        className={`h-full rounded-full ${stats.netPnL >= 0 ? 'bg-success' : 'bg-destructive'}`}
-                        style={{ width: `${Math.min(100, Math.max(10, Math.abs(stats.returnPercentage) * 12))}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-                <Button onClick={handleSync} disabled={isSyncing || loading} className="h-14 w-full gap-2 bg-primary font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90">
-                  <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                  Sync Desk
-                </Button>
-              </div>
-            </div>
-          </section>
-
-          {error && (
-            <Alert variant="destructive" className="border-destructive/30 bg-destructive/10">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {primaryMetrics.map((metric) => (
-              <StatCard
-                key={metric.title}
-                title={metric.title}
-                value={metric.value}
-                icon={metric.icon}
-                loading={loading}
-                valueClass={metric.valueClass}
-              />
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
-            <Card className="command-panel overflow-hidden rounded-lg">
-              <CardHeader className="flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="section-kicker mb-2">Equity command</p>
-                  <CardTitle className="flex items-center gap-3 text-2xl font-black">
-                    <LineChart className="h-6 w-6 text-primary" />
-                    Balance Trajectory
-                  </CardTitle>
-                </div>
-                <div className="rounded-md border border-white/10 bg-black/20 px-4 py-3 text-right">
-                  <p className="surface-label">Ending balance</p>
-                  <p className="mt-1 text-xl font-black">{formatEuro(endingBalance)}</p>
-                </div>
-              </CardHeader>
-              <CardContent className="p-4 sm:p-6">
-                {loading ? (
-                  <Skeleton className="h-[320px] rounded-md bg-white/10" />
-                ) : (
-                  <div className="h-[320px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={equityData} margin={{ top: 12, right: 10, left: 0, bottom: 0 }}>
-                        <defs>
-                          <linearGradient id="dashboardEquityFill" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.38} />
-                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.45)" vertical={false} />
-                        <XAxis dataKey="label" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} tickLine={false} axisLine={false} minTickGap={18} />
-                        <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} tickLine={false} axisLine={false} width={72} tickFormatter={(value) => `€${Number(value).toLocaleString('en-US')}`} />
-                        <Tooltip content={<DashboardTooltip formatEuro={formatEuro} />} />
-                        <Area type="monotone" dataKey="balance" stroke="hsl(var(--primary))" strokeWidth={3} fill="url(#dashboardEquityFill)" activeDot={{ r: 5, strokeWidth: 0 }} />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card className="glass-panel rounded-lg">
-              <CardHeader className="border-b border-white/10">
-                <p className="section-kicker mb-2">Risk pulse</p>
-                <CardTitle className="flex items-center gap-3 text-2xl font-black">
-                  <ShieldCheck className="h-6 w-6 text-primary" />
-                  Desk Control
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 p-5">
-                {loading ? (
-                  Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-md bg-white/10" />)
-                ) : (
-                  <>
-                    <div className="rounded-md border border-white/10 bg-black/20 p-4">
-                      <p className="surface-label">Mode</p>
-                      <p className={`mt-1 text-3xl font-black ${riskModeClass}`}>{riskMode}</p>
-                    </div>
-                    <RiskRow label="Avg. risk" value={`${stats.avgRiskPct.toFixed(2)}%`} />
-                    <RiskRow label="Payoff ratio" value={formatRatio(stats.payoffRatio)} valueClass={stats.payoffRatio >= 1.2 ? 'text-success' : stats.payoffRatio >= 1 ? 'text-foreground' : 'text-destructive'} />
-                    <RiskRow label="Best weekday" value={stats.bestWeekday ? stats.bestWeekday.label : 'No data'} valueClass="text-success" />
-                    <RiskRow label="Weakest symbol" value={formatPerformanceLabel(stats.worstSymbol)} valueClass={stats.worstSymbol?.netPnL < 0 ? 'text-destructive' : 'text-foreground'} />
-                    <RiskRow label="Total R" value={`${stats.totalR >= 0 ? '+' : ''}${stats.totalR.toFixed(2)}R`} valueClass={stats.totalR >= 0 ? 'text-success' : 'text-destructive'} />
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
-            <Card className="command-panel overflow-hidden rounded-lg">
-              <CardHeader className="flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="section-kicker mb-2">Performance calendar</p>
-                  <CardTitle className="flex items-center gap-3 text-2xl font-black">
-                    <CalendarDays className="h-6 w-6 text-primary" />
-                    {format(currentDate, 'MMMM yyyy')}
-                  </CardTitle>
-                </div>
-                <div className="flex items-center gap-2 rounded-md border border-white/10 bg-black/20 p-1">
-                  <Button variant="ghost" size="icon" onClick={prevMonth} aria-label="Previous month" className="hover:bg-white/[0.06]">
-                    <ChevronLeft className="w-5 h-5" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={nextMonth} aria-label="Next month" className="hover:bg-white/[0.06]">
-                    <ChevronRight className="w-5 h-5" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-4 sm:p-6">
-                <div className="grid grid-cols-7 gap-2 mb-2">
-                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                    <div key={day} className="py-2 text-center text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-                      {day}
-                    </div>
-                  ))}
-                </div>
-                <div className="grid grid-cols-7 gap-2">
-                  {loading ? (
-                    Array.from({ length: 35 }).map((_, i) => (
-                      <Skeleton key={i} className="h-24 rounded-md bg-white/10" />
-                    ))
-                  ) : (
-                    calendarDays.map((day, i) => {
-                      const { count, pnl } = getDayData(day);
-                      const isCurrentMonth = isSameMonth(day, currentDate);
-                      const isPositive = pnl > 0;
-                      const isNegative = pnl < 0;
-
-                      return (
-                        <div
-                          key={i}
-                          className={`h-24 rounded-md border p-2 transition-colors ${!isCurrentMonth ? 'border-transparent bg-black/10 opacity-35' : 'border-white/10 bg-white/[0.035]'} ${isCurrentMonth && isPositive ? 'border-success/35 bg-success/10' : ''} ${isCurrentMonth && isNegative ? 'border-destructive/35 bg-destructive/10' : ''}`}
-                        >
-                          <div className="flex h-full flex-col justify-between">
-                            <span className={`text-sm font-bold ${!isCurrentMonth ? 'text-muted-foreground' : 'text-foreground'}`}>
-                              {format(day, 'd')}
-                            </span>
-                            {count > 0 && (
-                              <div className="text-right">
-                                <span className={`block text-[11px] font-black ${isPositive ? 'text-success' : isNegative ? 'text-destructive' : 'text-muted-foreground'}`}>
-                                  {pnl > 0 ? '+' : ''}{formatEuro(pnl)}
-                                </span>
-                                <span className="text-[10px] text-muted-foreground">
-                                  {count} trade{count !== 1 ? 's' : ''}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="glass-panel rounded-lg">
-              <CardHeader className="border-b border-white/10">
-                <p className="section-kicker mb-2">Execution feed</p>
-                <CardTitle className="text-2xl font-black">Recent Trades</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                {loading ? (
-                  <div className="space-y-3 p-4">
-                    {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-md bg-white/10" />)}
-                  </div>
-                ) : recentTrades.length === 0 ? (
-                  <p className="m-4 rounded-md border border-white/10 bg-black/20 px-4 py-8 text-sm text-muted-foreground">No trades recorded for this month.</p>
-                ) : (
-                  <div className="divide-y divide-white/10">
-                    <div className="grid grid-cols-[1fr_72px_96px] gap-3 bg-black/20 px-4 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">
-                      <span>Symbol</span>
-                      <span>R</span>
-                      <span className="text-right">Net</span>
-                    </div>
-                    {recentTrades.map((trade) => {
-                      const net = getTradeNetProfit(trade, originalBalances, currentBalancesMap);
-                      const tradeDate = trade.entryDate || trade.date;
-                      return (
-                        <div key={trade.id} className="grid grid-cols-[1fr_72px_96px] items-center gap-3 px-4 py-4 transition-colors hover:bg-primary/5">
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-black">{trade.symbol || trade.instrument || 'Trade'}</p>
-                            <p className="mt-1 text-xs text-muted-foreground">{tradeDate ? format(new Date(tradeDate), 'MMM dd') : 'No date'}</p>
-                          </div>
-                          <p className="text-sm font-black">{Number(trade.rrSecured || 0).toFixed(2)}R</p>
-                          <p className={`text-right text-sm font-black ${net > 0 ? 'text-success' : net < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                            {net > 0 ? '+' : ''}{formatEuro(net)}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </main>
-    </>
-  );
-};
-
-const DashboardTooltip = ({ active, payload, label, formatEuro }) => {
-  if (!active || !payload?.length) return null;
-
-  const point = payload[0].payload;
-
-  return (
-    <div className="rounded-md border border-white/10 bg-popover px-4 py-3 shadow-2xl">
-      <p className="text-sm font-black text-foreground">{label}</p>
-      <p className="mt-1 text-xs text-muted-foreground">Balance</p>
-      <p className="text-base font-black text-primary">{formatEuro(point.balance)}</p>
-      <p className={`mt-1 text-xs font-bold ${point.pnl >= 0 ? 'text-success' : 'text-destructive'}`}>
-        {point.pnl >= 0 ? '+' : ''}{formatEuro(point.pnl)} P/L
-      </p>
+export default function DashboardPage() {
+  const data=useJournalData();
+  const {stats,balances,opening,trades}=data;
+  const [unit,setUnit]=usePerformanceUnit();
+  const percentage=unit==='percent';
+  const [mode,setMode]=useState('balance');
+  const [selectedDay,setSelectedDay]=useState(null);
+  useEffect(()=>setSelectedDay(null),[data.month,data.range,data.anchor,data.from,data.to]);
+  const rows=useMemo(()=>buildProcessedTrades(trades,balances,balances).reverse(),[trades,balances]);
+  const series=useMemo(()=>buildEquitySeries(trades,opening,balances,balances),[trades,opening,balances]);
+  const prefix=data.demo?'/demo':'';
+  const dayGroups=buildDayPerformance(trades,balances,balances);
+  const calendar=new Map(dayGroups.map(g=>[g.key,g]));
+  const first=new Date(data.month.getFullYear(),data.month.getMonth(),1);
+  const offset=(first.getDay()+6)%7;
+  const days=new Date(data.month.getFullYear(),data.month.getMonth()+1,0).getDate();
+  const visibleRows=selectedDay?rows.filter(r=>r.date&&dayKey(r.date)===selectedDay):rows.slice(0,5);
+  const missing=stats.totalTrades-summarizeReviews(trades).completed;
+  return <div className="journal-page">
+    <Helmet><title>Übersicht · The Trading Desk</title></Helmet>
+    <PageHeading eyebrow="Performance / Zeitraum" title="Übersicht" action={<Button asChild><Link to={prefix+'/trades'}><Plus/>Trade erfassen</Link></Button>}>Ergebnis, Risiko und die nächste gute Frage.</PageHeading>
+    <PeriodToolbar data={data}><PerformanceUnitSwitch unit={unit} onChange={setUnit}/></PeriodToolbar>
+    <DataState data={data}/><MetricStrip stats={stats} loading={data.loading} unit={unit} opening={opening}/>
+    {!data.loading&&!data.error&&!trades.length&&<div className="journal-empty mb-8"><h3>Platz für deinen nächsten Trade.</h3><p>In diesem Zeitraum gibt es noch keine Einträge. Erfasse einen Trade oder wähle einen anderen Monat.</p><Button asChild variant="outline"><Link to={prefix+'/trades'}>Zum Trade-Journal<ArrowUpRight/></Link></Button></div>}
+    <div className="journal-columns">
+      <section className="capital-section min-w-0"><SectionTitle number="01" title="Kapitalverlauf" helpKey={percentage?'returnPct':mode==='balance'?'balance':'netPnl'}>{percentage?<span className="text-xs text-muted-foreground">Rendite seit Zeitraumstart</span>:<div role="group" aria-label="Darstellung" className="period-switch">{[['balance','Kontostand'],['pnl','Netto-P&L']].map(([key,label])=><button key={key} onClick={()=>setMode(key)} aria-pressed={mode===key}>{label}</button>)}</div>}</SectionTitle>
+        <div className="capital-readout"><strong>{percentage?percent(stats.returnPct,{digits:2,sign:true}):money(mode==='balance'?stats.endingBalance:stats.netPnL)}</strong><span className="text-xs text-muted-foreground">realisiert · nach Gebühren</span></div>
+        <PerformanceChart series={series} mode={percentage?'return':mode} height={290}/><div className="outcome-strip">{[[stats.wins,"Gewinne","text-success"],[stats.losses,"Verluste","text-destructive"],[stats.totalTrades-stats.wins-stats.losses,"Break-even","text-muted-foreground"]].map(([count,label,tone])=><div key={label}><span>{label}</span><strong className={tone}>{count}<small className="ml-2 text-xs text-muted-foreground">{percent(stats.totalTrades?count/stats.totalTrades*100:0)}</small></strong></div>)}</div><div className="outcome-bar" aria-hidden="true">{[[stats.wins,"bg-success"],[stats.losses,"bg-destructive"],[stats.totalTrades-stats.wins-stats.losses,"bg-muted-foreground"]].map(([count,tone],i)=><i key={i} className={tone} style={{width:`${stats.totalTrades?count/stats.totalTrades*100:0}%`}}/>)}</div><p className="text-xs text-muted-foreground mt-4">Start im Zeitraum: {money(opening)} · {stats.totalTrades} Trades · Offene Positionen nicht enthalten{percentage&&' · Nicht erfasste Ein- und Auszahlungen bleiben unberücksichtigt'}</p>
+      </section>
+      <aside className="review-focus"><div className="flex items-center justify-between"><span className="text-xs text-primary">Dein Review-Fokus</span><NotebookPen className="text-primary" size={17}/></div><h3>Die Session endet.<br/>Dein Review beginnt.</h3><div className="focus-readout"><span className="focus-number">{String(missing).padStart(2,'0')}</span><p className="mt-1">Reviews noch nicht abgeschlossen</p></div><p>{stats.totalTrades<30?'Kleine Stichprobe: Betrachte Muster zunächst als Fragen, nicht als bestätigten Vorteil.':'Vergleiche deine Setups mit ihrer Stichprobengröße. Einzelne Ausreißer können das Gesamtbild verändern.'}</p><Button asChild variant="outline" className="mt-5 w-full"><Link to={prefix+'/review'}>Review öffnen<ArrowUpRight/></Link></Button></aside>
     </div>
-  );
-};
-
-const RiskRow = ({ label, value, valueClass = 'text-foreground' }) => (
-  <div className="flex items-center justify-between gap-4 rounded-md border border-white/10 bg-white/[0.035] px-4 py-3">
-    <span className="surface-label">{label}</span>
-    <span className={`text-sm font-black ${valueClass}`}>{value}</span>
-  </div>
-);
-
-const StatCard = ({ title, value, icon, loading, valueClass = 'text-foreground' }) => (
-  <Card className="group relative overflow-hidden rounded-lg border-white/10 bg-black/25 shadow-none transition-colors hover:border-primary/40 hover:bg-primary/5">
-    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/70 to-transparent opacity-60" />
-    <CardContent className="p-4">
-      <div className="mb-5 flex items-center justify-between gap-3">
-        <p className="surface-label">{title}</p>
-        <div className="grid h-9 w-9 place-items-center rounded-md border border-white/10 bg-white/[0.04] text-primary transition-colors group-hover:border-primary/30 group-hover:bg-primary/10">
-          {icon}
-        </div>
-      </div>
-      <div className="min-w-0">
-        {loading ? (
-          <Skeleton className="h-8 w-24 bg-white/10" />
-        ) : (
-          <h3 className={`truncate text-3xl font-black ${valueClass}`}>{value}</h3>
-        )}
-      </div>
-    </CardContent>
-  </Card>
-);
-
-export default DashboardPage;
+    <div className="dashboard-detail-grid">
+    <section className="journal-section dashboard-calendar"><SectionTitle number="02" title={data.range==='month'?'Dein Handelsmonat':'Deine Handelstage'}>{data.range==='month'&&<span className="text-xs text-muted-foreground">{data.month.toLocaleDateString('de-DE',{month:'long',year:'numeric'})}</span>}</SectionTitle>
+      {data.range==='month'?<div className="calendar-grid">{['Mo','Di','Mi','Do','Fr','Sa','So'].map(d=><div key={d} className="pb-2 text-center text-xs text-muted-foreground">{d}</div>)}
+      {Array.from({length:offset},(_,i)=><div key={'empty-'+i}/>)}{Array.from({length:days},(_,i)=>{const key=dayKey(new Date(first.getFullYear(),first.getMonth(),i+1));const g=calendar.get(key);return <button key={key} className={'calendar-cell '+(g?'has-trades '+(g.netPnL>=0?'positive':'negative'):'')} aria-pressed={selectedDay===key} aria-label={`${i+1}. ${first.toLocaleDateString('de-DE',{month:'long'})}: ${g?money(g.netPnL)+', '+g.trades+' Trades':'keine Trades'}`} onClick={()=>setSelectedDay(selectedDay===key?null:key)}><span>{i+1}</span>{g&&<><strong className={g.netPnL>=0?'text-success':'text-destructive'}>{shortMoney(g.netPnL)}</strong><small className="text-muted-foreground">{g.trades} Trades</small></>}</button>;})}</div>:<div className="max-h-80 overflow-y-auto">{dayGroups.slice().sort((a, b) => b.key.localeCompare(a.key)).map(g=><button key={g.key} className="flex w-full items-center justify-between gap-3 border-b py-3 text-sm hover:bg-secondary" aria-pressed={selectedDay===g.key} onClick={()=>setSelectedDay(selectedDay===g.key?null:g.key)}><span>{new Date(g.key+'T12:00:00').toLocaleDateString('de-DE')}<small className="block text-left text-muted-foreground">{g.trades} Trades</small></span><SignedValue value={g.netPnL}/></button>)}</div>}
+      <p className="mt-4 text-xs text-muted-foreground">Tagesergebnisse nach Gebühren · {dayGroups.length} Handelstage im gewählten Zeitraum · {percent(stats.totalTrades?(stats.reviewCount||0)/stats.totalTrades*100:0)} mit Notiz</p>
+    </section>
+    <section className="journal-section dashboard-trades">
+      <SectionTitle number="03" title={selectedDay?'Trades vom '+new Date(selectedDay+'T12:00:00').toLocaleDateString('de-DE'):'Letzte Trades'}>{selectedDay?<Button variant="ghost" size="sm" onClick={()=>setSelectedDay(null)}>Auswahl aufheben</Button>:<Link className="text-xs text-primary flex items-center gap-1" to={prefix+'/trades'}>Alle Trades<ArrowUpRight size={14}/></Link>}</SectionTitle>
+      <div className="journal-table-wrap"><table className="journal-table"><thead><tr><th>Trade</th><th>Netto</th><th className="hidden sm:table-cell">Netto-R</th><th>Review</th></tr></thead><tbody>{visibleRows.map(r=><tr key={r.trade.id}><td><strong>{r.symbol}</strong><span className="sub">{r.date?.toLocaleDateString('de-DE',{day:'2-digit',month:'short'})} · {r.trade.entryTime}</span></td><td><SignedValue value={r.netProfit}/></td><td className="hidden sm:table-cell font-mono">{rValue(r.netR)}</td><td><Link to={prefix+'/review?trade='+r.trade.id} className={reviewStatus(r.trade)==='completed'?'text-xs text-muted-foreground':'review-pending'}>{reviewStatusLabels[reviewStatus(r.trade)]}<span className="sr-only"> für {r.symbol}</span></Link></td></tr>)}</tbody></table></div>
+      {!visibleRows.length&&<p className="py-6 text-sm text-muted-foreground">Keine Trades in dieser Auswahl.</p>}
+    </section>
+    </div>
+  </div>;
+}

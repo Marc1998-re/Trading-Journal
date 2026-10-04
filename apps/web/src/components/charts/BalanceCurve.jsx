@@ -10,7 +10,7 @@ const CustomTooltip = ({ active, payload, label }) => {
       <div className="min-w-[180px] rounded-md border border-white/10 bg-card p-3 shadow-lg">
         <p className="mb-1 text-sm text-muted-foreground">{label}</p>
         <p className="text-lg font-bold text-primary">
-          €{value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          €{value.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </p>
       </div>
     );
@@ -23,7 +23,7 @@ const BalanceCurve = ({ trades, startingBalance = 10000, originalBalances = {}, 
   if (!trades || trades.length === 0) {
     return (
       <div className="flex h-[330px] items-center justify-center text-muted-foreground">
-        No trade data available
+        Keine Trade-Daten verfügbar
       </div>
     );
   }
@@ -54,7 +54,7 @@ const BalanceCurve = ({ trades, startingBalance = 10000, originalBalances = {}, 
           stroke="hsl(var(--muted-foreground))" 
           tick={{ fontSize: 12 }} 
           domain={[Math.max(0, minBalance - padding), maxBalance + padding]}
-          tickFormatter={(val) => `€${val.toLocaleString()}`}
+          tickFormatter={(val) => `€${val.toLocaleString('de-DE')}`}
           width={72}
         />
         <Tooltip content={<CustomTooltip />} />

@@ -9,7 +9,7 @@ const CustomTooltip = ({ active, payload, label, startingBalance }) => {
     const pct = ((val / safeStartingBalance) * 100).toFixed(2);
     const sign = val >= 0 ? '+' : '';
     const colorClass = val >= 0 ? 'text-success' : 'text-destructive';
-    const formattedValue = new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(val);
+    const formattedValue = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(val);
 
     return (
       <div className="min-w-[180px] rounded-md border border-white/10 bg-card p-3 shadow-lg">
@@ -27,7 +27,7 @@ const EquityCurve = ({ trades, startingBalance = 10000, originalBalances = {}, c
   if (!trades || trades.length === 0) {
     return (
       <div className="flex h-[330px] items-center justify-center text-muted-foreground">
-        No trade data available
+        Keine Trade-Daten verfügbar
       </div>
     );
   }
@@ -69,7 +69,7 @@ const EquityCurve = ({ trades, startingBalance = 10000, originalBalances = {}, c
         <YAxis
           stroke="hsl(var(--muted-foreground))"
           tick={{ fontSize: 12 }}
-          tickFormatter={(val) => `€${val.toLocaleString()}`}
+          tickFormatter={(val) => `€${val.toLocaleString('de-DE')}`}
           width={72}
         />
         <Tooltip content={<CustomTooltip startingBalance={startingBalance} />} />

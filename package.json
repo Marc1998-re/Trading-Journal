@@ -3,8 +3,13 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently --kill-others --raw \"npm run dev --prefix apps/web\" \"npm run dev --prefix apps/pocketbase\"",
-    "build": "concurrently --raw \"npm run build --prefix apps/web\"",
+    "dev": "npm run dev --workspace web",
+    "dev:full": "concurrently --kill-others --raw \"npm run dev --prefix apps/web\" \"npm run dev --prefix apps/pocketbase\"",
+    "test": "node --test tests/journal.test.mjs tests/theme.test.mjs tests/claude-copy.test.mjs tests/navigation.test.mjs tests/review.test.mjs tests/period.test.mjs tests/risk-analysis.test.mjs tests/metric-help.test.mjs tests/landing-product.test.mjs",
+    "copy:preview": "node scripts/claude-copy.mjs --dry-run",
+    "copy:review": "node scripts/claude-copy.mjs --send",
+    "test:backend": "node tests/backend.integration.mjs",
+    "build": "npm run build --workspace web",
     "start": "concurrently --kill-others --raw \"npm run start --prefix apps/pocketbase\"",
     "lint": "concurrently --raw \"npm run lint --prefix apps/web\""
   },

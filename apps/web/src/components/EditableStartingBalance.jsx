@@ -25,7 +25,7 @@ const EditableStartingBalance = ({ accounts, selectedAccountId, onSave }) => {
     
     const numVal = parseFloat(value);
     if (isNaN(numVal) || numVal <= 0) {
-      toast.error('Please enter a valid positive number');
+      toast.error('Bitte gib eine gültige positive Zahl ein.');
       return;
     }
     
@@ -50,11 +50,11 @@ const EditableStartingBalance = ({ accounts, selectedAccountId, onSave }) => {
       <div className="metric-card bg-accent/10 border-accent/20 text-accent-foreground group transition-all duration-300">
         <div className="flex justify-between items-start mb-1">
           <p className="metric-label flex items-center gap-2 text-accent-foreground/80">
-            Total Starting Balance
+            Startkapital gesamt
           </p>
         </div>
-        <p className="metric-value">${parseFloat(displayBalance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-        <p className="text-xs text-accent-foreground/60 mt-2">Combined across all accounts</p>
+        <p className="metric-value">€{parseFloat(displayBalance).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+        <p className="text-xs text-accent-foreground/60 mt-2">Über alle Konten kombiniert</p>
       </div>
     );
   }
@@ -67,11 +67,11 @@ const EditableStartingBalance = ({ accounts, selectedAccountId, onSave }) => {
       >
         <div className="flex justify-between items-start mb-1">
           <p className="metric-label flex items-center gap-2 text-accent-foreground/80">
-            Starting Balance
+            Startkapital
             <Pencil className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
           </p>
         </div>
-        <p className="metric-value">${parseFloat(displayBalance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+        <p className="metric-value">€{parseFloat(displayBalance).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         <p className="text-xs text-accent-foreground/60 mt-2">{currentAccount?.accountName}</p>
       </div>
     );
@@ -80,14 +80,14 @@ const EditableStartingBalance = ({ accounts, selectedAccountId, onSave }) => {
   return (
     <div className="metric-card bg-accent/15 border-accent/30 shadow-md ring-1 ring-accent/20">
       <div className="flex justify-between items-center mb-3">
-        <p className="metric-label text-accent-foreground/90">Set Account Balance</p>
+        <p className="metric-label text-accent-foreground/90">Kontostand setzen</p>
         <button onClick={handleCancel} className="text-accent-foreground/50 hover:text-accent-foreground transition-colors">
           <X className="w-4 h-4" />
         </button>
       </div>
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-accent-foreground/50 font-medium">$</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-accent-foreground/50 font-medium">€</span>
           <Input
             type="number"
             step="0.01"

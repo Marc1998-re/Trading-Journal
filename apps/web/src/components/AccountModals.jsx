@@ -34,17 +34,17 @@ export const CreateAccountModal = ({ isOpen, onClose, onCreate }) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create Trading Account</DialogTitle>
+          <DialogTitle>Trading-Konto erstellen</DialogTitle>
           <DialogDescription>
-            Add a new trading account to segment your trades.
+            Erstelle ein neues Konto, um deine Trades sauber zu segmentieren.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label htmlFor="accountName">Account Name</Label>
+            <Label htmlFor="accountName">Kontoname</Label>
             <Input
               id="accountName"
-              placeholder="e.g. Apex 100k Challenge"
+              placeholder="z. B. Apex 100k Challenge"
               value={accountName}
               onChange={(e) => setAccountName(e.target.value)}
               autoFocus
@@ -53,10 +53,10 @@ export const CreateAccountModal = ({ isOpen, onClose, onCreate }) => {
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
-              Cancel
+              Abbrechen
             </Button>
             <Button type="submit" disabled={isSubmitting || !accountName.trim()}>
-              {isSubmitting ? 'Creating...' : 'Create Account'}
+              {isSubmitting ? 'Wird erstellt...' : 'Konto erstellen'}
             </Button>
           </DialogFooter>
         </form>
@@ -94,14 +94,14 @@ export const RenameAccountModal = ({ isOpen, onClose, onRename, account }) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Rename Trading Account</DialogTitle>
+          <DialogTitle>Trading-Konto umbenennen</DialogTitle>
           <DialogDescription>
-            Change the name of your trading account.
+            Ändere den Namen deines Trading-Kontos.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label htmlFor="renameAccountName">Account Name</Label>
+            <Label htmlFor="renameAccountName">Kontoname</Label>
             <Input
               id="renameAccountName"
               value={accountName}
@@ -112,10 +112,10 @@ export const RenameAccountModal = ({ isOpen, onClose, onRename, account }) => {
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
-              Cancel
+              Abbrechen
             </Button>
             <Button type="submit" disabled={isSubmitting || !accountName.trim() || accountName.trim() === account?.accountName}>
-              {isSubmitting ? 'Saving...' : 'Save Changes'}
+              {isSubmitting ? 'Speichern...' : 'Änderungen speichern'}
             </Button>
           </DialogFooter>
         </form>
@@ -160,10 +160,10 @@ export const DeleteAccountModal = ({ isOpen, onClose, onDelete, account, availab
         <DialogHeader>
           <DialogTitle className="text-destructive flex items-center gap-2">
             <AlertTriangle className="w-5 h-5" />
-            Delete Account
+            Konto löschen
           </DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete <strong>{account?.accountName}</strong>?
+            Möchtest du <strong>{account?.accountName}</strong> wirklich löschen?
           </DialogDescription>
         </DialogHeader>
         
@@ -171,15 +171,15 @@ export const DeleteAccountModal = ({ isOpen, onClose, onDelete, account, availab
           <form onSubmit={handleSubmit} className="space-y-6 pt-2">
             <Alert variant="destructive" className="bg-destructive/10 text-destructive border-destructive/20">
               <AlertDescription>
-                All trades belonging to this account must be reassigned to another account before deletion.
+                Alle Trades dieses Kontos müssen vor dem Löschen einem anderen Konto zugewiesen werden.
               </AlertDescription>
             </Alert>
 
             <div className="space-y-2">
-              <Label htmlFor="targetAccount">Reassign trades to:</Label>
+              <Label htmlFor="targetAccount">Trades zuweisen an:</Label>
               <Select value={targetAccountId} onValueChange={setTargetAccountId} required>
                 <SelectTrigger id="targetAccount">
-                  <SelectValue placeholder="Select an account" />
+                  <SelectValue placeholder="Konto auswählen" />
                 </SelectTrigger>
                 <SelectContent>
                   {otherAccounts.map(acc => (
@@ -191,10 +191,10 @@ export const DeleteAccountModal = ({ isOpen, onClose, onDelete, account, availab
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
-                Cancel
+                Abbrechen
               </Button>
               <Button type="submit" variant="destructive" disabled={isSubmitting || !targetAccountId}>
-                {isSubmitting ? 'Deleting...' : 'Delete & Reassign'}
+                {isSubmitting ? 'Löschen...' : 'Löschen & zuweisen'}
               </Button>
             </DialogFooter>
           </form>
@@ -202,12 +202,12 @@ export const DeleteAccountModal = ({ isOpen, onClose, onDelete, account, availab
           <div className="space-y-6 pt-2">
             <Alert className="bg-muted border-border">
               <AlertDescription>
-                You cannot delete your only trading account. Please create another account first if you wish to delete this one.
+                Du kannst dein einziges Trading-Konto nicht löschen. Bitte erstelle zuerst ein weiteres Konto, wenn du dieses löschen möchtest.
               </AlertDescription>
             </Alert>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose} className="w-full">
-                Close
+                Schließen
               </Button>
             </DialogFooter>
           </div>

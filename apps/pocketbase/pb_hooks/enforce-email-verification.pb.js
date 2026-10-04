@@ -1,11 +1,9 @@
 /// <reference path="../pb_data/types.d.ts" />
 onRecordAuthRequest((e) => {
-  const user = e.record;
-  
-  // Check if user is verified
-  if (!user.get("verified")) {
-    throw new BadRequestError("Please verify your email before logging in. Check your inbox for the verification link.");
+  if (!e.record.verified()) {
+    throw new ForbiddenError('Bitte bestätige zuerst deine E-Mail-Adresse.', {
+      verification: { code: 'verification_required', message: 'E-Mail noch nicht bestätigt.' }
+    });
   }
-  
   e.next();
-}, "users");
+}, 'users');

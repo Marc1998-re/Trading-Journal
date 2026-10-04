@@ -92,12 +92,12 @@ const EditTradeModal = ({ trade, open, onClose, onSaved }) => {
     e.preventDefault();
     
     if (!formData.accountId) {
-      toast.error('Account is required');
+      toast.error('Konto ist erforderlich.');
       return;
     }
 
     if (!formData.symbol.trim()) {
-      toast.error('Symbol is required');
+      toast.error('Symbol ist erforderlich.');
       return;
     }
 
@@ -136,11 +136,11 @@ const EditTradeModal = ({ trade, open, onClose, onSaved }) => {
       };
 
       await pb.collection('trades').update(trade.id, updateData, { $autoCancel: false });
-      toast.success('Trade updated successfully');
+      toast.success('Trade erfolgreich aktualisiert.');
       onSaved();
       onClose();
     } catch (err) {
-      toast.error(err.message || 'Failed to update trade');
+      toast.error(err.message || 'Trade konnte nicht aktualisiert werden.');
       console.error(err);
     } finally {
       setLoading(false);
@@ -151,21 +151,21 @@ const EditTradeModal = ({ trade, open, onClose, onSaved }) => {
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit trade</DialogTitle>
-          <DialogDescription>Update essential trade details</DialogDescription>
+          <DialogTitle>Trade bearbeiten</DialogTitle>
+          <DialogDescription>Aktualisiere die wichtigsten Trade-Details</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             
             <div className="space-y-2">
-              <Label htmlFor="editAccountId">Account *</Label>
+              <Label htmlFor="editAccountId">Konto *</Label>
               <Select 
                 value={formData.accountId} 
                 onValueChange={(val) => handleSelectChange('accountId', val)}
                 required
               >
                 <SelectTrigger id="editAccountId" className="bg-background text-foreground">
-                  <SelectValue placeholder="Select Account" />
+                  <SelectValue placeholder="Konto auswählen" />
                 </SelectTrigger>
                 <SelectContent>
                   {accounts.map(acc => (
@@ -185,7 +185,7 @@ const EditTradeModal = ({ trade, open, onClose, onSaved }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="editEntryDate">Entry Date *</Label>
+              <Label htmlFor="editEntryDate">Einstiegsdatum *</Label>
               <Input
                 id="editEntryDate"
                 name="entryDate"
@@ -198,7 +198,7 @@ const EditTradeModal = ({ trade, open, onClose, onSaved }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="editEntryTime">Entry Time *</Label>
+              <Label htmlFor="editEntryTime">Einstiegszeit *</Label>
               <Input
                 id="editEntryTime"
                 name="entryTime"
@@ -221,19 +221,19 @@ const EditTradeModal = ({ trade, open, onClose, onSaved }) => {
                 max="100"
                 value={formData.stopLoss}
                 onChange={handleChange}
-                placeholder="e.g. 1.0"
+                placeholder="z. B. 1.0"
                 required
                 className="bg-background text-foreground"
               />
               {formData.stopLoss && !isNaN(parseFloat(formData.stopLoss)) && (
                 <p className="text-xs text-muted-foreground font-medium mt-1">
-                  Stop Loss: {formData.stopLoss}% of €{startingBalance.toLocaleString()} = €{calculateStopLossInEuro(startingBalance, formData.stopLoss).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                  Stop Loss: {formData.stopLoss}% von €{startingBalance.toLocaleString()} = €{calculateStopLossInEuro(startingBalance, formData.stopLoss).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                 </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="editRrSecured">RR Secured *</Label>
+              <Label htmlFor="editRrSecured">Gesichertes RR *</Label>
               <Input
                 id="editRrSecured"
                 name="rrSecured"
@@ -254,18 +254,18 @@ const EditTradeModal = ({ trade, open, onClose, onSaved }) => {
                 onValueChange={(val) => handleSelectChange('status', val)}
               >
                 <SelectTrigger id="editStatus" className="bg-background text-foreground">
-                  <SelectValue placeholder="Auto-calculate" />
+                  <SelectValue placeholder="Automatisch berechnen" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Win">Win</SelectItem>
-                  <SelectItem value="Loss">Loss</SelectItem>
-                  <SelectItem value="Breakeven">Breakeven</SelectItem>
+                  <SelectItem value="Win">Gewinn</SelectItem>
+                  <SelectItem value="Loss">Verlust</SelectItem>
+                  <SelectItem value="Breakeven">Break-even</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="editCommissionPercentage">Commission (%)</Label>
+              <Label htmlFor="editCommissionPercentage">Gebühr (%)</Label>
               <Input
                 id="editCommissionPercentage"
                 name="commissionPercentage"
@@ -280,7 +280,7 @@ const EditTradeModal = ({ trade, open, onClose, onSaved }) => {
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="editContextUrl">Context URL</Label>
+              <Label htmlFor="editContextUrl">Kontext URL</Label>
               <Input
                 id="editContextUrl"
                 name="contextUrl"
@@ -293,7 +293,7 @@ const EditTradeModal = ({ trade, open, onClose, onSaved }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="editValidationUrl">Validation URL</Label>
+              <Label htmlFor="editValidationUrl">Validierungs URL</Label>
               <Input
                 id="editValidationUrl"
                 name="validationUrl"
@@ -306,7 +306,7 @@ const EditTradeModal = ({ trade, open, onClose, onSaved }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="editEntryUrl">Entry URL</Label>
+              <Label htmlFor="editEntryUrl">Einstiegs URL</Label>
               <Input
                 id="editEntryUrl"
                 name="entryUrl"
@@ -319,13 +319,13 @@ const EditTradeModal = ({ trade, open, onClose, onSaved }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="editNotes">Notes</Label>
+              <Label htmlFor="editNotes">Notizen</Label>
               <Textarea
                 id="editNotes"
                 name="notes"
                 value={formData.notes}
                 onChange={handleChange}
-                placeholder="Trade setup, market conditions, lessons learned..."
+                placeholder="Trade-Setup, Marktbedingungen, Learnings..."
                 rows={3}
                 className="bg-background text-foreground resize-none"
               />
@@ -335,18 +335,18 @@ const EditTradeModal = ({ trade, open, onClose, onSaved }) => {
           <DialogFooter className="gap-2">
             <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
               <X className="w-4 h-4 mr-2" />
-              Cancel
+              Abbrechen
             </Button>
             <Button type="submit" disabled={loading} className="gap-2">
               {loading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                  Saving...
+                  Speichern...
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4" />
-                  Save changes
+                  Änderungen speichern
                 </>
               )}
             </Button>

@@ -6,6 +6,8 @@ build/
 .env.*
 !.env.example
 !**/.env.example
+!.env.claude.example
+.claude-reviews/
 
 # PocketBase local runtime data and binaries
 apps/pocketbase/pb_data/

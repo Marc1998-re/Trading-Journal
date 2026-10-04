@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
 import pb from '@/lib/pocketbaseClient';
 import { useAuth } from '@/contexts/AuthContext.jsx';
 
@@ -13,10 +14,12 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }) => {
-  const { currentUser, userSettings } = useAuth();
+  const { currentUser, userSettings, refreshUserSettings } = useAuth();
+  const savingRef = useRef(false);
+  const [savingTheme, setSavingTheme] = useState(false);
   
   const [theme, setThemeState] = useState(() => {
-    return localStorage.getItem('theme') || 'dark';
+    return localStorage.getItem('theme') === 'light' ? 'light' : 'dark';
   });
 
   // Keep internal state in sync if AuthContext loads/updates it
@@ -29,7 +32,11 @@ export const ThemeProvider = ({ children }) => {
     };
     
     window.addEventListener('theme-updated', handleSync);
-    return () => window.removeEventListener('theme-updated', handleSync);
+    window.addEventListener('storage', handleSync);
+    return () => {
+      window.removeEventListener('theme-updated', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
   }, [theme]);
 
   // Apply theme to DOM document
@@ -41,10 +48,13 @@ export const ThemeProvider = ({ children }) => {
   }, [theme]);
 
   const setTheme = async (newTheme) => {
+    if (!['light', 'dark'].includes(newTheme) || savingRef.current || newTheme === theme) return;
     setThemeState(newTheme);
     
     // Persist to database if logged in
     if (currentUser) {
+      savingRef.current = true;
+      setSavingTheme(true);
       try {
         if (userSettings?.id) {
           await pb.collection('userSettings').update(userSettings.id, { theme: newTheme }, { $autoCancel: false });
@@ -56,9 +66,14 @@ export const ThemeProvider = ({ children }) => {
             startingBalance: 10000, // Default required fields
             commissionPercentage: 0
           }, { $autoCancel: false });
+          await refreshUserSettings();
         }
       } catch (error) {
         console.error('Failed to save theme preference to database', error);
+        toast.error('Design lokal gespeichert. Die Synchronisierung mit deinem Konto ist fehlgeschlagen.');
+      } finally {
+        savingRef.current = false;
+        setSavingTheme(false);
       }
     }
   };
@@ -68,7 +83,7 @@ export const ThemeProvider = ({ children }) => {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, savingTheme }}>
       {children}
     </ThemeContext.Provider>
   );

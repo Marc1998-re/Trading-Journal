@@ -39,14 +39,14 @@ export function SymbolCombobox({ value, onChange, symbols = [] }) {
             !value && "text-muted-foreground"
           )}
         >
-          {value || "Select or type symbol..."}
+          {value || "Symbol auswählen oder eingeben..."}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
         <Command>
           <CommandInput
-            placeholder="Search or type new..."
+            placeholder="Suchen oder neu eingeben..."
             value={inputValue}
             onValueChange={(val) => {
               setInputValue(val);
@@ -55,7 +55,7 @@ export function SymbolCombobox({ value, onChange, symbols = [] }) {
           />
           <CommandList>
             <CommandEmpty>
-              {inputValue ? `Will use "${inputValue.toUpperCase()}"` : "No symbols found."}
+              {inputValue ? `Verwendet "${inputValue.toUpperCase()}"` : "Keine Symbole gefunden."}
             </CommandEmpty>
             <CommandGroup>
               {symbols.map((symbol) => (
@@ -85,7 +85,7 @@ export function SymbolCombobox({ value, onChange, symbols = [] }) {
                   }}
                 >
                   <Check className="mr-2 h-4 w-4 opacity-0" />
-                  Create "{inputValue.toUpperCase()}"
+                  "{inputValue.toUpperCase()}" erstellen
                 </CommandItem>
               )}
             </CommandGroup>

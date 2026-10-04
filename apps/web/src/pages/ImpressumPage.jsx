@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Helmet } from 'react-helmet';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -16,8 +15,6 @@ import {
 } from 'lucide-react';
 
 const ImpressumPage = () => {
-  const [lang, setLang] = useState('en');
-
   const content = {
     en: {
       title: 'Legal Notice',
@@ -31,7 +28,7 @@ const ImpressumPage = () => {
             <div className="space-y-3">
               <p className="font-semibold text-foreground">Marc Reinhardt</p>
               <p className="text-muted-foreground">
-                Individual trader and operator of Marc's Trading Journal
+                Individual trader and operator of The Trading Desk
               </p>
             </div>
           ),
@@ -68,7 +65,7 @@ const ImpressumPage = () => {
           content: (
             <div className="space-y-2">
               <p>
-                <span className="font-medium text-foreground">Platform:</span> Marc's Trading Journal
+                <span className="font-medium text-foreground">Platform:</span> The Trading Desk
               </p>
               <p>
                 <span className="font-medium text-foreground">Hosting Provider:</span> Hostinger International Ltd.
@@ -89,7 +86,7 @@ const ImpressumPage = () => {
                 The content of this website is provided for informational purposes only. While we strive to ensure accuracy, we make no warranties or representations regarding the completeness, accuracy, or reliability of the information provided.
               </p>
               <p>
-                Marc's Trading Journal is not responsible for any direct, indirect, incidental, special, or consequential damages arising from the use of or inability to use the platform or its content.
+                The Trading Desk is not responsible for any direct, indirect, incidental, special, or consequential damages arising from the use of or inability to use the platform or its content.
               </p>
             </div>
           ),
@@ -110,7 +107,7 @@ const ImpressumPage = () => {
           icon: <Copyright className="w-5 h-5 text-primary" />,
           content: (
             <p>
-              All content, design, graphics, and software code of Marc's Trading Journal are protected by copyright and other intellectual property laws. Unauthorized reproduction, distribution, or modification of any content is strictly prohibited.
+              All content, design, graphics, and software code of The Trading Desk are protected by copyright and other intellectual property laws. Unauthorized reproduction, distribution, or modification of any content is strictly prohibited.
             </p>
           ),
         },
@@ -155,7 +152,7 @@ const ImpressumPage = () => {
             <div className="space-y-3">
               <p className="font-semibold text-foreground">Marc Reinhardt</p>
               <p className="text-muted-foreground">
-                Einzelner Trader und Betreiber von Marc's Trading Journal
+                Einzelner Trader und Betreiber von The Trading Desk
               </p>
             </div>
           ),
@@ -192,7 +189,7 @@ const ImpressumPage = () => {
           content: (
             <div className="space-y-2">
               <p>
-                <span className="font-medium text-foreground">Plattform:</span> Marc's Trading Journal
+                <span className="font-medium text-foreground">Plattform:</span> The Trading Desk
               </p>
               <p>
                 <span className="font-medium text-foreground">Hosting-Anbieter:</span> Hostinger International Ltd.
@@ -213,7 +210,7 @@ const ImpressumPage = () => {
                 Der Inhalt dieser Website wird nur zu Informationszwecken bereitgestellt. Obwohl wir uns bemühen, die Genauigkeit zu gewährleisten, geben wir keine Garantien oder Zusicherungen bezüglich der Vollständigkeit, Genauigkeit oder Zuverlässigkeit der bereitgestellten Informationen.
               </p>
               <p>
-                Marc's Trading Journal ist nicht verantwortlich für direkte, indirekte, zufällige, besondere oder Folgeschäden, die sich aus der Nutzung oder der Unmöglichkeit der Nutzung der Plattform oder ihres Inhalts ergeben.
+                The Trading Desk ist nicht verantwortlich für direkte, indirekte, zufällige, besondere oder Folgeschäden, die sich aus der Nutzung oder der Unmöglichkeit der Nutzung der Plattform oder ihres Inhalts ergeben.
               </p>
             </div>
           ),
@@ -234,7 +231,7 @@ const ImpressumPage = () => {
           icon: <Copyright className="w-5 h-5 text-primary" />,
           content: (
             <p>
-              Alle Inhalte, Designs, Grafiken und Softwarecodes von Marc's Trading Journal sind durch Urheberrecht und andere Gesetze zum Schutz geistigen Eigentums geschützt. Die unbefugte Vervielfältigung, Verbreitung oder Änderung von Inhalten ist strengstens untersagt.
+              Alle Inhalte, Designs, Grafiken und Softwarecodes von The Trading Desk sind durch Urheberrecht und andere Gesetze zum Schutz geistigen Eigentums geschützt. Die unbefugte Vervielfältigung, Verbreitung oder Änderung von Inhalten ist strengstens untersagt.
             </p>
           ),
         },
@@ -269,40 +266,22 @@ const ImpressumPage = () => {
     },
   };
 
-  const currentContent = content[lang];
+  const currentContent = content.de;
 
   return (
     <>
       <Helmet>
         <title>{`${currentContent.title} - Trading Journal`}</title>
-        <meta name="description" content="Legal Notice and Impressum Information" />
+        <meta name="description" content="Impressum und Anbieterinformationen" />
       </Helmet>
 
       <div className="min-h-screen bg-background py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
-          {/* Header & Toggle */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-6">
+          {/* Header */}
+          <div className="mb-12">
             <div>
               <h1 className="text-4xl font-bold tracking-tight mb-2">{currentContent.title}</h1>
               <p className="text-muted-foreground">{currentContent.subtitle}</p>
-            </div>
-            <div className="flex items-center bg-muted p-1 rounded-lg border border-border/50 shadow-sm">
-              <Button
-                variant={lang === 'de' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setLang('de')}
-                className={`rounded-md px-4 transition-all ${lang === 'de' ? 'shadow-sm' : ''}`}
-              >
-                DE
-              </Button>
-              <Button
-                variant={lang === 'en' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setLang('en')}
-                className={`rounded-md px-4 transition-all ${lang === 'en' ? 'shadow-sm' : ''}`}
-              >
-                EN
-              </Button>
             </div>
           </div>
 
@@ -310,7 +289,7 @@ const ImpressumPage = () => {
           <div className="space-y-8">
             <AnimatePresence mode="wait">
               <motion.div
-                key={lang}
+                key="de"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
@@ -343,9 +322,7 @@ const ImpressumPage = () => {
           {/* Footer Note */}
           <div className="mt-16 text-center text-sm text-muted-foreground">
             <p>
-              {lang === 'en' 
-                ? 'If you have any questions about this Legal Notice, please contact us.'
-                : 'Wenn Sie Fragen zu diesem Impressum haben, kontaktieren Sie uns bitte.'}
+              Wenn Sie Fragen zu diesem Impressum haben, kontaktieren Sie uns bitte.
             </p>
           </div>
         </div>

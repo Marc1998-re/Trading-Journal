@@ -1,38 +1,51 @@
-import React from 'react';
-import { Route, Routes, BrowserRouter as Router, Navigate } from 'react-router-dom';
+import React, { lazy, Suspense } from 'react';
+import { Route, Routes, createBrowserRouter, RouterProvider, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext.jsx';
 import { ThemeProvider } from '@/contexts/ThemeContext.jsx';
 import { AccountProvider } from '@/contexts/AccountContext.jsx';
 import { FilterProvider } from '@/contexts/FilterContext.jsx';
+import { NavigationGuardProvider } from '@/contexts/NavigationGuardContext.jsx';
+import { JournalPeriodProvider } from '@/contexts/JournalPeriodContext.jsx';
 import ProtectedRoute from '@/components/ProtectedRoute.jsx';
 import ScrollToTop from '@/components/ScrollToTop.jsx';
 import Header from '@/components/Header.jsx';
 import Footer from '@/components/Footer.jsx';
 import HomePage from '@/pages/HomePage.jsx';
-import DashboardPage from '@/pages/DashboardPage.jsx';
-import LoginPage from '@/pages/LoginPage.jsx';
-import SignupPage from '@/pages/SignupPage.jsx';
-import TradesPage from '@/pages/TradesPage.jsx';
-import AnalysisPage from '@/pages/AnalysisPage.jsx';
-import ChartsPage from '@/pages/ChartsPage.jsx';
-import SettingsPage from '@/pages/SettingsPage.jsx';
-import PrivacyPolicyPage from '@/pages/PrivacyPolicyPage.jsx';
-import TermsOfServicePage from '@/pages/TermsOfServicePage.jsx';
-import DisclaimerPage from '@/pages/DisclaimerPage.jsx';
-import ImpressumPage from '@/pages/ImpressumPage.jsx';
-import VerifyPendingPage from '@/pages/VerifyPendingPage.jsx';
+const DashboardPage=lazy(()=>import('@/pages/DashboardPage.jsx'));
+const LoginPage=lazy(()=>import('@/pages/LoginPage.jsx'));
+const SignupPage=lazy(()=>import('@/pages/SignupPage.jsx'));
+const TradesPage=lazy(()=>import('@/pages/TradesPage.jsx'));
+const AnalysisPage=lazy(()=>import('@/pages/AnalysisPage.jsx'));
+const ChartsPage=lazy(()=>import('@/pages/ChartsPage.jsx'));
+const ReviewPage=lazy(()=>import('@/pages/ReviewPage.jsx'));
+const ResetPasswordPage=lazy(()=>import('@/pages/ResetPasswordPage.jsx'));
+const SettingsPage=lazy(()=>import('@/pages/SettingsPage.jsx'));
+const PrivacyPolicyPage=lazy(()=>import('@/pages/PrivacyPolicyPage.jsx'));
+const TermsOfServicePage=lazy(()=>import('@/pages/TermsOfServicePage.jsx'));
+const DisclaimerPage=lazy(()=>import('@/pages/DisclaimerPage.jsx'));
+const ImpressumPage=lazy(()=>import('@/pages/ImpressumPage.jsx'));
+const VerifyPendingPage=lazy(()=>import('@/pages/VerifyPendingPage.jsx'));
 import CookieConsentBanner from '@/components/CookieConsentBanner.jsx';
 import { Toaster } from '@/components/ui/sonner';
 import { useGoogleAnalytics } from '@/hooks/useGoogleAnalytics.js';
 
 const AppContent = () => {
   useGoogleAnalytics();
+  const {pathname}=useLocation();
+  const workspace=pathname.startsWith('/demo')||['/home','/dashboard','/analysis','/charts','/trades','/review','/settings'].includes(pathname);
 
   return (
-    <div className="min-h-screen flex flex-col transition-theme">
+    <div className={`trading-app min-h-screen flex flex-col transition-theme${pathname === '/' ? ' landing-theme' : ''}`}>
       <Header />
-      <main className="flex-1">
-        <Routes>
+      <main className={workspace?'workspace-main':'flex-1'}>
+        <Suspense fallback={<div role="status" className="p-10 text-sm text-muted-foreground">Ansicht wird geladen…</div>}><Routes>
+          <Route path="/reset-password" element={<ResetPasswordPage/>}/>
+          <Route path="/demo" element={<DashboardPage/>}/>
+          <Route path="/demo/trades" element={<TradesPage/>}/>
+          <Route path="/demo/analysis" element={<AnalysisPage/>}/>
+          <Route path="/demo/charts" element={<ChartsPage/>}/>
+          <Route path="/demo/review" element={<ReviewPage/>}/>
+          <Route path="/review" element={<ProtectedRoute><ReviewPage/></ProtectedRoute>}/>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
@@ -87,30 +100,38 @@ const AppContent = () => {
             }
           />
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        </Routes></Suspense>
       </main>
-      <Footer />
+      {!workspace&&<Footer />}
       <CookieConsentBanner />
     </div>
   );
 };
 
-function App() {
+function AppProviders() {
   return (
-    <Router>
+    <NavigationGuardProvider>
       <AuthProvider>
         <ThemeProvider>
           <AccountProvider>
             <FilterProvider>
+              <JournalPeriodProvider>
               <ScrollToTop />
               <AppContent />
               <Toaster />
+              </JournalPeriodProvider>
             </FilterProvider>
           </AccountProvider>
         </ThemeProvider>
       </AuthProvider>
-    </Router>
+    </NavigationGuardProvider>
   );
+}
+
+const router = createBrowserRouter([{ path: '*', element: <AppProviders /> }]);
+
+function App() {
+  return <RouterProvider router={router} />;
 }
 
 export default App;

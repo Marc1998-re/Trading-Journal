@@ -41,7 +41,7 @@ const DeleteAccountModal = ({ isOpen, onClose, onSuccess }) => {
       await deleteAccount(password);
       onSuccess();
     } catch (err) {
-      setError(err.message || 'An unexpected error occurred. Please try again.');
+      setError(err.message || 'Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut.');
     } finally {
       setIsLoading(false);
     }
@@ -54,9 +54,9 @@ const DeleteAccountModal = ({ isOpen, onClose, onSuccess }) => {
           <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-2 mx-auto sm:mx-0">
             <AlertTriangle className="w-6 h-6 text-destructive" />
           </div>
-          <DialogTitle className="text-2xl text-center sm:text-left">Delete Account</DialogTitle>
+          <DialogTitle className="text-2xl text-center sm:text-left">Konto löschen</DialogTitle>
           <DialogDescription className="text-base text-center sm:text-left">
-            This action is permanent. All your trades, settings, and associated data will be completely wiped from our servers and cannot be recovered.
+            Diese Aktion ist dauerhaft. Alle Trades, Einstellungen und zugehörigen Daten werden vollständig von unseren Servern gelöscht und können nicht wiederhergestellt werden.
           </DialogDescription>
         </DialogHeader>
 
@@ -68,14 +68,14 @@ const DeleteAccountModal = ({ isOpen, onClose, onSuccess }) => {
 
         <form onSubmit={handleDelete} className="space-y-6 mt-4">
           <div className="space-y-3">
-            <Label htmlFor="delete-password">Confirm Password</Label>
+            <Label htmlFor="delete-password">Passwort bestätigen</Label>
             <div className="relative">
               <Input
                 id="delete-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
+                placeholder="Passwort eingeben"
                 className="pl-10 h-11"
                 required
                 disabled={isLoading}
@@ -97,7 +97,7 @@ const DeleteAccountModal = ({ isOpen, onClose, onSuccess }) => {
                 htmlFor="confirm-deletion"
                 className="text-sm font-medium cursor-pointer leading-snug"
               >
-                I understand this is permanent and cannot be undone
+                Ich verstehe, dass diese Aktion dauerhaft ist und nicht rückgängig gemacht werden kann
               </Label>
             </div>
           </div>
@@ -110,7 +110,7 @@ const DeleteAccountModal = ({ isOpen, onClose, onSuccess }) => {
               disabled={isLoading}
               className="w-full sm:w-auto h-11"
             >
-              Cancel
+              Abbrechen
             </Button>
             <Button
               type="submit"
@@ -121,10 +121,10 @@ const DeleteAccountModal = ({ isOpen, onClose, onSuccess }) => {
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Deleting...
+                  Löschen...
                 </>
               ) : (
-                'Delete Account'
+                'Konto löschen'
               )}
             </Button>
           </DialogFooter>

@@ -1,18 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Helmet } from 'react-helmet';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Globe, Shield, Mail, Database, Lock, FileText } from 'lucide-react';
 
 const PrivacyPolicyPage = () => {
-  const [lang, setLang] = useState('en');
-
-  const toggleLanguage = () => {
-    setLang((prev) => (prev === 'en' ? 'de' : 'en'));
-  };
-
   const content = {
     en: {
       title: 'Privacy Policy',
@@ -336,40 +329,22 @@ const PrivacyPolicyPage = () => {
     },
   };
 
-  const currentContent = content[lang];
+  const currentContent = content.de;
 
   return (
     <>
       <Helmet>
         <title>{`${currentContent.title} - Trading Journal`}</title>
-        <meta name="description" content="Privacy Policy and Data Protection Information" />
+        <meta name="description" content="Datenschutzerklärung und Informationen zum Datenschutz" />
       </Helmet>
 
       <div className="min-h-screen bg-background py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
-          {/* Header & Toggle */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12 gap-6">
+          {/* Header */}
+          <div className="mb-12">
             <div>
               <h1 className="text-4xl font-bold tracking-tight mb-2">{currentContent.title}</h1>
               <p className="text-muted-foreground">{currentContent.subtitle}</p>
-            </div>
-            <div className="flex items-center bg-muted p-1 rounded-lg border border-border/50 shadow-sm">
-              <Button
-                variant={lang === 'de' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setLang('de')}
-                className={`rounded-md px-4 transition-all ${lang === 'de' ? 'shadow-sm' : ''}`}
-              >
-                DE
-              </Button>
-              <Button
-                variant={lang === 'en' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setLang('en')}
-                className={`rounded-md px-4 transition-all ${lang === 'en' ? 'shadow-sm' : ''}`}
-              >
-                EN
-              </Button>
             </div>
           </div>
 
@@ -377,7 +352,7 @@ const PrivacyPolicyPage = () => {
           <div className="space-y-8">
             <AnimatePresence mode="wait">
               <motion.div
-                key={lang}
+                key="de"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
@@ -410,9 +385,7 @@ const PrivacyPolicyPage = () => {
           {/* Footer Note */}
           <div className="mt-16 text-center text-sm text-muted-foreground">
             <p>
-              {lang === 'en' 
-                ? 'If you have any questions about this Privacy Policy, please contact us.'
-                : 'Wenn Sie Fragen zu dieser Datenschutzerklärung haben, kontaktieren Sie uns bitte.'}
+              Wenn Sie Fragen zu dieser Datenschutzerklärung haben, kontaktieren Sie uns bitte.
             </p>
           </div>
         </div>

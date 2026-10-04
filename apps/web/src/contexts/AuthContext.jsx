@@ -16,12 +16,20 @@ export const AuthProvider = ({ children }) => {
   const [userSettings, setUserSettings] = useState(null);
   const [initialLoading, setInitialLoading] = useState(true);
   const [isVerificationPending, setIsVerificationPending] = useState(false);
-  const [verificationEmail, setVerificationEmail] = useState('');
+  const [verificationEmail, setVerificationEmail] = useState(()=>sessionStorage.getItem('verificationEmail')||'');
+  useEffect(()=>{sessionStorage.setItem('verificationEmail',verificationEmail);},[verificationEmail]);
 
   useEffect(() => {
     const initAuth = async () => {
       if (pb.authStore.isValid) {
-        setCurrentUser(pb.authStore.model);
+        try {
+          const refreshed = await pb.collection('users').authRefresh({requestKey:null});
+          setCurrentUser(refreshed.record);
+        } catch (error) {
+          if (error.status === 401 || error.status === 403) pb.authStore.clear();
+          setInitialLoading(false);
+          return;
+        }
         
         // Fetch user settings on load to get theme and other preferences
         try {
@@ -49,7 +57,9 @@ export const AuthProvider = ({ children }) => {
       setInitialLoading(false);
     };
 
+    const unsubscribe=pb.authStore.onChange((_token,record)=>setCurrentUser(record));
     initAuth();
+    return unsubscribe;
   }, []);
 
   const login = async (email, password) => {
@@ -59,8 +69,8 @@ export const AuthProvider = ({ children }) => {
       if (authData.record.verified === false) {
         setVerificationEmail(email);
         setIsVerificationPending(true);
-        setCurrentUser(authData.record);
-        throw new Error('Please verify your email first.');
+        pb.authStore.clear();
+        throw new Error('Bitte bestätige zuerst deine E-Mail-Adresse.');
       }
       
       setCurrentUser(authData.record);
@@ -93,14 +103,18 @@ export const AuthProvider = ({ children }) => {
       const dataMsg = JSON.stringify(error.response?.data || {});
       
       if (
-        errorMsg === 'Please verify your email first.' ||
+        errorMsg === 'Bitte bestätige zuerst deine E-Mail-Adresse.' ||
         errorMsg.toLowerCase().includes('verify') ||
         responseMsg.toLowerCase().includes('verify') ||
-        dataMsg.toLowerCase().includes('verify')
+        dataMsg.toLowerCase().includes('verify') ||
+        dataMsg.includes('verification_required') ||
+        responseMsg.toLowerCase().includes('bestätige')
       ) {
         setVerificationEmail(email);
         setIsVerificationPending(true);
-        throw new Error('Please verify your email first.');
+        const pendingError=new Error('Bitte bestätige zuerst deine E-Mail-Adresse.');
+        pendingError.code='verification_required';
+        throw pendingError;
       }
       throw error;
     }
@@ -119,21 +133,23 @@ export const AuthProvider = ({ children }) => {
       setVerificationEmail(email);
       setIsVerificationPending(true);
 
+      let verificationRequested=false;
       try {
         await requestVerificationEmail(email);
+        verificationRequested=true;
       } catch (e) {
-        console.warn("Manual verification request failed:", e);
+        // Account creation succeeded; a mail failure must not trigger another signup.
       }
 
-      return record;
+      return {...record,verificationRequested};
     } catch (error) {
-      let errorMessage = 'Failed to create account. Please try again.';
+      let errorMessage = 'Konto konnte nicht erstellt werden. Bitte versuche es erneut.';
       if (error.response?.data) {
         const data = error.response.data;
         const messages = [];
-        if (data.email?.message) messages.push(`Email: ${data.email.message}`);
-        if (data.password?.message) messages.push(`Password: ${data.password.message}`);
-        if (data.passwordConfirm?.message) messages.push(`Password Confirmation: ${data.passwordConfirm.message}`);
+        if (data.email?.message) messages.push(`E-Mail: ${data.email.message}`);
+        if (data.password?.message) messages.push(`Passwort: ${data.password.message}`);
+        if (data.passwordConfirm?.message) messages.push(`Passwortbestätigung: ${data.passwordConfirm.message}`);
         if (messages.length > 0) {
           errorMessage = messages.join(' | ');
         } else if (error.response?.message) {
@@ -151,7 +167,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const resendVerificationEmail = async (emailToUse = verificationEmail) => {
-    if (!emailToUse) throw new Error('No email address available to resend verification.');
+    if (!emailToUse) throw new Error('Keine E-Mail-Adresse zum erneuten Senden verfügbar.');
     return await requestVerificationEmail(emailToUse);
   };
 
@@ -159,21 +175,22 @@ export const AuthProvider = ({ children }) => {
     try {
       await pb.collection('users').confirmVerification(token, { $autoCancel: false });
     } catch (error) {
-      throw new Error(error.message || 'Invalid or expired verification token.');
+      throw new Error(error.message || 'Ungültiger oder abgelaufener Bestätigungs-Token.');
     }
 
-    try {
-      if (pb.authStore.isValid) {
+    setIsVerificationPending(false);
+    setVerificationEmail('');
+    if (pb.authStore.isValid) {
+      try {
         const authData = await pb.collection('users').authRefresh({ $autoCancel: false });
         setCurrentUser(authData.record);
         setIsVerificationPending(false);
         return authData;
-      } else {
-        throw new Error('No active session found.');
+      } catch {
+        pb.authStore.clear();
       }
-    } catch (error) {
-      throw new Error('Verification successful but login failed. Please log in manually.');
     }
+    return {verified:true};
   };
 
   const logout = () => {
@@ -200,13 +217,13 @@ export const AuthProvider = ({ children }) => {
   };
 
   const deleteAccount = async (password) => {
-    if (!currentUser) throw new Error("No authenticated user found.");
+    if (!currentUser) throw new Error("Kein eingeloggter Nutzer gefunden.");
 
     // 1. Verify the user's password
     try {
       await pb.collection('users').authWithPassword(currentUser.email, password, { $autoCancel: false });
     } catch (error) {
-      throw new Error("Incorrect password. Please try again.");
+      throw new Error("Falsches Passwort. Bitte versuche es erneut.");
     }
 
     // 2. Delete all associated data
@@ -233,7 +250,7 @@ export const AuthProvider = ({ children }) => {
       await pb.collection('users').delete(currentUser.id, { $autoCancel: false });
     } catch (err) {
       console.error("Failed to delete user record:", err);
-      throw new Error("Failed to delete user account. Please try again later.");
+      throw new Error("Konto konnte nicht gelöscht werden. Bitte versuche es später erneut.");
     }
 
     // 4. Clear auth state and logout
@@ -263,7 +280,7 @@ export const AuthProvider = ({ children }) => {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground font-medium">Loading session...</p>
+          <p className="text-muted-foreground font-medium">Sitzung wird geladen...</p>
         </div>
       </div>
     );

@@ -21,22 +21,29 @@ const FilterBar = () => {
     filters.status !== 'All' ? filters.status : null,
   ].filter(Boolean).length;
 
+  const statusLabels = {
+    All: 'Alle',
+    Win: 'Gewinn',
+    Loss: 'Verlust',
+    Breakeven: 'Break-even',
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Filter className="w-5 h-5 text-muted-foreground" />
-          <h3 className="text-lg font-semibold">Filters</h3>
+          <h3 className="text-lg font-semibold">Filter</h3>
           {activeFiltersCount > 0 && (
             <Badge variant="secondary" className="ml-2">
-              {activeFiltersCount} active
+              {activeFiltersCount} aktiv
             </Badge>
           )}
         </div>
         {activeFiltersCount > 0 && (
           <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-2">
             <X className="w-4 h-4" />
-            Clear all
+            Alle löschen
           </Button>
         )}
       </div>
@@ -54,7 +61,7 @@ const FilterBar = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="startDate">Start date</Label>
+          <Label htmlFor="startDate">Startdatum</Label>
           <Input
             id="startDate"
             type="date"
@@ -65,7 +72,7 @@ const FilterBar = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="endDate">End date</Label>
+          <Label htmlFor="endDate">Enddatum</Label>
           <Input
             id="endDate"
             type="date"
@@ -82,10 +89,10 @@ const FilterBar = () => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="All">All</SelectItem>
-              <SelectItem value="Win">Win</SelectItem>
-              <SelectItem value="Loss">Loss</SelectItem>
-              <SelectItem value="Breakeven">Breakeven</SelectItem>
+              <SelectItem value="All">Alle</SelectItem>
+              <SelectItem value="Win">Gewinn</SelectItem>
+              <SelectItem value="Loss">Verlust</SelectItem>
+              <SelectItem value="Breakeven">Break-even</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -103,7 +110,7 @@ const FilterBar = () => {
           )}
           {filters.startDate && (
             <Badge variant="secondary" className="gap-2 filter-badge">
-              From: {filters.startDate}
+              Ab: {filters.startDate}
               <button onClick={() => handleChange('startDate', '')} className="hover:text-foreground">
                 <X className="w-3 h-3" />
               </button>
@@ -111,7 +118,7 @@ const FilterBar = () => {
           )}
           {filters.endDate && (
             <Badge variant="secondary" className="gap-2 filter-badge">
-              To: {filters.endDate}
+              Bis: {filters.endDate}
               <button onClick={() => handleChange('endDate', '')} className="hover:text-foreground">
                 <X className="w-3 h-3" />
               </button>
@@ -119,7 +126,7 @@ const FilterBar = () => {
           )}
           {filters.status !== 'All' && (
             <Badge variant="secondary" className="gap-2 filter-badge">
-              Status: {filters.status}
+              Status: {statusLabels[filters.status] || filters.status}
               <button onClick={() => handleChange('status', 'All')} className="hover:text-foreground">
                 <X className="w-3 h-3" />
               </button>

@@ -2,25 +2,25 @@ import React from 'react';
 import { PieChart as RechartsPie, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 const COLORS = {
-  'win rate': 'hsl(var(--success))',
-  'loss rate': 'hsl(var(--destructive))',
-  'breakeven rate': 'hsl(var(--muted-foreground))',
+  'trefferquote': 'hsl(var(--success))',
+  'verlustquote': 'hsl(var(--destructive))',
+  'break-even-quote': 'hsl(var(--muted-foreground))',
 };
 
 const PieChart = ({ data }) => {
   const total = (data?.wins || 0) + (data?.losses || 0) + (data?.breakeven || 0);
 
   const chartData = [
-    { name: 'Win Rate', value: data?.wins || 0 },
-    { name: 'Loss Rate', value: data?.losses || 0 },
-    { name: 'Breakeven Rate', value: data?.breakeven || 0 },
+    { name: 'Trefferquote', value: data?.wins || 0 },
+    { name: 'Verlustquote', value: data?.losses || 0 },
+    { name: 'Break-even-Quote', value: data?.breakeven || 0 },
   ].filter((item) => item.value > 0);
   const winRate = total > 0 ? ((data?.wins || 0) / total) * 100 : 0;
 
   if (chartData.length === 0 || total === 0) {
     return (
       <div className="flex h-[320px] items-center justify-center text-muted-foreground">
-        No trade data available
+        Keine Trade-Daten verfügbar
       </div>
     );
   }
@@ -47,7 +47,7 @@ const PieChart = ({ data }) => {
               ))}
             </Pie>
             <Tooltip
-              formatter={(value, name) => [`${((value / total) * 100).toFixed(1)}% (${value} trades)`, name]}
+              formatter={(value, name) => [`${((value / total) * 100).toFixed(1)}% (${value} ${value === 1 ? 'Trade' : 'Trades'})`, name]}
               contentStyle={{
                 backgroundColor: 'hsl(var(--card))',
                 border: '1px solid hsl(var(--border) / 0.7)',
@@ -62,7 +62,7 @@ const PieChart = ({ data }) => {
         <div className="pointer-events-none absolute inset-0 grid place-items-center">
           <div className="text-center">
             <p className="text-3xl font-black text-success">{winRate.toFixed(0)}%</p>
-            <p className="surface-label mt-1">Win Rate</p>
+            <p className="surface-label mt-1">Trefferquote</p>
           </div>
         </div>
       </div>
@@ -83,7 +83,7 @@ const PieChart = ({ data }) => {
               <div className="h-2 overflow-hidden rounded-full bg-white/10">
                 <div className="h-full rounded-full" style={{ width: `${percent}%`, backgroundColor: color }} />
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">{item.value} trades</p>
+              <p className="mt-2 text-xs text-muted-foreground">{item.value} {item.value === 1 ? 'Trade' : 'Trades'}</p>
             </div>
           );
         })}

@@ -30,7 +30,7 @@ const AccountSwitcher = ({ isMobile = false }) => {
   const [activeAccountAction, setActiveAccountAction] = useState(null);
 
   const selectedAccount = accounts.find(a => a.id === selectedAccountId);
-  const displayName = selectedAccountId && selectedAccount ? selectedAccount.accountName : 'All Accounts';
+  const displayName = selectedAccountId && selectedAccount ? selectedAccount.accountName : 'Alle Konten';
 
   const handleOpenRename = (e, account) => {
     e.stopPropagation();
@@ -51,7 +51,7 @@ const AccountSwitcher = ({ isMobile = false }) => {
           <Button 
             variant="outline" 
             role="combobox" 
-            aria-label="Select account" 
+            aria-label="Konto auswählen"
             className={`justify-between gap-2 border-border/50 bg-background/50 hover:bg-muted ${isMobile ? 'w-full' : 'w-[200px]'}`}
           >
             <div className="flex items-center gap-2 truncate">
@@ -63,7 +63,7 @@ const AccountSwitcher = ({ isMobile = false }) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-[240px] p-2" align={isMobile ? "center" : "end"}>
           <DropdownMenuLabel className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
-            Trading Accounts
+            Trading-Konten
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           
@@ -73,7 +73,7 @@ const AccountSwitcher = ({ isMobile = false }) => {
               className="flex items-center justify-between cursor-pointer rounded-md mb-1 py-2"
             >
               <span className={!selectedAccountId ? "font-medium text-foreground" : "text-muted-foreground"}>
-                All Accounts
+                Alle Konten
               </span>
               {!selectedAccountId && <Check className="w-4 h-4 text-primary" />}
             </DropdownMenuItem>
@@ -119,7 +119,7 @@ const AccountSwitcher = ({ isMobile = false }) => {
             className="flex items-center gap-2 cursor-pointer text-primary font-medium py-2 rounded-md focus:text-primary focus:bg-primary/10"
           >
             <Plus className="w-4 h-4" />
-            Create Account
+            Konto erstellen
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

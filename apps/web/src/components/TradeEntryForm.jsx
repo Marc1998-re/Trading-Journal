@@ -85,7 +85,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
         });
         const isDuplicate = recentTrades.items.some(trade => trade.symbol?.toLowerCase() === symbol.toLowerCase());
         if (isDuplicate) {
-          setDuplicateWarning(`You recently traded ${symbol}. Is this a new position?`);
+          setDuplicateWarning(`Du hast ${symbol} vor Kurzem gehandelt. Ist das eine neue Position?`);
         } else {
           setDuplicateWarning('');
         }
@@ -119,23 +119,23 @@ const TradeEntryForm = ({ onTradeAdded }) => {
     e.preventDefault();
 
     if (!currentUser?.id) {
-      toast.error('You must be logged in to add a trade.');
+      toast.error('Du musst eingeloggt sein, um einen Trade hinzuzufügen.');
       return;
     }
 
     if (!accountId) {
-      toast.error('Account is required. Please create or select an account first.');
+      toast.error('Ein Konto ist erforderlich. Bitte erstelle oder wähle zuerst ein Konto aus.');
       return;
     }
 
     if (!symbol.trim()) {
-      toast.error('Symbol is required.');
+      toast.error('Symbol ist erforderlich.');
       return;
     }
 
     // Validate RR Secured
     if (rrSecured === null || rrSecured === undefined || String(rrSecured).trim() === '') {
-      toast.error('Risk/Reward Ratio is required.');
+      toast.error('Chance/Risiko-Verhältnis ist erforderlich.');
       return;
     }
 
@@ -143,7 +143,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
     const finalRrSecured = Number(normalizedRrSecured);
 
     if (isNaN(finalRrSecured)) {
-      toast.error('Risk/Reward Ratio must be a valid number.');
+      toast.error('Chance/Risiko-Verhältnis muss eine gültige Zahl sein.');
       return;
     }
 
@@ -153,7 +153,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
     const parsedCommission = parseFloat(commissionPercentage);
 
     if (isNaN(parsedStopLoss) || parsedStopLoss < 0) {
-      toast.error('Stop Loss must be a valid positive number.');
+      toast.error('Stop Loss muss eine gültige positive Zahl sein.');
       return;
     }
 
@@ -161,7 +161,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
     const commissionVal = isNaN(parsedCommission) ? 0 : parsedCommission;
 
     if (stopLossVal > 100) {
-      toast.error('Stop loss percentage cannot exceed 100%.');
+      toast.error('Stop-Loss-Prozentwert darf 100% nicht überschreiten.');
       return;
     }
 
@@ -203,7 +203,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
         $autoCancel: false
       });
 
-      toast.success('Trade added successfully');
+      toast.success('Trade erfolgreich hinzugefügt.');
 
       // Reset form
       setSymbol('');
@@ -225,7 +225,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
     } catch (err) {
       console.error('PocketBase Error:', err);
 
-      let errorMessage = 'Failed to add trade. Please check your inputs.';
+      let errorMessage = 'Trade konnte nicht hinzugefügt werden. Bitte prüfe deine Eingaben.';
 
       if (err.response && err.response.data) {
         const validationErrors = Object.entries(err.response.data)
@@ -233,7 +233,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
           .join(' | ');
 
         if (validationErrors) {
-          errorMessage = `Validation Error: ${validationErrors}`;
+          errorMessage = `Validierungsfehler: ${validationErrors}`;
         }
       } else if (err.message) {
         errorMessage = err.message;
@@ -252,9 +252,9 @@ const TradeEntryForm = ({ onTradeAdded }) => {
       <CardHeader className="border-b border-white/10 pb-4">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="section-kicker mb-2">New execution</p>
-            <CardTitle className="text-2xl font-black">Add New Trade</CardTitle>
-            <CardDescription>Capture the trade, risk and review context in one pass</CardDescription>
+            <p className="section-kicker mb-2">Neue Ausführung</p>
+            <CardTitle className="text-2xl font-black">Neuen Trade erfassen</CardTitle>
+            <CardDescription>Erfasse Trade, Risiko und Review-Kontext in einem Ablauf</CardDescription>
           </div>
           <Button
             type="button"
@@ -263,7 +263,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
             className="h-9 w-9 shrink-0 sm:hidden"
             onClick={() => setIsMobileFormOpen((value) => !value)}
             aria-expanded={isMobileFormOpen}
-            aria-label={isMobileFormOpen ? 'Hide trade form' : 'Show trade form'}
+            aria-label={isMobileFormOpen ? 'Trade-Formular ausblenden' : 'Trade-Formular anzeigen'}
           >
             {isMobileFormOpen ? <ChevronUp className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
           </Button>
@@ -281,10 +281,10 @@ const TradeEntryForm = ({ onTradeAdded }) => {
           {/* Row 1 */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="accountId" className="text-xs font-semibold uppercase text-muted-foreground">Account *</Label>
+              <Label htmlFor="accountId" className="text-xs font-semibold uppercase text-muted-foreground">Konto *</Label>
               <Select value={accountId} onValueChange={setAccountId} required>
                 <SelectTrigger id="accountId" className="border-white/10 bg-black/20">
-                  <SelectValue placeholder="Select Account" />
+                  <SelectValue placeholder="Konto auswählen" />
                 </SelectTrigger>
                 <SelectContent>
                   {accounts.map(acc => (
@@ -304,7 +304,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="entryDate" className="text-xs font-semibold uppercase text-muted-foreground">Entry Date *</Label>
+              <Label htmlFor="entryDate" className="text-xs font-semibold uppercase text-muted-foreground">Einstiegsdatum *</Label>
               <Input
                 id="entryDate"
                 name="entryDate"
@@ -317,7 +317,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="entryTime" className="text-xs font-semibold uppercase text-muted-foreground">Entry Time *</Label>
+              <Label htmlFor="entryTime" className="text-xs font-semibold uppercase text-muted-foreground">Einstiegszeit *</Label>
               <Input
                 id="entryTime"
                 name="entryTime"
@@ -343,13 +343,13 @@ const TradeEntryForm = ({ onTradeAdded }) => {
                 max="100"
                 value={stopLoss}
                 onChange={handleStopLossChange}
-                placeholder="e.g. 1.0"
+                placeholder="z. B. 1.0"
                 required
                 className="border-white/10 bg-black/20"
               />
               {stopLoss && !isNaN(parseFloat(stopLoss)) && (
                 <p className="text-xs text-muted-foreground font-medium mt-1">
-                  Stop Loss: {stopLoss}% of €{startingBalance.toLocaleString()} = €{calculateStopLossInEuro(startingBalance, stopLoss).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                  Stop Loss: {stopLoss}% von €{startingBalance.toLocaleString()} = €{calculateStopLossInEuro(startingBalance, stopLoss).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                 </p>
               )}
             </div>
@@ -364,13 +364,13 @@ const TradeEntryForm = ({ onTradeAdded }) => {
                 min="0"
                 value={stopLossPips}
                 onChange={handleStopLossPipsChange}
-                placeholder="e.g. 15.5"
+                placeholder="z. B. 15.5"
                 className="border-white/10 bg-black/20"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="rrSecured" className="text-xs font-semibold uppercase text-primary">Risk/Reward Ratio *</Label>
+              <Label htmlFor="rrSecured" className="text-xs font-semibold uppercase text-primary">Chance/Risiko-Verhältnis *</Label>
               <Input
                 id="rrSecured"
                 name="rrSecured"
@@ -378,7 +378,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
                 inputMode="decimal"
                 value={rrSecured}
                 onChange={handleRrSecuredChange}
-                placeholder="e.g. 2.5, -1, 0"
+                placeholder="z. B. 2.5, -1, 0"
                 required
                 className="border-primary/40 bg-primary/10 focus-visible:ring-primary/50"
               />
@@ -388,12 +388,12 @@ const TradeEntryForm = ({ onTradeAdded }) => {
               <Label htmlFor="status" className="text-xs font-semibold uppercase text-muted-foreground">Status</Label>
               <Select value={status} onValueChange={handleStatusChange}>
                 <SelectTrigger id="status" className="border-white/10 bg-black/20">
-                  <SelectValue placeholder="Auto-calculate" />
+                  <SelectValue placeholder="Automatisch berechnen" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Win">Win</SelectItem>
-                  <SelectItem value="Loss">Loss</SelectItem>
-                  <SelectItem value="Breakeven">Breakeven</SelectItem>
+                  <SelectItem value="Win">Gewinn</SelectItem>
+                  <SelectItem value="Loss">Verlust</SelectItem>
+                  <SelectItem value="Breakeven">Break-even</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -402,7 +402,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
           {/* Row 3 */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="commissionPercentage" className="text-xs font-semibold uppercase text-muted-foreground">Commission (%)</Label>
+              <Label htmlFor="commissionPercentage" className="text-xs font-semibold uppercase text-muted-foreground">Gebühr (%)</Label>
               <Input
                 id="commissionPercentage"
                 name="commissionPercentage"
@@ -416,7 +416,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="contextUrl" className="text-xs font-semibold uppercase text-muted-foreground">Context URL</Label>
+              <Label htmlFor="contextUrl" className="text-xs font-semibold uppercase text-muted-foreground">Kontext URL</Label>
               <Input
                 id="contextUrl"
                 name="contextUrl"
@@ -429,7 +429,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="validationUrl" className="text-xs font-semibold uppercase text-muted-foreground">Validation URL</Label>
+              <Label htmlFor="validationUrl" className="text-xs font-semibold uppercase text-muted-foreground">Validierungs URL</Label>
               <Input
                 id="validationUrl"
                 name="validationUrl"
@@ -442,7 +442,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="entryUrl" className="text-xs font-semibold uppercase text-muted-foreground">Entry URL</Label>
+              <Label htmlFor="entryUrl" className="text-xs font-semibold uppercase text-muted-foreground">Einstiegs URL</Label>
               <Input
                 id="entryUrl"
                 name="entryUrl"
@@ -457,13 +457,13 @@ const TradeEntryForm = ({ onTradeAdded }) => {
 
           {/* Row 4 */}
           <div className="space-y-2">
-            <Label htmlFor="notes" className="text-xs font-semibold uppercase text-muted-foreground">Notes</Label>
+            <Label htmlFor="notes" className="text-xs font-semibold uppercase text-muted-foreground">Notizen</Label>
             <Textarea
               id="notes"
               name="notes"
               value={notes}
               onChange={handleNotesChange}
-              placeholder="Trade setup, market conditions, lessons learned..."
+              placeholder="Trade-Setup, Marktbedingungen, Learnings..."
               rows={3}
               className="border-white/10 bg-black/20 resize-none"
             />
@@ -477,12 +477,12 @@ const TradeEntryForm = ({ onTradeAdded }) => {
             {loading ? (
               <>
                 <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                Saving Trade...
+                Trade wird gespeichert...
               </>
             ) : (
               <>
                 <Plus className="w-5 h-5" />
-                Add Trade to Journal
+                Trade ins Journal eintragen
               </>
             )}
           </Button>
