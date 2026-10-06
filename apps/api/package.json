@@ -1,0 +1,24 @@
+{
+  "name": "journal-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.12" },
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env.local --watch src/server.mjs",
+    "start": "node --env-file-if-exists=.env.local src/server.mjs",
+    "migrate": "node --env-file-if-exists=.env.local src/migrate.mjs",
+    "check": "node --env-file-if-exists=.env.local src/check.mjs",
+    "cleanup": "node --env-file-if-exists=.env.local src/maintenance.mjs",
+    "invite": "node --env-file-if-exists=.env.local src/invite-user.mjs",
+    "import:csv": "node --env-file-if-exists=.env.local src/import-csv.mjs"
+  },
+  "dependencies": {
+    "csv-parse": "^7.0.3",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "mysql2": "^3.15.0",
+    "nodemailer": "^10.0.15",
+    "zod": "^4.3.6"
+  }
+}

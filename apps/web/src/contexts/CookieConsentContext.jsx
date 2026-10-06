@@ -33,7 +33,7 @@ export const ConsentProvider = ({ children }) => {
       try {
         // Check if a record already exists for this user
         const existingRecords = await pb.collection('cookieConsent').getFullList({
-          filter: `userId = "${pb.authStore.model.id}"`,
+          filter: { userId: pb.authStore.model.id },
           $autoCancel: false
         });
 

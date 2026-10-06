@@ -55,7 +55,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
       if (!currentUser?.id) return;
       try {
         const result = await pb.collection('userSettings').getList(1, 1, {
-          filter: `userId="${currentUser.id}"`,
+          filter: { userId: currentUser.id },
           $autoCancel: false
         });
         if (result.items.length > 0) {
@@ -79,7 +79,7 @@ const TradeEntryForm = ({ onTradeAdded }) => {
       }
       try {
         const recentTrades = await pb.collection('trades').getList(1, 5, {
-          filter: `userId = "${currentUser.id}"`,
+          filter: { userId: currentUser.id },
           sort: '-created',
           $autoCancel: false
         });

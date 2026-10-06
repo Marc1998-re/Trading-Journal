@@ -236,14 +236,15 @@ const SettingsPage = () => {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="newPassword">Neues Passwort</Label>
+                <Label htmlFor="newPassword">Neues Passwort · mindestens 12 Zeichen</Label>
                 <Input 
                   id="newPassword" 
                   type="password" 
                   value={newPassword} 
                   onChange={e => setNewPassword(e.target.value)} 
                   required 
-                  minLength={8}
+                  minLength={12}
+                  maxLength={128}
                   className="bg-background"
                 />
               </div>
@@ -255,7 +256,8 @@ const SettingsPage = () => {
                   value={confirmPassword} 
                   onChange={e => setConfirmPassword(e.target.value)} 
                   required 
-                  minLength={8}
+                  minLength={12}
+                  maxLength={128}
                   className="bg-background"
                 />
               </div>

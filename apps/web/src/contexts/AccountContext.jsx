@@ -30,7 +30,7 @@ export const AccountProvider = ({ children }) => {
     try {
       setIsLoading(true);
       const records = await pb.collection('tradingAccounts').getFullList({
-        filter: `userId = "${currentUser.id}"`,
+        filter: { userId: currentUser.id },
         sort: '-created',
         $autoCancel: false
       });
@@ -139,8 +139,15 @@ export const AccountProvider = ({ children }) => {
 
   const deleteAccount = async (accountId, targetAccountId) => {
     try {
+      if (pb.moveAndDeleteAccount) {
+        await pb.moveAndDeleteAccount(accountId, targetAccountId);
+        await fetchAccounts();
+        if (selectedAccountId === accountId) selectAccount(targetAccountId);
+        toast.success('Konto erfolgreich geloescht. Trades wurden vollstaendig uebernommen.');
+        return;
+      }
       const tradesToReassign = await pb.collection('trades').getFullList({
-        filter: `accountId = "${accountId}"`,
+        filter: { accountId },
         $autoCancel: false
       });
 

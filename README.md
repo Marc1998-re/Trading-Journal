@@ -27,39 +27,46 @@ lokale Vorschau und kein Produktionsserver.
 
 ## Echte Konten und Daten
 
-Das Backend ist PocketBase. Im Entwicklungsbetrieb leitet Vite
-`/hcgi/platform` an `http://127.0.0.1:8090` weiter. Alternativ kann
-`VITE_POCKETBASE_URL` in `apps/web/.env.local` gesetzt werden; eine Vorlage liegt
-in `apps/web/.env.example`. Diese URL wird beim Frontend-Build eingebunden.
+Der neue Standard ist eine Node.js-/Express-API mit MySQL/MariaDB unter
+`apps/api`. Sie verwaltet Konten, Trades, Reviews und die Anmeldung ueber
+HttpOnly-Cookies. Die Demo bleibt unabhaengig von der Datenbank.
+
+Die Vorlage `apps/api/.env.example` beschreibt die private Server-Konfiguration.
+Mit lokaler Datenbank und konfiguriertem SMTP:
+
+```sh
+npm run db:migrate
+npm run dev:full
+```
+
+Das Frontend startet auf Port 4189, die API auf 4190. Vite leitet `/api` an die
+lokale API weiter. Auf Produktion liefert Express Frontend und API unter
+derselben HTTPS-Domain aus. `npm start` setzt bereits ausgefuehrte Migrationen
+voraus; `npm run start:hostinger` fuehrt sie vor dem HTTP-Start aus.
+
+PocketBase ist als ausdrueckliche Rueckfalloption erhalten: Mit
+`VITE_DATA_BACKEND=pocketbase` und `VITE_POCKETBASE_URL` das Frontend neu bauen.
+`npm run dev:pocketbase` nutzt den bisherigen lokalen Startweg. Diese Option
+wandelt keine Daten automatisch zwischen den beiden Datenbanken um.
 
 Geheimnisse gehoeren ausschliesslich in private Server-Konfigurationen oder
 ignorierte lokale Umgebungsdateien, niemals in Git oder `VITE_*`-Variablen.
-Das gilt insbesondere fuer SMTP-Zugang, PocketBase-Schluessel und den optionalen
+Das gilt insbesondere fuer MySQL-/SMTP-Zugang, PocketBase-Schluessel und den optionalen
 Anthropic-API-Schluessel. Claude wird nur durch ein separates redaktionelles
 Werkzeug aufgerufen und wird fuer den Journalbetrieb nicht benoetigt.
 
 ## Hostinger-Umzug
 
-Ein Upload auf GitHub veroeffentlicht die Anwendung nicht automatisch auf einem
-Hostinger-Server. Die konkrete Einrichtung erfolgt erst nach Pruefung des VPS,
-seines Betriebssystems, vorhandener Dienste und der zu uebernehmenden Daten.
+Ziel ist das vorhandene Business-Webhosting mit einer serverseitigen Node.js-App
+und einer Hostinger-MySQL-Datenbank, ohne zusaetzlichen PocketBase-VPS. Die genaue
+Konfiguration und Freigabe-Checkliste steht in
+[HOSTINGER-MYSQL.md](docs/HOSTINGER-MYSQL.md).
 
-Vor einer Umschaltung sind erforderlich:
-
-- Sicherung und Wiederherstellungstest der bisherigen PocketBase-Daten inklusive
-  hochgeladener Dateien; keine produktive Datenbank in dieses Repository laden.
-- Migrationstest mit der passenden PocketBase-Version in einer getrennten
-  Umgebung. Das Repository stammt aus Horizons und enthaelt noch dessen
-  Betriebs-Hilfsskripte; diese sind keine fertige VPS-Konfiguration.
-- Dauerhafter Backend-Datenspeicher, HTTPS, eingeschraenkter Admin-Zugang und
-  automatische Backups auf dem Server.
-- SMTP-Konfiguration und echte Tests fuer Registrierung, Bestaetigungsmail,
-  Passwort-Reset, Login und Datenspeicherung.
-- Erst danach Domain/DNS umstellen. Das bisherige Journal bis zum erfolgreichen
-  Umzug weiterlaufen lassen.
-
-Die ausfuehrliche Backend- und Mail-Checkliste steht in
-[JOURNAL-UPGRADE.md](JOURNAL-UPGRADE.md).
+Noch ist damit nichts auf Hostinger veroeffentlicht. GitHub-Push, neue Testwebsite,
+Datenbank, SMTP, Datenimport und Domain-Umschaltung sind getrennte Schritte.
+Horizons nicht loeschen, bevor Backup und Testwebsite nachweislich funktionieren.
+Der echte MySQL-Integrationstest und Tests mit einem echten Mail-Empfaenger sind
+Freigabevoraussetzungen.
 
 ## Aktueller Funktionsumfang
 
@@ -68,8 +75,10 @@ abgeschlossener Trades in EUR. Kosten, urspruengliches Risiko und die Herkunft
 verwendeter Risikowerte werden beruecksichtigt. Die Infofelder in der Anwendung
 erklaeren Berechnung und Interpretation.
 
-CSV-Export ist vorhanden. Broker-Anbindung, Dateiimport, offene Positionen,
-Ein-/Auszahlungen und Waehrungsumrechnung sind noch nicht enthalten.
+CSV-Export ist vorhanden. Die neue API enthaelt einen administrativen CSV-Import
+mit Trockenlauf und bestaetigter Kontozuordnung, noch keinen Dateiimport in der
+Oberflaeche. Broker-Anbindung, offene Positionen, Ein-/Auszahlungen und
+Waehrungsumrechnung sind noch nicht enthalten.
 
 Weitere Hinweise:
 

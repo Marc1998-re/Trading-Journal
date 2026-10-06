@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const initAuth = async () => {
-      if (pb.authStore.isValid) {
+      if ((pb.usesCookies && !window.location.pathname.startsWith('/demo')) || pb.authStore.isValid) {
         try {
           const refreshed = await pb.collection('users').authRefresh({requestKey:null});
           setCurrentUser(refreshed.record);
@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }) => {
         // Fetch user settings on load to get theme and other preferences
         try {
           const res = await pb.collection('userSettings').getList(1, 1, {
-            filter: `userId="${pb.authStore.model.id}"`,
+            filter: { userId: pb.authStore.model.id },
             $autoCancel: false
           });
           
@@ -79,7 +79,7 @@ export const AuthProvider = ({ children }) => {
       // Fetch settings after login
       try {
         const res = await pb.collection('userSettings').getList(1, 1, {
-          filter: `userId="${authData.record.id}"`,
+          filter: { userId: authData.record.id },
           $autoCancel: false
         });
         if (res.items.length > 0) {
@@ -193,8 +193,9 @@ export const AuthProvider = ({ children }) => {
     return {verified:true};
   };
 
-  const logout = () => {
-    pb.authStore.clear();
+  const logout = async () => {
+    if (pb.logout) await pb.logout();
+    else pb.authStore.clear();
     setCurrentUser(null);
     setUserSettings(null);
     setIsVerificationPending(false);
@@ -205,7 +206,7 @@ export const AuthProvider = ({ children }) => {
     if (!currentUser) return;
     try {
       const res = await pb.collection('userSettings').getList(1, 1, {
-        filter: `userId="${currentUser.id}"`,
+        filter: { userId: currentUser.id },
         $autoCancel: false
       });
       if (res.items.length > 0) {
@@ -218,6 +219,15 @@ export const AuthProvider = ({ children }) => {
 
   const deleteAccount = async (password) => {
     if (!currentUser) throw new Error("Kein eingeloggter Nutzer gefunden.");
+
+    if (pb.deleteUser) {
+      await pb.deleteUser(password);
+      setCurrentUser(null);
+      setUserSettings(null);
+      setIsVerificationPending(false);
+      setVerificationEmail('');
+      return true;
+    }
 
     // 1. Verify the user's password
     try {
@@ -232,7 +242,7 @@ export const AuthProvider = ({ children }) => {
     for (const collection of collectionsToClear) {
       try {
         const records = await pb.collection(collection).getFullList({
-          filter: `userId="${currentUser.id}"`,
+          filter: { userId: currentUser.id },
           $autoCancel: false
         });
         
@@ -254,7 +264,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     // 4. Clear auth state and logout
-    logout();
+    await logout();
     return true;
   };
 

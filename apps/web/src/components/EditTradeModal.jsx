@@ -40,7 +40,7 @@ const EditTradeModal = ({ trade, open, onClose, onSaved }) => {
       if (!currentUser?.id) return;
       try {
         const result = await pb.collection('userSettings').getList(1, 1, {
-          filter: `userId="${currentUser.id}"`,
+          filter: { userId: currentUser.id },
           $autoCancel: false
         });
         if (result.items.length > 0) {

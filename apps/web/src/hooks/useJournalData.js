@@ -26,7 +26,7 @@ export function useJournalData() {
     if(demo || !userId) return;
     setLoading(true);setError('');
     try {
-      const result=await pb.collection('trades').getFullList({filter:pb.filter('userId = {:user}',{user:userId}),sort:'entryDate,entryTime',requestKey:'journal-trades'});
+      const result=await pb.collection('trades').getFullList({filter:{userId},sort:'entryDate,entryTime',requestKey:'journal-trades'});
       setRecords(result);
     } catch(e) {if(!e.isAbort) setError('Deine Trades konnten nicht geladen werden. Bitte versuche es erneut.');}
     finally {setLoading(false);}
