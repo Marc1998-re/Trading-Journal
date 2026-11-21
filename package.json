@@ -11,7 +11,7 @@
     "copy:review": "node scripts/claude-copy.mjs --send",
     "test:backend": "node tests/backend.integration.mjs",
     "test:api": "node --test tests/api.test.mjs tests/api-client.test.mjs tests/api-http.test.mjs tests/pro-journal.test.mjs tests/ai-access.test.mjs",
-    "test:mysql": "node --test tests/mysql.integration.test.mjs",
+    "test:mysql": "node --test tests/mysql.integration.test.mjs tests/pro-ai.mysql.test.mjs",
     "db:migrate": "npm run migrate --workspace journal-api",
     "db:check": "npm run check --workspace journal-api",
     "db:cleanup": "npm run cleanup --workspace journal-api",

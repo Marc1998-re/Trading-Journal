@@ -49,7 +49,6 @@ export function RulesPrompt({ settingsPath = '/settings' }) {
 const numberOrNull = value => value === '' || value === null || value === undefined ? null : Number(value);
 
 export function AccountRulesForm({ account, onSave }) {
-  const start = Number(account.startingBalance) || 0;
   const [form, setForm] = useState({
     accountType: account.accountType || 'private', propFirm: account.propFirm || '', startingBalance: account.startingBalance ?? '',
     dailyLossLimit: account.dailyLossLimit ?? '', maxLoss: account.maxLoss ?? '', drawdownMode: account.drawdownMode || 'static',
@@ -58,8 +57,13 @@ export function AccountRulesForm({ account, onSave }) {
   const [busy, setBusy] = useState(false);
   const set = (key, value) => setForm(f => ({ ...f, [key]: value }));
   const prop = form.accountType === 'prop';
+  // Hints and presets follow the balance being edited, not the saved one.
+  const start = Number(form.startingBalance) || 0;
   const pctHint = key => Number(form[key]) > 0 && start > 0 ? `${percent(Number(form[key]) / start * 100)} des Startkapitals` : ' ';
-  const preset = (daily, max, target, mode) => setForm(f => ({ ...f, dailyLossLimit: daily ? Math.round(start * daily / 100) : '', maxLoss: max ? Math.round(start * max / 100) : '', profitTarget: target ? Math.round(start * target / 100) : '', drawdownMode: mode }));
+  const preset = (daily, max, target, mode) => setForm(f => {
+    const base = Number(f.startingBalance) || 0;
+    return { ...f, dailyLossLimit: daily ? Math.round(base * daily / 100) : '', maxLoss: max ? Math.round(base * max / 100) : '', profitTarget: target ? Math.round(base * target / 100) : '', drawdownMode: mode };
+  });
   async function submit(e) {
     e.preventDefault(); setBusy(true);
     try {
