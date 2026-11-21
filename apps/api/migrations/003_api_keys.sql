@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS apiKeys (
+  id VARCHAR(32) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
+  userId VARCHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  name VARCHAR(80) NOT NULL,
+  prefix VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  tokenHash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  lastUsedAt DATETIME(3) NULL,
+  expiresAt DATETIME(3) NULL,
+  created DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  UNIQUE KEY api_key_hash (tokenHash), KEY api_key_user (userId, created),
+  FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4

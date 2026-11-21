@@ -95,6 +95,11 @@
   .settings-section h2 { @apply text-base font-semibold; }
   .settings-section header p { @apply mt-2 max-w-xs text-sm leading-6 text-muted-foreground; }
   .settings-section > div { @apply min-w-0; }
+  .ai-key-reveal { @apply grid gap-3 rounded-md border border-success/40 bg-success/5 p-4; }
+  .ai-key-value { @apply min-w-0 max-w-full flex-1 break-all rounded border bg-background px-3 py-2 font-mono text-xs; }
+  .ai-prompt { @apply my-3 max-h-72 overflow-auto whitespace-pre-wrap break-words rounded border bg-muted/40 p-3 font-mono text-xs leading-5 text-foreground; }
+  .ai-key-list { @apply divide-y rounded-md border; }
+  .ai-key-list > li { @apply flex flex-wrap items-center justify-between gap-3 px-4 py-3; }
   .settings-danger { @apply mt-0 rounded-none border-x-0 border-b-0 bg-transparent shadow-none; }
   .settings-danger > div { @apply px-0; }
   .trading-app .public-header:not(.landing-header) { max-width: none; padding-inline: 4.5%; }

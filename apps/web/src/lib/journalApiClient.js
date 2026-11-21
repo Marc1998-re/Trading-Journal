@@ -53,6 +53,11 @@ export function createJournalApiClient(baseUrl = '/api', fetcher = (...args) => 
     filter(_expression, values) { return { userId: values.user }; },
     async logout() { await request('/auth/logout', { method: 'POST' }); authStore.clear(); },
     async deleteUser(password) { await request('/users/me', { method: 'DELETE', body: { password } }); authStore.clear(); },
+    apiKeys: {
+      list() { return request('/ai-keys'); },
+      create(name, expiresInDays) { return request('/ai-keys', { method: 'POST', body: { name, expiresInDays } }); },
+      revoke(id) { return request('/ai-keys/' + encodeURIComponent(id), { method: 'DELETE' }); },
+    },
     moveAndDeleteAccount(id, targetAccountId) { return request('/accounts/' + encodeURIComponent(id) + '/move-and-delete', { method: 'POST', body: { targetAccountId } }); },
     collection(name) {
       const path = '/records/' + encodeURIComponent(name);

@@ -115,6 +115,7 @@ export function authService(pool, config, mailer) {
       if (!await verifyPassword(data.password, row.passwordHash)) throw new ApiError(400, 'Falsches Passwort.');
       // Delete trades first: account ownership foreign keys deliberately restrict account deletion.
       await db.execute('DELETE FROM trades WHERE userId = ?', [row.id]);
+      await db.execute('DELETE FROM missedTrades WHERE userId = ?', [row.id]);
       await db.execute('DELETE FROM users WHERE id = ?', [row.id]);
     });
     res.clearCookie(config.cookieName, cookieOptions(config));

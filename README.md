@@ -95,6 +95,23 @@ Datenbank: `apps/api/migrations/002_pro_journal.sql` ergänzt Trade- und Kontosp
 Tabelle `missedTrades`. `npm run db:migrate` bzw. `npm run start:hostinger` führt sie aus. Vorher
 ein Datenbank-Backup anlegen. Die PocketBase-Rückfalloption unterstützt diese Erweiterungen nicht.
 
+### KI-Zugriff (API-Schlüssel)
+
+Unter Einstellungen → KI-Zugriff erstellen Nutzer persönliche, **nur lesende** API-Schlüssel
+(`tdj_…`, Gültigkeit 30/90/365 Tage oder unbegrenzt, max. 10 aktive, jederzeit widerrufbar). Der
+Schlüssel wird einmal angezeigt; gespeichert wird nur sein SHA-256-Hash (`apiKeys`, Migration
+`003_api_keys.sql`).
+
+- `GET /api/v1/openapi.json` – öffentliche OpenAPI-Beschreibung (z. B. Import als ChatGPT-Aktion)
+- `GET /api/v1/me`, `/accounts`, `/summary`, `/trades`, `/trades/{id}`, `/missed-trades`
+- `GET /api/v1/trades/{id}/screenshots/{index}` – TradingView-Snapshots als Bild (nur
+  `s3.tradingview.com`, keine anderen Hosts – kein SSRF); andere Bild-Links stehen als `imageUrl`
+  in den Trades.
+- Authentifizierung: `Authorization: Bearer tdj_…` oder `X-API-Key`. 120 Anfragen/Minute je
+  Schlüssel, CORS offen (keine Cookies), Schreibzugriffe liefern 405.
+
+Ohne eigenen Server gibt es zusätzlich einen JSON-Datei-Export zum Hochladen in KI-Chats.
+
 CSV-Export ist vorhanden. Die neue API enthaelt einen administrativen CSV-Import
 mit Trockenlauf und bestaetigter Kontozuordnung, noch keinen Dateiimport in der
 Oberflaeche. Broker-Anbindung, offene Positionen, Ein-/Auszahlungen und

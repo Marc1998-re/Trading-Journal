@@ -17,6 +17,7 @@ import SettingsSection from '@/components/SettingsSection.jsx';
 import { AccountRulesForm } from '@/components/journal/AccountRules.jsx';
 import { useAccount } from '@/contexts/AccountContext.jsx';
 import DeleteAccountModal from '@/components/DeleteAccountModal.jsx';
+import AiAccessSettings from '@/components/journal/AiAccess.jsx';
 
 const SettingsPage = () => {
   const navigate = useNavigate();
@@ -181,6 +182,13 @@ const SettingsPage = () => {
             description="Lege fest, ob ein Konto Privatkapital oder eine Prop-Firm-Challenge ist, und hinterlege Limits. Die Übersicht zeigt dir dann jederzeit deinen Puffer."
           >
             <AccountRulesSettings />
+          </SettingsSection>
+
+          <SettingsSection
+            title="KI-Zugriff"
+            description="Gib einer KI deiner Wahl Lesezugriff auf dein Journal – inklusive Kennzahlen und Screenshots – und lass deine Trades analysieren. Nur wenn du es willst, jederzeit widerrufbar."
+          >
+            <AiAccessSettings />
           </SettingsSection>
 
           {/* Profile Section */}

@@ -9,14 +9,17 @@ import { collectionSchemas, id } from './validation.mjs';
 import { authService } from './auth.mjs';
 import { limit } from './security.mjs';
 import { listRecords, findRecord, createRecord, updateRecord, deleteRecord, moveAndDeleteAccount } from './records.mjs';
+import { aiRouter, createApiKey, listApiKeys, revokeApiKey } from './aiAccess.mjs';
 
-export function createApp({ pool, config, mailer, staticDir = fileURLToPath(new URL('../../../dist/apps/web/', import.meta.url)) }) {
+export function createApp({ pool, config, mailer, fetcher, staticDir = fileURLToPath(new URL('../../../dist/apps/web/', import.meta.url)) }) {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', config.TRUST_PROXY);
   // Existing charts use inline styles, and the current optional analytics script is kept compatible.
   app.use(helmet({ contentSecurityPolicy: { directives: { 'script-src': ["'self'", "'unsafe-inline'", 'https://www.googletagmanager.com'], 'img-src': ["'self'", 'data:', 'https:'], 'connect-src': ["'self'", 'https://www.google-analytics.com', 'https://region1.google-analytics.com'], 'upgrade-insecure-requests': config.secureCookie ? [] : null } }, referrerPolicy: { policy: 'no-referrer' } }));
   app.use('/api', (_req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
+  // Read-only AI access authenticates with bearer keys, never cookies, so it sits before the Origin check.
+  app.use('/api/v1', aiRouter(pool, config, fetcher));
   app.use('/api', (req, _res, next) => {
     // Cookie-authenticated API stays same-origin; no wildcard CORS or browser DB credentials.
     if (!['GET', 'HEAD'].includes(req.method) && req.get('origin') !== config.origin) throw new ApiError(403, 'Diese Anfrage stammt nicht von deinem Journal.');
@@ -51,6 +54,12 @@ export function createApp({ pool, config, mailer, staticDir = fileURLToPath(new 
     const data = parse(z.object({ targetAccountId: id }).strict(), req.body);
     await moveAndDeleteAccount(pool, req.user.id, req.params.id, data.targetAccountId); res.sendStatus(204);
   });
+  app.get('/api/ai-keys', auth.requireUser, async (req, res) => res.json(await listApiKeys(pool, req.user.id)));
+  app.post('/api/ai-keys', auth.requireUser, async (req, res) => {
+    await limit(pool, 'ai-key-create:' + req.user.id, 10, 3600);
+    res.status(201).json(await createApiKey(pool, req.user.id, req.body));
+  });
+  app.delete('/api/ai-keys/:id', auth.requireUser, async (req, res) => { await revokeApiKey(pool, req.user.id, req.params.id); res.sendStatus(204); });
   const records = express.Router();
   records.use(auth.requireUser);
   records.use(async (req, _res, next) => { await limit(pool, 'api:' + req.user.id, 600, 60); next(); });
