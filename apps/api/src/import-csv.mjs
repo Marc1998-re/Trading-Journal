@@ -39,7 +39,9 @@ export function buildImportPlan(csv, mapping, userId) {
       commissionPercentage: value(10, 'commissionPercentage'), rrSecured: value(11, 'rrSecured'),
       notes: row[12], contextUrl: row[13], validationUrl: row[14], entryUrl: row[15], fees: null,
     };
-    const trade = validateRecord('trades', input, userId);
+    let trade;
+    try { trade = validateRecord('trades', input, userId); }
+    catch (error) { throw new Error(`CSV row ${index + 2}: ${Object.entries(error.data || {}).map(([field, issue]) => field + ' – ' + issue.message).join(', ') || error.message}`, { cause: error }); }
     const canonical = JSON.stringify(row);
     const occurrence = (occurrences.get(canonical) || 0) + 1;
     occurrences.set(canonical, occurrence);
