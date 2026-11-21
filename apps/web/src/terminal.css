@@ -95,6 +95,14 @@
   .settings-section h2 { @apply text-base font-semibold; }
   .settings-section header p { @apply mt-2 max-w-xs text-sm leading-6 text-muted-foreground; }
   .settings-section > div { @apply min-w-0; }
+  .chart-strip { @apply my-4 grid gap-3 sm:grid-cols-3; }
+  .chart-shot { @apply grid gap-1.5 rounded-md border p-2 transition-colors hover:border-primary; }
+  .chart-shot-frame { @apply block aspect-[16/9] overflow-hidden rounded bg-muted; }
+  .chart-shot-frame img { @apply h-full w-full object-cover; }
+  .chart-shot-empty { @apply flex h-full w-full flex-col items-center justify-center gap-1 text-xs text-muted-foreground; }
+  .chart-shot-label { @apply inline-flex items-center gap-1.5 text-xs font-medium; }
+  .chart-links { @apply inline-flex gap-1; }
+  .chart-links a { @apply inline-flex h-7 w-7 items-center justify-center rounded border font-mono text-xs text-muted-foreground hover:border-primary hover:text-primary; }
   .ai-key-reveal { @apply grid gap-3 rounded-md border border-success/40 bg-success/5 p-4; }
   .ai-key-value { @apply min-w-0 max-w-full flex-1 break-all rounded border bg-background px-3 py-2 font-mono text-xs; }
   .ai-prompt { @apply my-3 max-h-72 overflow-auto whitespace-pre-wrap break-words rounded border bg-muted/40 p-3 font-mono text-xs leading-5 text-foreground; }

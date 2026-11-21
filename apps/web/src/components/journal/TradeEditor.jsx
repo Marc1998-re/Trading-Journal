@@ -10,6 +10,8 @@ import { money, rValue } from '@/lib/format';
 import { dayKey, getTradeRiskBasis } from '@/lib/tradeCalculations';
 import { riskSources } from '@/lib/riskAnalysis';
 import { emotionOptions, gradeOptions, holdingMinutes, formatDuration } from '@/lib/proJournal';
+import { chartFields } from '@/lib/screenshots';
+import ChartStrip from './ChartStrip';
 
 const optionalNumber = value => value === '' || value === null || value === undefined ? null : Number(value);
 const hasProFields = trade => Boolean(trade && (trade.exitDate || trade.plannedRR != null || trade.mae != null || trade.mfe != null || trade.grade || trade.emotion || trade.confidence));
@@ -27,7 +29,7 @@ export default function TradeEditor({ trade, accounts, onClose, onSaved, setupSu
     fees: trade?.fees ?? 0, commissionPercentage: trade?.commissionPercentage ?? 0,
     plannedRR: trade?.plannedRR ?? '', mae: trade?.mae ?? '', mfe: trade?.mfe ?? '',
     grade: trade?.grade || '', emotion: trade?.emotion || '', confidence: trade?.confidence ?? '',
-    notes: trade?.notes || '', contextUrl: trade?.contextUrl || '',
+    notes: trade?.notes || '', contextUrl: trade?.contextUrl || '', validationUrl: trade?.validationUrl || '', entryUrl: trade?.entryUrl || '',
   });
   const [showPro, setShowPro] = useState(() => hasProFields(trade));
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
@@ -103,7 +105,8 @@ export default function TradeEditor({ trade, accounts, onClose, onSaved, setupSu
       </>}
 
       <fieldset className="form-section"><legend>Dokumentation</legend><div className="grid gap-4">
-        {field('contextUrl', 'Chart-Link (TradingView-Screenshot o. Ä.)', { type: 'url', placeholder: 'https://…' })}
+        <div className="grid gap-4 md:grid-cols-3">{chartFields.map(([key, label, hint]) => <label key={key} className="form-field">{label === 'Validierung' ? 'Validierungs' : label === 'Einstieg' ? 'Einstiegs' : label}-Link<Input type="url" value={form[key]} onChange={e => set(key, e.target.value.trim())} placeholder="https://www.tradingview.com/x/…" aria-describedby={key + '-hint'} /><span id={key + '-hint'} className="font-normal">{hint}</span></label>)}</div>
+        <ChartStrip trade={{ ...form, symbol: form.symbol || 'Trade' }} />
         <label className="form-field">Notiz<Textarea value={form.notes} maxLength={5000} rows={3} onChange={e => set('notes', e.target.value)} placeholder="Was war geplant? Was ist passiert? Was nehme ich mit?" /></label>
       </div></fieldset>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}

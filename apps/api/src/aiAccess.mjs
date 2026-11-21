@@ -14,7 +14,7 @@ import { evaluateAccountRules } from '../../web/src/lib/accountRules.js';
 
 export const MAX_KEYS_PER_USER = 10;
 const KEY_PATTERN = /^tdj_[a-f0-9]{64}$/;
-const SCREENSHOT_FIELDS = [['entryUrl', 'Einstieg'], ['validationUrl', 'Bestätigung'], ['contextUrl', 'Chart / Kontext']];
+const SCREENSHOT_FIELDS = [['entryUrl', 'Einstieg'], ['validationUrl', 'Validierung'], ['contextUrl', 'Chart / Kontext']];
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
 const utc = value => value ? String(value).replace(' ', 'T') + 'Z' : null;

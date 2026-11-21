@@ -12,6 +12,8 @@ import { resolveReviewTrade } from '@/lib/journalNavigation';
 import { reviewStatus, reviewStatusLabels, summarizeReviews } from '@/lib/review';
 import { periodLabel } from '@/lib/journalPeriod';
 
+import ChartStrip from '@/components/journal/ChartStrip';
+
 export default function ReviewPage() {
   const data = useJournalData();
   const [params, setParams] = useSearchParams();
@@ -71,6 +73,7 @@ export default function ReviewPage() {
             </div>}
             <SectionTitle number="02" title={trade.symbol + ' · ' + (trade.setup || 'Ohne Setup')} />
             <p className="text-xs text-muted-foreground mb-4">Einstieg: {getTradeDate(trade)?.toLocaleDateString('de-DE')} · {trade.entryTime || 'Uhrzeit nicht erfasst'} · {data.accounts.find(a => a.id === trade.accountId)?.accountName || data.accountName}</p>
+            <ChartStrip trade={trade} />
             <ReviewEditor key={trade.id} trade={trade} data={data} />
           </> : requestedId !== null ? <div className="journal-empty" role="status">
             <h3>Trade nicht verfügbar</h3>

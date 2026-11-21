@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
-import { Plus, Download, Search, Pencil, Trash2, ChevronLeft, ChevronRight, ExternalLink, FilterX } from 'lucide-react';
+import { Plus, Download, Search, Pencil, Trash2, ChevronLeft, ChevronRight, FilterX } from 'lucide-react';
+import { ChartLinks } from '@/components/journal/ChartStrip';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -76,14 +77,15 @@ export default function TradesPage() {
     ]} /></div>}
 
     <div className="journal-table-wrap trade-ledger" tabIndex={0} role="region" aria-label="Trade-Tabelle"><table className="journal-table">
-      <thead><tr>{['Trade', 'Setup', 'Netto', 'Netto-R / Basis', 'Haltedauer', 'Psychologie', 'Kosten', 'Review', ''].map((h, i) => <th key={i} scope="col">{h}</th>)}</tr></thead>
+      <thead><tr>{['Trade', 'Setup', 'Netto', 'Netto-R / Basis', 'Haltedauer', 'Psychologie', 'Charts', 'Kosten', 'Review', ''].map((h, i) => <th key={i} scope="col">{h}</th>)}</tr></thead>
       <tbody>{visible.map(({ t, net, risk, source, r, hold }) => <tr key={t.id}>
-        <td className="min-w-40"><strong className="flex items-center gap-2">{t.symbol}{sideLabel(t.side) !== '—' && <span className={'side-badge ' + sideLabel(t.side).toLowerCase()}>{sideLabel(t.side)}</span>}{t.contextUrl && <a href={t.contextUrl} target="_blank" rel="noreferrer noopener" aria-label={`Chart zu ${t.symbol} öffnen`} className="text-muted-foreground hover:text-primary"><ExternalLink size={13} /></a>}</strong><span className="sub">{getTradeDate(t)?.toLocaleDateString('de-DE')} · {t.entryTime}{sessionOf(t.entryTime) ? ' · ' + sessionOf(t.entryTime).label : ''}</span></td>
+        <td className="min-w-40"><strong className="flex items-center gap-2">{t.symbol}{sideLabel(t.side) !== '—' && <span className={'side-badge ' + sideLabel(t.side).toLowerCase()}>{sideLabel(t.side)}</span>}</strong><span className="sub">{getTradeDate(t)?.toLocaleDateString('de-DE')} · {t.entryTime}{sessionOf(t.entryTime) ? ' · ' + sessionOf(t.entryTime).label : ''}</span></td>
         <td className="min-w-36"><span className="flex items-center gap-2">{t.grade && <span className={'grade-badge grade-' + t.grade} title={`${t.grade}-Setup`}>{t.grade}</span>}{t.setup || <span className="text-muted-foreground">Nicht erfasst</span>}</span>{t.plannedRR != null && <span className="sub">Ziel {decimal(Number(t.plannedRR), 1)} R</span>}</td>
         <td className="whitespace-nowrap"><SignedValue value={net} /><span className="sub font-mono">Brutto {money(t.profitLoss)}</span></td>
         <td className="whitespace-nowrap text-xs"><span className="block font-mono text-sm">{risk ? rValue(r) : '—'}</span><RiskBasisLabel source={source} /></td>
         <td className="whitespace-nowrap font-mono text-xs">{formatDuration(hold)}{t.mfe != null && <span className="sub">MFE {decimal(Number(t.mfe), 1)} R{t.mae != null ? ` · MAE ${decimal(Number(t.mae), 1)} R` : ''}</span>}</td>
         <td className="whitespace-nowrap text-xs">{t.emotion ? emotionLabels[t.emotion] : <span className="text-muted-foreground">—</span>}{t.confidence ? <span className="sub">Überzeugung {t.confidence}/5</span> : null}</td>
+        <td><ChartLinks trade={t} /></td>
         <td className="whitespace-nowrap font-mono text-xs">{money(Number(t.profitLoss) - net)}</td>
         <td><Link className={reviewStatus(t) === 'completed' ? 'text-xs text-muted-foreground hover:underline' : 'review-pending'} to={(data.demo ? '/demo' : '') + '/review?trade=' + t.id}>{reviewStatusLabels[reviewStatus(t)]}</Link></td>
         <td>{!data.demo && <div className="flex"><IconButton label="Trade bearbeiten" onClick={() => setEditor(t)}><Pencil size={15} /></IconButton><IconButton label="Trade löschen" onClick={() => setDeleting(t)}><Trash2 size={15} /></IconButton></div>}</td>
