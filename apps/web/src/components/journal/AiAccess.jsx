@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Bot, Copy, Check, KeyRound, Download, ShieldCheck, Trash2 } from 'lucide-react';
+import { AlertTriangle, Bot, Copy, Check, KeyRound, Download, ShieldCheck, Trash2 } from 'lucide-react';
 import pb from '@/lib/pocketbaseClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,7 +18,7 @@ function CopyButton({ value, label = 'Kopieren' }) {
   return <Button type="button" variant="outline" size="sm" onClick={copy}>{copied ? <Check size={14} className="mr-1.5" /> : <Copy size={14} className="mr-1.5" />}{copied ? 'Kopiert' : label}</Button>;
 }
 
-export function aiPrompt(origin, key) {
+export function aiPrompt(origin, key, canWrite = false) {
   return `Du hast Lesezugriff auf mein Trading-Journal „The Trading Desk“.
 API: ${origin}/api/v1 (Beschreibung: ${origin}/api/v1/openapi.json)
 Authentifizierung: Header "Authorization: Bearer ${key}"
@@ -30,7 +30,13 @@ Wichtige Endpunkte:
 - GET /trades?from=…&to=…&perPage=200&page=… – Trades inkl. netR, Session, Notizen, Review und Screenshot-Links
 - GET /trades/{id}/screenshots/{index} – Chart-Screenshot als Bild
 - GET /missed-trades – nicht genommene Trades mit Grund
-
+${canWrite ? `
+Du darfst auch Einträge anlegen und korrigieren (nicht löschen):
+- GET /schema – alle Felder mit Erklärung
+- POST /trades bzw. /missed-trades – ein Eintrag oder { "items": [...] } (max. 200)
+- PATCH /trades/{id} bzw. /missed-trades/{id} – nur geänderte Felder senden
+Regeln: Zeig mir vor dem Speichern immer eine Tabelle der Einträge und warte auf mein OK. Prüfe zuerst mit ?dryRun=true. Datum/Uhrzeit in meiner lokalen Zeit (Europe/Berlin). profitLoss ist brutto, Gebühren separat in fees. riskAmount = geplantes Risiko in EUR. Erfinde keine Werte – frag nach, wenn etwas fehlt.
+` : ''}
 Analysiere meine Trades wie ein erfahrener Trading-Coach: Edge je Setup, Session und Grade, Risiko- und Regelverstöße, Ausführung (MFE/MAE), Psychologie und verpasste Chancen. Sieh dir die Screenshots meiner besten und schlechtesten Trades an. Nenne konkrete, priorisierte Verbesserungen mit Zahlen.`;
 }
 
@@ -57,6 +63,7 @@ export default function AiAccessSettings() {
   const [loading, setLoading] = useState(supported);
   const [name, setName] = useState('');
   const [expiry, setExpiry] = useState(90);
+  const [scope, setScope] = useState('read');
   const [busy, setBusy] = useState(false);
   const [created, setCreated] = useState(null);
   const [confirming, setConfirming] = useState(null);
@@ -73,8 +80,8 @@ export default function AiAccessSettings() {
   async function create(e) {
     e.preventDefault(); setBusy(true);
     try {
-      const result = await pb.apiKeys.create(name.trim(), expiry);
-      setCreated(result); setName(''); await load();
+      const result = await pb.apiKeys.create(name.trim(), expiry, scope);
+      setCreated(result); setName(''); setScope('read'); await load();
     } catch (error) { toast.error(error.message || 'Schlüssel konnte nicht erstellt werden.'); }
     finally { setBusy(false); }
   }
@@ -91,7 +98,7 @@ export default function AiAccessSettings() {
 
   return <div className="space-y-6">
     <ul className="grid gap-2 text-sm text-muted-foreground">
-      <li className="flex gap-2"><ShieldCheck size={16} className="mt-0.5 shrink-0 text-success" />Nur lesend: Die KI kann nichts ändern oder löschen.</li>
+      <li className="flex gap-2"><ShieldCheck size={16} className="mt-0.5 shrink-0 text-success" />Du entscheidest je Schlüssel: nur lesen oder zusätzlich Trades erfassen und korrigieren. Löschen kann eine KI nie.</li>
       <li className="flex gap-2"><ShieldCheck size={16} className="mt-0.5 shrink-0 text-success" />Trades, nicht genommene Trades, Konten, Kennzahlen und Screenshots (TradingView-Links werden als Bild geliefert).</li>
       <li className="flex gap-2"><ShieldCheck size={16} className="mt-0.5 shrink-0 text-success" />Jeder Schlüssel ist einzeln widerrufbar. Gib ihn nur Diensten, denen du deine Trading-Daten anvertraust.</li>
     </ul>
@@ -103,8 +110,8 @@ export default function AiAccessSettings() {
         <div className="flex flex-wrap items-center gap-2"><code className="ai-key-value">{created.key}</code><CopyButton value={created.key} label="Schlüssel kopieren" /></div>
         <details className="text-sm">
           <summary className="cursor-pointer font-medium text-primary">Fertige Anleitung für deine KI</summary>
-          <pre className="ai-prompt">{aiPrompt(origin, created.key)}</pre>
-          <CopyButton value={aiPrompt(origin, created.key)} label="Anleitung kopieren" />
+          <pre className="ai-prompt">{aiPrompt(origin, created.key, created.record.scope === 'write')}</pre>
+          <CopyButton value={aiPrompt(origin, created.key, created.record.scope === 'write')} label="Anleitung kopieren" />
         </details>
         <div><Button type="button" variant="ghost" size="sm" onClick={() => setCreated(null)}>Fertig, ich habe ihn gespeichert</Button></div>
       </div>}
@@ -112,6 +119,9 @@ export default function AiAccessSettings() {
       <form onSubmit={create} className="form-section space-y-4">
         <label className="form-field">Name des Schlüssels<Input value={name} onChange={e => setName(e.target.value)} maxLength={80} required placeholder="z. B. ChatGPT Analyse, Claude, Python-Skript" /></label>
         <div className="form-field"><span>Gültigkeit</span><div className="chip-group" role="group" aria-label="Gültigkeit">{expiryOptions.map(([value, label]) => <button key={label} type="button" aria-pressed={expiry === value} onClick={() => setExpiry(value)}>{label}</button>)}</div></div>
+        <div className="form-field"><span>Berechtigung</span><div className="chip-group" role="group" aria-label="Berechtigung">{[['read', 'Nur lesen'], ['write', 'Lesen & Trades erfassen']].map(([value, label]) => <button key={value} type="button" aria-pressed={scope === value} onClick={() => setScope(value)}>{label}</button>)}</div>
+          {scope === 'write' && <span className="flex gap-2 font-normal text-warning"><AlertTriangle size={14} className="mt-0.5 shrink-0" />Die KI kann dann Trades und nicht genommene Trades anlegen und ändern – Löschen ist nie möglich. Lass dir Einträge vor dem Speichern immer zeigen.</span>}
+        </div>
         <div className="flex justify-end"><Button disabled={busy || !name.trim()}><Bot size={15} className="mr-2" />{busy ? 'Wird erstellt…' : 'Schlüssel erstellen'}</Button></div>
       </form>
 
@@ -121,7 +131,7 @@ export default function AiAccessSettings() {
           <ul className="ai-key-list">{keys.map(key => {
             const expired = key.expiresAt && new Date(key.expiresAt) < new Date();
             return <li key={key.id}>
-              <div className="min-w-0"><strong className="block truncate text-sm">{key.name}</strong>
+              <div className="min-w-0"><strong className="flex min-w-0 items-center gap-2 text-sm"><span className="truncate">{key.name}</span><span className={'status-pill ' + (key.scope === 'write' ? 'warn' : 'neutral')}>{key.scope === 'write' ? 'Lesen & Erfassen' : 'Nur lesen'}</span></strong>
                 <span className="text-xs text-muted-foreground"><code>{key.prefix}…</code> · erstellt {dateLabel(key.created)} · zuletzt genutzt {dateTimeLabel(key.lastUsedAt)} · {expired ? <span className="text-destructive">abgelaufen</span> : key.expiresAt ? `gültig bis ${dateLabel(key.expiresAt)}` : 'unbegrenzt'}</span></div>
               {confirming === key.id ? <div className="flex shrink-0 gap-2"><Button type="button" size="sm" variant="destructive" onClick={() => revoke(key.id)}>Widerrufen</Button><Button type="button" size="sm" variant="ghost" onClick={() => setConfirming(null)}>Abbrechen</Button></div>
                 : <Button type="button" size="sm" variant="outline" onClick={() => setConfirming(key.id)} aria-label={`Schlüssel ${key.name} widerrufen`}><Trash2 size={14} className="mr-1.5" />Widerrufen</Button>}

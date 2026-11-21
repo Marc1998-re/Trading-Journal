@@ -55,7 +55,7 @@ export function createJournalApiClient(baseUrl = '/api', fetcher = (...args) => 
     async deleteUser(password) { await request('/users/me', { method: 'DELETE', body: { password } }); authStore.clear(); },
     apiKeys: {
       list() { return request('/ai-keys'); },
-      create(name, expiresInDays) { return request('/ai-keys', { method: 'POST', body: { name, expiresInDays } }); },
+      create(name, expiresInDays, scope = 'read') { return request('/ai-keys', { method: 'POST', body: { name, expiresInDays, scope } }); },
       revoke(id) { return request('/ai-keys/' + encodeURIComponent(id), { method: 'DELETE' }); },
     },
     moveAndDeleteAccount(id, targetAccountId) { return request('/accounts/' + encodeURIComponent(id) + '/move-and-delete', { method: 'POST', body: { targetAccountId } }); },

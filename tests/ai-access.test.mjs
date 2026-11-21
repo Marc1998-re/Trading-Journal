@@ -6,6 +6,7 @@ import { hashToken } from '../apps/api/src/security.mjs';
 import { aiTrade, openApiSpec, screenshotImageUrl, screenshotsOf } from '../apps/api/src/aiAccess.mjs';
 
 const KEY = 'tdj_' + 'a'.repeat(64);
+const WRITE_KEY = 'tdj_' + 'c'.repeat(64);
 const trade = { id: 't1', userId: 'u1', accountId: 'a1', symbol: 'NQ', entryDate: '2026-10-05', entryTime: '15:40', exitDate: '2026-10-05', exitTime: '16:10', riskAmount: 200, profitLoss: 500, fees: 20, commissionPercentage: 0, entryUrl: 'https://www.tradingview.com/x/AbC123xy/', validationUrl: '', contextUrl: 'https://example.com/chart.png', notes: 'Plan befolgt', created: '2026-10-05 16:12:00.000', updated: '2026-10-05 16:12:00.000', reviewCompletedAt: null, reviewTags: '[]' };
 
 test('screenshot links resolve to direct images; only TradingView is proxied', () => {
@@ -32,13 +33,18 @@ test('AI trade view adds computed values and hides the owner', () => {
 });
 
 function fakePool({ verified = true } = {}) {
-  const calls = [];
-  return {
-    calls,
+  const calls = [], stored = [];
+  const pool = {
+    calls, stored,
     query: async () => [[{ ok: 1 }]],
+    getConnection: async () => ({ beginTransaction: async () => { pool.snapshot = stored.length; }, commit: async () => {}, rollback: async () => { stored.length = pool.snapshot; }, release() {}, execute: (...args) => pool.execute(...args) }),
     execute: async (sql, params = []) => {
       calls.push(sql);
-      if (sql.includes('FROM apiKeys JOIN users')) return [[params[0] === hashToken(KEY) ? { keyId: 'k1', keyName: 'Test', id: 'u1', name: 'Marc', verified } : undefined]];
+      if (sql.includes('FROM apiKeys JOIN users')) return [[params[0] === hashToken(KEY) ? { keyId: 'k1', keyName: 'Test', scope: 'read', id: 'u1', name: 'Marc', verified } : params[0] === hashToken(WRITE_KEY) ? { keyId: 'k2', keyName: 'Schreiben', scope: 'write', id: 'u1', name: 'Marc', verified } : undefined]];
+      if (sql.startsWith('SELECT * FROM `tradingAccounts` WHERE id = ?')) return [[params[0] === 'a1' && params[1] === 'u1' ? { id: 'a1', userId: 'u1', startingBalance: 10000 } : undefined]];
+      if (sql.startsWith('SELECT id FROM `trades`')) return [[stored.find(row => row.symbol === params[2] && row.entryTime === params[4]) || (params[2] === 'NQ' && params[4] === '15:40' ? { id: 't1' } : undefined)]];
+      if (sql.startsWith('INSERT INTO `trades`')) { const fields = sql.match(/\(([^)]*)\) VALUES/)[1].split(', ').map(f => f.replaceAll('`', '')); stored.push(Object.fromEntries(fields.map((f, i) => [f, params[i]]))); return [{}]; }
+      if (sql.startsWith('SELECT * FROM `trades` WHERE id = ?') && stored.some(row => row.id === params[0])) return [[{ ...stored.find(row => row.id === params[0]), created: '2026-10-07 10:00:00.000', updated: '2026-10-07 10:00:00.000', reviewTags: '[]' }]];
       if (sql.startsWith('INSERT INTO rateLimits')) return [{}];
       if (sql.startsWith('SELECT hits')) return [[{ hits: 1 }]];
       if (sql.startsWith('UPDATE apiKeys')) return [{}];
@@ -51,6 +57,7 @@ function fakePool({ verified = true } = {}) {
       throw new Error('Unexpected SQL: ' + sql);
     },
   };
+  return pool;
 }
 
 async function serve(pool, fetcher) {
@@ -75,7 +82,8 @@ test('AI API: bearer auth, CORS, read-only, trades and screenshot proxy', async 
     const preflight = await fetch(base + '/trades', { method: 'OPTIONS', headers: { Origin: 'https://chat.example' } });
     assert.equal(preflight.status, 204);
     assert.equal(preflight.headers.get('access-control-allow-origin'), '*');
-    assert.equal((await fetch(base + '/trades', { method: 'POST', headers: auth })).status, 405);
+    assert.equal((await fetch(base + '/trades', { method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' }, body: '{}' })).status, 403, 'read keys cannot write');
+    assert.equal((await fetch(base + '/trades/t1', { method: 'DELETE', headers: auth })).status, 405);
     const list = await fetch(base + '/trades', { headers: auth });
     assert.equal(list.status, 200);
     const body = await list.json();
@@ -113,5 +121,37 @@ test('key management needs a session and the journal origin', async () => {
     // An API key must never manage keys or reach cookie-only routes.
     assert.equal((await fetch(root + '/ai-keys', { headers: { Authorization: 'Bearer ' + KEY } })).status, 401);
     assert.equal((await fetch(root + '/records/trades', { headers: { Authorization: 'Bearer ' + KEY } })).status, 401);
+  } finally { server.close(); }
+});
+
+test('AI API: write keys create, validate, dedupe and batch trades atomically', async () => {
+  const pool = fakePool();
+  const { server, base } = await serve(pool);
+  const post = (path, body) => fetch(base + path, { method: 'POST', headers: { Authorization: 'Bearer ' + WRITE_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const good = { accountId: 'a1', symbol: 'es', entryDate: '2026-10-07', entryTime: '09:45', side: 'long', riskAmount: 100, profitLoss: 150, fees: 5 };
+  try {
+    const dry = await post('/trades?dryRun=true', good);
+    assert.equal(dry.status, 201);
+    assert.equal((await dry.json()).created, 0);
+    assert.equal(pool.stored.length, 0, 'dry run saves nothing');
+    const created = await post('/trades', good);
+    assert.equal(created.status, 201);
+    const body = await created.json();
+    assert.equal(body.created, 1);
+    assert.equal(body.items[0].symbol, 'ES');
+    assert.equal(body.items[0].computed.netR, 1.45);
+    assert.equal((await post('/trades', good)).status, 409, 'retries do not duplicate');
+    assert.equal((await post('/trades', { ...good, symbol: 'NQ', entryTime: '15:40' })).status, 409);
+    const batch = await post('/trades', { items: [{ ...good, entryTime: '10:00' }, { ...good, entryTime: '11:00', accountId: 'foreign' }] });
+    assert.equal(batch.status, 404);
+    assert.match((await batch.json()).message, /^Eintrag 2:/);
+    assert.equal(pool.stored.length, 1, 'a failing batch is rolled back');
+    const invalid = await post('/trades', { ...good, entryTime: '25:00' });
+    assert.equal(invalid.status, 400);
+    assert.equal((await post('/trades', { ...good, userId: 'someone-else', entryTime: '12:00' })).status, 403);
+    assert.equal((await post('/trades', { items: Array(201).fill(good) })).status, 400);
+    const schema = await (await fetch(base + '/schema', { headers: { Authorization: 'Bearer ' + WRITE_KEY } })).json();
+    assert.ok(schema.trades.properties.riskAmount.description);
+    assert.equal(schema.trades.properties.userId, undefined);
   } finally { server.close(); }
 });

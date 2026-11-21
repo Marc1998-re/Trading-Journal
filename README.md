@@ -97,8 +97,8 @@ ein Datenbank-Backup anlegen. Die PocketBase-Rückfalloption unterstützt diese 
 
 ### KI-Zugriff (API-Schlüssel)
 
-Unter Einstellungen → KI-Zugriff erstellen Nutzer persönliche, **nur lesende** API-Schlüssel
-(`tdj_…`, Gültigkeit 30/90/365 Tage oder unbegrenzt, max. 10 aktive, jederzeit widerrufbar). Der
+Unter Einstellungen → KI-Zugriff erstellen Nutzer persönliche API-Schlüssel – wahlweise **nur lesen**
+oder **lesen & erfassen** (`tdj_…`, Gültigkeit 30/90/365 Tage oder unbegrenzt, max. 10 aktive, jederzeit widerrufbar). Der
 Schlüssel wird einmal angezeigt; gespeichert wird nur sein SHA-256-Hash (`apiKeys`, Migration
 `003_api_keys.sql`).
 
@@ -107,8 +107,13 @@ Schlüssel wird einmal angezeigt; gespeichert wird nur sein SHA-256-Hash (`apiKe
 - `GET /api/v1/trades/{id}/screenshots/{index}` – TradingView-Snapshots als Bild (nur
   `s3.tradingview.com`, keine anderen Hosts – kein SSRF); andere Bild-Links stehen als `imageUrl`
   in den Trades.
+- Nur mit Schreibrecht: `POST /api/v1/trades` und `/missed-trades` (ein Eintrag oder
+  `{ "items": [...] }`, max. 200, alles oder nichts), `PATCH /api/v1/trades/{id}` und
+  `/missed-trades/{id}`. `?dryRun=true` prüft ohne Speichern; gleiche Einträge (Konto, Symbol,
+  Richtung, Einstieg) werden mit 409 abgelehnt, außer mit `?allowDuplicates=true`. `GET /api/v1/schema`
+  liefert alle Felder mit Erklärung. Löschen ist über Schlüssel nie möglich (405).
 - Authentifizierung: `Authorization: Bearer tdj_…` oder `X-API-Key`. 120 Anfragen/Minute je
-  Schlüssel, CORS offen (keine Cookies), Schreibzugriffe liefern 405.
+  Schlüssel (Schreiben zusätzlich 60/Minute), CORS offen (keine Cookies).
 
 Ohne eigenen Server gibt es zusätzlich einen JSON-Datei-Export zum Hochladen in KI-Chats.
 
