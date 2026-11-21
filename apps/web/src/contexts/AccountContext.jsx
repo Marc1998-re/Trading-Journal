@@ -101,6 +101,18 @@ export const AccountProvider = ({ children }) => {
     }
   };
 
+  const updateAccount = async (accountId, patch) => {
+    try {
+      const record = await pb.collection('tradingAccounts').update(accountId, patch, { $autoCancel: false });
+      setAccounts(prev => prev.map(a => a.id === accountId ? record : a));
+      toast.success('Kontoregeln gespeichert.');
+      return record;
+    } catch (error) {
+      toast.error(error.response?.message || 'Kontoregeln konnten nicht gespeichert werden.');
+      throw error;
+    }
+  };
+
   const createAccount = async (accountName) => {
     if (!currentUser) return;
     try {
@@ -183,6 +195,7 @@ export const AccountProvider = ({ children }) => {
     selectAccount,
     selectAllAccounts,
     updateAccountBalance,
+    updateAccount,
     createAccount,
     renameAccount,
     deleteAccount,

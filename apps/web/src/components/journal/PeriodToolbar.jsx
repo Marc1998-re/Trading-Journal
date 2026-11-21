@@ -41,7 +41,7 @@ export default function PeriodToolbar({ data, children }) {
         {!data.demo && <Button variant="ghost" size="icon" aria-label="Daten aktualisieren" onClick={data.refresh} disabled={data.loading}><RefreshCw className={data.loading ? 'animate-spin' : ''} /></Button>}
       </div>
     </div>
-    <p className="-mt-3 mb-6 text-xs text-muted-foreground">Zeitraum und Reihenfolge nach Einstiegsdatum. Ein separates Abschlussdatum wird noch nicht erfasst.</p>
+    <p className="-mt-3 mb-6 text-xs text-muted-foreground">Zeitraum und Reihenfolge richten sich nach dem Einstiegsdatum, auch wenn ein Trade später geschlossen wurde.</p>
     <Dialog open={open} onOpenChange={setOpen}><DialogContent className="max-w-sm"><DialogTitle>Zeitraum wählen</DialogTitle><DialogDescription>Start und Ende zählen mit. Die Zuordnung erfolgt nach Einstiegsdatum.</DialogDescription>
       <form onSubmit={apply} className="space-y-4">
         <label className="form-field">Von<Input type="date" required value={dates.from} onChange={e => setDates({ ...dates, from: e.target.value })} /></label>

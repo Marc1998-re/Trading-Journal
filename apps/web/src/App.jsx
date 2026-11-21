@@ -18,6 +18,7 @@ const TradesPage=lazy(()=>import('@/pages/TradesPage.jsx'));
 const AnalysisPage=lazy(()=>import('@/pages/AnalysisPage.jsx'));
 const ChartsPage=lazy(()=>import('@/pages/ChartsPage.jsx'));
 const ReviewPage=lazy(()=>import('@/pages/ReviewPage.jsx'));
+const MissedTradesPage=lazy(()=>import('@/pages/MissedTradesPage.jsx'));
 const ResetPasswordPage=lazy(()=>import('@/pages/ResetPasswordPage.jsx'));
 const SettingsPage=lazy(()=>import('@/pages/SettingsPage.jsx'));
 const PrivacyPolicyPage=lazy(()=>import('@/pages/PrivacyPolicyPage.jsx'));
@@ -32,7 +33,7 @@ import { useGoogleAnalytics } from '@/hooks/useGoogleAnalytics.js';
 const AppContent = () => {
   useGoogleAnalytics();
   const {pathname}=useLocation();
-  const workspace=pathname.startsWith('/demo')||['/home','/dashboard','/analysis','/charts','/trades','/review','/settings'].includes(pathname);
+  const workspace=pathname.startsWith('/demo')||['/home','/dashboard','/analysis','/charts','/trades','/missed','/review','/settings'].includes(pathname);
 
   return (
     <div className={`trading-app min-h-screen flex flex-col transition-theme${pathname === '/' ? ' landing-theme' : ''}`}>
@@ -45,6 +46,8 @@ const AppContent = () => {
           <Route path="/demo/analysis" element={<AnalysisPage/>}/>
           <Route path="/demo/charts" element={<ChartsPage/>}/>
           <Route path="/demo/review" element={<ReviewPage/>}/>
+          <Route path="/demo/missed" element={<MissedTradesPage/>}/>
+          <Route path="/missed" element={<ProtectedRoute><MissedTradesPage/></ProtectedRoute>}/>
           <Route path="/review" element={<ProtectedRoute><ReviewPage/></ProtectedRoute>}/>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />

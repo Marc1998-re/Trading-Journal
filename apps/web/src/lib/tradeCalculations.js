@@ -385,6 +385,11 @@ export const calculateAdvancedStats = (trades, startingBalance = 10000, original
       riskEstimatedTrades: 0,
       confidence: null,
       recoveryFactor: null,
+      rStdDev: null,
+      sqn: null,
+      kelly: null,
+      avgTradesPerDay: 0,
+      tradingDays: 0,
       wins: 0,
       losses: 0,
       breakeven: 0,
@@ -457,6 +462,12 @@ export const calculateAdvancedStats = (trades, startingBalance = 10000, original
   const dayPerformance = buildDayPerformance(trades, originalBalances, currentBalances);
   const weekdayPerformance = buildWeekdayPerformance(trades, originalBalances, currentBalances);
   const bestWeekdays = [...weekdayPerformance].sort((a, b) => b.netPnL - a.netPnL);
+  const meanR = rValues.length ? totalR / rValues.length : null;
+  const rStdDev = rValues.length > 1 ? Math.sqrt(rValues.reduce((sum, value) => sum + (value - meanR) ** 2, 0) / (rValues.length - 1)) : null;
+  // Van Tharp's System Quality Number, capped at 100 trades so large samples do not inflate it.
+  const sqn = rStdDev > 0 ? Math.sqrt(Math.min(rValues.length, 100)) * meanR / rStdDev : null;
+  const winRateFraction = winners.length / totalTrades;
+  const kelly = Number.isFinite(payoffRatio) && payoffRatio > 0 ? (winRateFraction - (1 - winRateFraction) / payoffRatio) * 100 : null;
 
   return {
     totalTrades,
@@ -494,6 +505,11 @@ export const calculateAdvancedStats = (trades, startingBalance = 10000, original
     riskEstimatedTrades: processedTrades.filter(item => !(Number(item.trade.riskAmount) > 0)).length,
     confidence: winRateInterval(winners.length, totalTrades),
     recoveryFactor: maxDrawdown > 0 ? netPnL / maxDrawdown : null,
+    rStdDev,
+    sqn,
+    kelly,
+    tradingDays: dayPerformance.length,
+    avgTradesPerDay: dayPerformance.length ? totalTrades / dayPerformance.length : 0,
     ...streakStats,
     bestSymbol: symbolPerformance[0] || null,
     worstSymbol: symbolPerformance[symbolPerformance.length - 1] || null,

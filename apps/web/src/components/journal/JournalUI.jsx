@@ -43,3 +43,28 @@ export function DataState({data}) {
 export function SignedValue({value,unit='money'}) {
   return <span className={`inline-flex items-center gap-1.5 font-mono ${value>0?'text-success':value<0?'text-destructive':'text-muted-foreground'}`}>{value>0?<ArrowUpRight size={14}/>:value<0?<ArrowDownRight size={14}/>:null}{unit==='money'?money(value,true):unit==='r'?rValue(value):decimal(value)}</span>;
 }
+
+// Professional KPI tile: label, headline figure, context line and an optional mini visual.
+export function KpiCard({label,value,detail,tone,helpKey=metricHelpKeys[label],visual,loading=false}) {
+  return <div className="kpi-card"><div className="kpi-label">{label}{helpKey&&<MetricHelp helpKey={helpKey} label={label}/>}</div>
+    <div className={`kpi-value ${tone==='positive'?'text-success':tone==='negative'?'text-destructive':''}`}>{loading?'…':value}</div>
+    {visual&&!loading&&<div className="kpi-visual">{visual}</div>}
+    {detail&&<p className="kpi-detail">{detail}</p>}
+  </div>;
+}
+export function SplitBar({parts}) {
+  const total=parts.reduce((s,p)=>s+p.value,0);
+  return <div className="split-bar" aria-hidden="true">{parts.map((p,i)=><i key={i} className={p.className} style={{width:`${total?p.value/total*100:0}%`}}/>)}</div>;
+}
+export function Gauge({value,max,tone='primary',marker}) {
+  const width=Number.isFinite(value)?Math.max(0,Math.min(1,value/max))*100:value===Infinity?100:0;
+  return <div className="gauge" aria-hidden="true"><i className={`bg-${tone}`} style={{width:`${width}%`}}/>{marker!==undefined&&<b style={{left:`${marker/max*100}%`}}/>}</div>;
+}
+// Dense label/value grid for secondary statistics.
+export function StatGrid({items,columns=4}) {
+  return <dl className="stat-grid" style={{'--stat-columns':columns}}>{items.map(item=><div key={item.label} className="stat-cell"><dt>{item.label}{(item.helpKey||metricHelpKeys[item.label])&&<MetricHelp helpKey={item.helpKey||metricHelpKeys[item.label]} label={item.label}/>}</dt><dd className={item.tone==='positive'?'text-success':item.tone==='negative'?'text-destructive':''}>{item.value}</dd>{item.detail&&<span>{item.detail}</span>}</div>)}</dl>;
+}
+export function Panel({title,eyebrow,action,children,className=''}) {
+  return <section className={`journal-panel ${className}`}>{(title||action)&&<header className="panel-header"><div className="min-w-0">{eyebrow&&<p className="panel-eyebrow">{eyebrow}</p>}{title&&<h2>{title}</h2>}</div>{action}</header>}{children}</section>;
+}
+export const toneOf = value => value > 0 ? 'positive' : value < 0 ? 'negative' : undefined;

@@ -2,6 +2,7 @@ import { ApiError, parse } from './errors.mjs';
 import { newId, publicRecord, transaction } from './database.mjs';
 import { collectionSchemas, id, listSchema, validateRecord } from './validation.mjs';
 
+const accountScoped = new Set(['trades', 'missedTrades']);
 const columns = Object.fromEntries(Object.entries(collectionSchemas).map(([name, schema]) => [name, new Set(['id', 'created', 'updated', ...Object.keys(schema.shape).filter(key => !['date', 'time', 'instrument'].includes(key))])]));
 
 function table(name) {
@@ -27,11 +28,11 @@ export async function listRecords(db, name, userId, query) {
   if (options.userId && options.userId !== userId) throw new ApiError(403, 'Fremde Daten duerfen nicht gelesen werden.');
   const filters = ['userId = ?'], params = [userId];
   if (options.accountId) {
-    if (name !== 'trades') throw new ApiError(400, 'Dieser Filter ist hier nicht verfuegbar.');
+    if (!accountScoped.has(name)) throw new ApiError(400, 'Dieser Filter ist hier nicht verfuegbar.');
     filters.push('accountId = ?'); params.push(options.accountId);
   }
   if (options.from || options.to) {
-    if (name !== 'trades') throw new ApiError(400, 'Dieser Filter ist hier nicht verfuegbar.');
+    if (!accountScoped.has(name)) throw new ApiError(400, 'Dieser Filter ist hier nicht verfuegbar.');
     if (options.from) { filters.push('entryDate >= ?'); params.push(options.from); }
     if (options.to) { filters.push('entryDate <= ?'); params.push(options.to); }
   }
@@ -53,7 +54,7 @@ export async function listRecords(db, name, userId, query) {
 export async function insertRecord(db, name, userId, input, extras = {}) {
   const recordId = extras.id || newId();
   const value = validateRecord(name, input, userId);
-  if (name === 'trades') await findRecord(db, 'tradingAccounts', value.accountId, userId, true);
+  if (accountScoped.has(name)) await findRecord(db, 'tradingAccounts', value.accountId, userId, true);
   const record = { id: recordId, ...value, ...(extras.importFingerprint ? { importFingerprint: extras.importFingerprint } : {}) };
   const fields = Object.keys(record);
   await db.execute(`INSERT INTO ${table(name)} (${fields.map(field => '`' + field + '`').join(', ')}) VALUES (${fields.map(() => '?').join(', ')})`, fields.map(field => dbValue(field, record[field])));
@@ -65,7 +66,7 @@ export const createRecord = (pool, name, userId, input) => transaction(pool, db 
 export const updateRecord = (pool, name, userId, recordId, input) => transaction(pool, async db => {
   const previous = await findRecord(db, name, recordId, userId, true);
   const value = validateRecord(name, input, userId, previous);
-  if (name === 'trades') await findRecord(db, 'tradingAccounts', value.accountId, userId, true);
+  if (accountScoped.has(name)) await findRecord(db, 'tradingAccounts', value.accountId, userId, true);
   const fields = Object.keys(value);
   await db.execute(`UPDATE ${table(name)} SET ${fields.map(field => '`' + field + '` = ?').join(', ')} WHERE id = ? AND userId = ?`, [...fields.map(field => dbValue(field, value[field])), recordId, userId]);
   return findRecord(db, name, recordId, userId);
@@ -74,7 +75,7 @@ export const updateRecord = (pool, name, userId, recordId, input) => transaction
 export const deleteRecord = (pool, name, userId, recordId) => transaction(pool, async db => {
   await findRecord(db, name, recordId, userId, true);
   if (name === 'tradingAccounts') {
-    const [[row]] = await db.execute('SELECT COUNT(*) AS total FROM trades WHERE accountId = ? AND userId = ?', [recordId, userId]);
+    const [[row]] = await db.execute('SELECT (SELECT COUNT(*) FROM trades WHERE accountId = ? AND userId = ?) + (SELECT COUNT(*) FROM missedTrades WHERE accountId = ? AND userId = ?) AS total', [recordId, userId, recordId, userId]);
     if (row.total) throw new ApiError(409, 'Weise die Trades zuerst einem anderen Konto zu.');
   }
   await db.execute(`DELETE FROM ${table(name)} WHERE id = ? AND userId = ?`, [recordId, userId]);
@@ -86,5 +87,6 @@ export const moveAndDeleteAccount = (pool, userId, source, target) => transactio
   // Consistent lock order prevents simultaneous account moves from deadlocking.
   for (const accountId of [source, target].sort()) await findRecord(db, 'tradingAccounts', accountId, userId, true);
   await db.execute('UPDATE trades SET accountId = ? WHERE accountId = ? AND userId = ?', [target, source, userId]);
+  await db.execute('UPDATE missedTrades SET accountId = ? WHERE accountId = ? AND userId = ?', [target, source, userId]);
   await db.execute('DELETE FROM tradingAccounts WHERE id = ? AND userId = ?', [source, userId]);
 });

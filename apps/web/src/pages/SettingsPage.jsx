@@ -14,6 +14,8 @@ import { Save, Percent, User, Lock, AlertTriangle, Trash2 } from 'lucide-react';
 import ThemeSwitch from '@/components/journal/ThemeSwitch';
 import { PageHeading } from '@/components/journal/JournalUI';
 import SettingsSection from '@/components/SettingsSection.jsx';
+import { AccountRulesForm } from '@/components/journal/AccountRules.jsx';
+import { useAccount } from '@/contexts/AccountContext.jsx';
 import DeleteAccountModal from '@/components/DeleteAccountModal.jsx';
 
 const SettingsPage = () => {
@@ -172,6 +174,13 @@ const SettingsPage = () => {
               <span className="text-sm">{theme === 'dark' ? 'Dunkles Design' : 'Helles Design'}</span>
               <ThemeSwitch/>
             </div>
+          </SettingsSection>
+
+          <SettingsSection
+            title="Handelskonten & Regeln"
+            description="Lege fest, ob ein Konto Privatkapital oder eine Prop-Firm-Challenge ist, und hinterlege Limits. Die Übersicht zeigt dir dann jederzeit deinen Puffer."
+          >
+            <AccountRulesSettings />
           </SettingsSection>
 
           {/* Profile Section */}
@@ -347,3 +356,9 @@ const SettingsPage = () => {
 };
 
 export default SettingsPage;
+
+function AccountRulesSettings() {
+  const { accounts, updateAccount } = useAccount();
+  if (!accounts.length) return <p className="text-sm text-muted-foreground">Noch kein Handelskonto angelegt. Erstelle ein Konto über die Kontoauswahl in der Seitenleiste.</p>;
+  return <div className="space-y-4">{accounts.map(account => <AccountRulesForm key={account.id + (account.updated || '')} account={account} onSave={updateAccount} />)}</div>;
+}

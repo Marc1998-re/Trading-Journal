@@ -75,6 +75,26 @@ abgeschlossener Trades in EUR. Kosten, urspruengliches Risiko und die Herkunft
 verwendeter Risikowerte werden beruecksichtigt. Die Infofelder in der Anwendung
 erklaeren Berechnung und Interpretation.
 
+### Profi-Funktionen (Branch `feature/pro-journal`)
+
+- **Performance-Cockpit:** KPI-Kacheln (Netto, Profitfaktor, Trefferquote, Erwartungswert, Drawdown),
+  Disziplin-Score, Kennzahlen-Raster (SQN, Ø Gewinn/Verlust in R, Serien, Handelstage, Kosten) und
+  Handelskalender mit Wochensummen.
+- **Kontotypen:** Privatkapital oder Prop-Firm. Pro Konto Tagesverlust-Limit, max. Verlust
+  (statisch oder trailing), Gewinnziel, max. Risiko je Trade und max. Trades pro Tag. Die Übersicht
+  zeigt den verbleibenden Puffer auf Basis realisierter Trades (Floating-P&L ist nicht enthalten).
+- **Nicht genommene Trades:** eigenes Log mit Grund, Bewertung (bewusst ausgelassen / verpasst) und
+  hypothetischem Ergebnis in R. Fließt nicht in Kontostand oder Statistiken ein.
+- **Optionale Profi-Angaben je Trade:** Ausstieg (Haltedauer), geplantes Ziel in R, MAE/MFE,
+  Setup-Note A/B/C, Emotion und Überzeugung.
+- **Analyse in Tabs:** Überblick, R & Risiko, Setups & Märkte (inkl. A/B/C, Long/Short), Timing
+  (Sessions, Stunden-Heatmap, Wochentage, Haltedauer), Ausführung (MFE/MAE, Gewinnausschöpfung,
+  Ziel erreicht) und Psychologie (Regeltreue, Emotion, Überzeugung, Lern-Tags).
+
+Datenbank: `apps/api/migrations/002_pro_journal.sql` ergänzt Trade- und Kontospalten sowie die
+Tabelle `missedTrades`. `npm run db:migrate` bzw. `npm run start:hostinger` führt sie aus. Vorher
+ein Datenbank-Backup anlegen. Die PocketBase-Rückfalloption unterstützt diese Erweiterungen nicht.
+
 CSV-Export ist vorhanden. Die neue API enthaelt einen administrativen CSV-Import
 mit Trockenlauf und bestaetigter Kontozuordnung, noch keinen Dateiimport in der
 Oberflaeche. Broker-Anbindung, offene Positionen, Ein-/Auszahlungen und

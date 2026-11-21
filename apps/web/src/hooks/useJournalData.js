@@ -5,9 +5,10 @@ import { useAccount } from '@/contexts/AccountContext';
 import { useJournalPeriod } from '@/contexts/JournalPeriodContext';
 import { useNavigationGuard } from '@/contexts/NavigationGuardContext';
 import pb from '@/lib/pocketbaseClient';
-import { demoAccounts, demoTrades } from '@/lib/demoData';
+import { demoAccounts, demoTrades, demoMissedTrades } from '@/lib/demoData';
 import { calculateAdvancedStats } from '@/lib/tradeCalculations';
-import { selectPeriodTrades } from '@/lib/journalPeriod';
+import { selectPeriodTrades, periodBounds } from '@/lib/journalPeriod';
+import { getTradeDate } from '@/lib/tradeCalculations';
 
 export function useJournalData() {
   const { pathname } = useLocation();
@@ -21,6 +22,8 @@ export function useJournalData() {
   const [records,setRecords] = useState([]);
   const [loading,setLoading] = useState(!demo);
   const [error,setError] = useState('');
+  const [missedRecords,setMissedRecords] = useState([]);
+  const [missedError,setMissedError] = useState('');
   const accounts=demo?demoAccounts:context.accounts;
   const refresh=useCallback(async()=>{
     if(demo || !userId) return;
@@ -30,6 +33,11 @@ export function useJournalData() {
       setRecords(result);
     } catch(e) {if(!e.isAbort) setError('Deine Trades konnten nicht geladen werden. Bitte versuche es erneut.');}
     finally {setLoading(false);}
+    // Missed trades are optional: an older database without the table must not block the journal.
+    try {
+      setMissedRecords(await pb.collection('missedTrades').getFullList({filter:{userId},sort:'entryDate,entryTime',requestKey:'journal-missed'}));
+      setMissedError('');
+    } catch(e) {if(!e.isAbort) setMissedError('Nicht genommene Trades konnten nicht geladen werden. Ist die Datenbank-Migration 002 ausgeführt?');}
   },[demo,userId]);
   useEffect(()=>{refresh();},[refresh]);
   const refreshSafely = useCallback(() => {
@@ -45,7 +53,10 @@ export function useJournalData() {
     const active=demo || !context.selectedAccountId?accounts:accounts.filter(a=>a.id===context.selectedAccountId);
     const base=active.reduce((s,a)=>s+(Number(a.startingBalance)||0),0);
     const { trades, opening } = selectPeriodTrades(all, { month, range, anchor, from, to }, base, balances);
-    return {allTrades:all,trades,balances,opening,stats:calculateAdvancedStats(trades,opening,balances,balances),accountName:active.length===1?active[0].accountName:'Alle Konten'};
-  },[demo,records,accounts,context.selectedAccountId,month,range,anchor,from,to,demoReviews]);
-  return {...data,demo,loading,error,refresh:refreshSafely,updateTrade,month,setMonth,range,setRange,setPeriod,anchor,from,to,accounts};
+    const allMissed=(demo?demoMissedTrades:missedRecords).filter(t=>demo || !context.selectedAccountId || t.accountId===context.selectedAccountId);
+    const { start, end } = periodBounds({ month, range, anchor, from, to });
+    const missed = start ? allMissed.filter(t => { const date = getTradeDate(t); return date && date >= start && date < end; }) : allMissed;
+    return {allTrades:all,trades,balances,opening,allMissed,missed,activeAccounts:active,stats:calculateAdvancedStats(trades,opening,balances,balances),accountName:active.length===1?active[0].accountName:'Alle Konten'};
+  },[demo,records,missedRecords,accounts,context.selectedAccountId,month,range,anchor,from,to,demoReviews]);
+  return {...data,demo,loading,error,missedError,refresh:refreshSafely,updateTrade,month,setMonth,range,setRange,setPeriod,anchor,from,to,accounts};
 }

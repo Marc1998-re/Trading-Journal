@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, List, ChartNoAxesCombined, Activity, NotebookPen, Settings, LogOut, ArrowUpRight, MoreHorizontal } from 'lucide-react';
+import { LayoutDashboard, List, ChartNoAxesCombined, Activity, NotebookPen, EyeOff, Settings, LogOut, ArrowUpRight, MoreHorizontal } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import AccountSwitcher from '@/components/AccountSwitcher';
 import { Button } from '@/components/ui/button';
@@ -20,8 +20,8 @@ export default function Header() {
     catch { toast.error('Abmelden fehlgeschlagen. Bitte pruefe deine Verbindung und versuche es erneut.'); }
   }
   const demo=pathname.startsWith('/demo');
-  const workspace=demo || (!!currentUser && ['/home','/dashboard','/trades','/analysis','/charts','/review','/settings'].includes(pathname));
-  const links=[['Übersicht','/home',LayoutDashboard],['Trade-Journal','/trades',List],['Analyse','/analysis',ChartNoAxesCombined],['Verläufe','/charts',Activity],['Review','/review',NotebookPen]];
+  const workspace=demo || (!!currentUser && ['/home','/dashboard','/trades','/missed','/analysis','/charts','/review','/settings'].includes(pathname));
+  const links=[['Übersicht','/home',LayoutDashboard],['Trade-Journal','/trades',List],['Nicht genommen','/missed',EyeOff],['Analyse','/analysis',ChartNoAxesCombined],['Verläufe','/charts',Activity],['Review','/review',NotebookPen]];
   const pathFor=path=>demo?(path==='/home'?'/demo':'/demo'+path):path;
   const activeName = links.find(([, path]) => pathFor(path) === pathname)?.[0] || 'Einstellungen';
   const brand=<Link to={workspace?pathFor('/home'):'/'} className="journal-brand"><span className="brand-mark">TD<span>/</span></span><span>The<br/><strong>Trading Desk</strong></span></Link>;
@@ -34,6 +34,6 @@ export default function Header() {
     <header className="workspace-header"><div className="workspace-breadcrumb"><Link to="/">The Trading Desk</Link><span aria-hidden="true">/</span><span>{activeName}</span></div><div className="flex items-center gap-4">{demo&&<span className="demo-label">Interaktive Demo</span>}<ThemeSwitch/></div></header>
     <header className="workspace-mobile-header">{brand}<div className="flex items-center gap-2"><ThemeSwitch/>{!demo&&<DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" aria-label="Konto und Einstellungen" title="Konto und Einstellungen"><MoreHorizontal size={18}/></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem asChild><Link to="/settings"><Settings size={16} className="mr-2"/>Einstellungen</Link></DropdownMenuItem><DropdownMenuSeparator/><DropdownMenuItem onSelect={signOut}><LogOut size={16} className="mr-2"/>Abmelden</DropdownMenuItem></DropdownMenuContent></DropdownMenu>}</div></header>
     {!demo&&<div className="workspace-mobile-account"><AccountSwitcher isMobile/></div>}
-    <nav className="mobile-bottom-nav" aria-label="Mobile Journalnavigation">{links.map(([name,path,Icon],index)=><NavLink key={path} end to={pathFor(path)} className={({isActive})=>isActive?'is-active':''}><Icon size={19}/><span>{name==='Trade-Journal'?'Trades':name}</span></NavLink>)}</nav>
+    <nav className="mobile-bottom-nav" aria-label="Mobile Journalnavigation">{links.map(([name,path,Icon],index)=><NavLink key={path} end to={pathFor(path)} className={({isActive})=>isActive?'is-active':''}><Icon size={19}/><span>{name==='Trade-Journal'?'Trades':name==='Nicht genommen'?'Verpasst':name}</span></NavLink>)}</nav>
   </>;
 }

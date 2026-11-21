@@ -11,15 +11,24 @@ const text = max => z.string().max(max);
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z?)?$/).transform(value => value.slice(0, 10)).pipe(z.iso.date()).refine(value => value >= '1900-01-01' && value <= '2100-12-31', 'Ungueltiges Einstiegsdatum.');
 const link = z.union([z.literal(''), z.url().max(2000).refine(value => ['http:', 'https:'].includes(new URL(value).protocol), 'Nur HTTP(S)-Links erlaubt.')]);
 const owner = { userId: id.optional() };
+const optionalDate = z.union([z.literal(''), z.null(), date]).transform(value => value || null);
+const clock = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+export const tradeGrades = ['', 'A', 'B', 'C'];
+export const tradeEmotions = ['', 'calm', 'confident', 'fomo', 'fearful', 'greedy', 'frustrated', 'bored'];
+export const missedReasons = ['rules', 'risk_limit', 'news', 'hesitation', 'fear', 'absent', 'execution', 'conditions', 'other'];
+const rMultiple = z.number().finite().min(-1000).max(1000);
 const trade = z.object({
   ...owner, accountId: id, symbol: text(30).trim().min(1).transform(value => value.toUpperCase()),
-  entryDate: date, entryTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+  entryDate: date, entryTime: clock,
+  exitDate: optionalDate.default(null), exitTime: z.union([z.literal(''), clock]).default(''),
   date: date.optional(), time: text(5).optional(), instrument: text(30).optional(),
   setup: text(80).default(''), side: z.enum(['', 'long', 'short']).default(''),
   riskAmount: amount.positive().nullable().default(null), profitLoss: nullableAmount.default(null),
   fees: amount.nonnegative().nullable().default(0), commissionPercentage: z.number().min(0).max(100).nullable().default(0),
   stopLoss: z.number().min(0).max(100).nullable().default(null), stopLossPips: amount.nonnegative().nullable().default(null),
   rrSecured: nullableAmount.default(null), riskRewardRatio: nullableAmount.default(null),
+  plannedRR: rMultiple.nonnegative().nullable().default(null), mae: rMultiple.nonnegative().nullable().default(null), mfe: rMultiple.nonnegative().nullable().default(null),
+  grade: z.enum(tradeGrades).default(''), emotion: z.enum(tradeEmotions).default(''), confidence: z.number().int().min(1).max(5).nullable().default(null),
   status: z.enum(['', 'Win', 'Loss', 'Breakeven']).default(''),
   notes: text(5000).default(''), contextUrl: link.default(''), validationUrl: link.default(''), entryUrl: link.default(''),
   reviewStatus: z.enum(['', 'draft', 'completed']).default(''), reviewSetup: z.enum(['', 'yes', 'no', 'na']).default(''), reviewRisk: z.enum(['', 'yes', 'no', 'na']).default(''),
@@ -27,11 +36,27 @@ const trade = z.object({
   reviewLesson: text(1000).default(''), reviewAction: text(1000).default(''),
   // Only the server writes this timestamp; supplied values are never trusted.
   reviewCompletedAt: text(40).nullable().optional(),
+}).strict().refine(value => !value.exitDate || value.exitDate > value.entryDate || (value.exitDate === value.entryDate && (!value.exitTime || value.exitTime >= value.entryTime)), { path: ['exitDate'], message: 'Der Ausstieg darf nicht vor dem Einstieg liegen.' });
+
+const missedTrade = z.object({
+  ...owner, accountId: id, symbol: text(30).trim().min(1).transform(value => value.toUpperCase()),
+  entryDate: date, entryTime: clock,
+  setup: text(80).default(''), side: z.enum(['', 'long', 'short']).default(''), grade: z.enum(tradeGrades).default(''),
+  decision: z.enum(['valid', 'missed']).default('missed'), reason: z.enum(missedReasons).default('other'),
+  potentialR: rMultiple.nullable().default(null),
+  notes: text(5000).default(''), contextUrl: link.default(''),
 }).strict();
 
 export const collectionSchemas = {
   trades: trade,
-  tradingAccounts: z.object({ ...owner, accountName: text(200).trim().min(1), startingBalance: amount.positive(), currency: z.literal('EUR').default('EUR'), status: z.enum(['active', 'inactive']).default('active') }).strict(),
+  missedTrades: missedTrade,
+  tradingAccounts: z.object({
+    ...owner, accountName: text(200).trim().min(1), startingBalance: amount.positive(), currency: z.literal('EUR').default('EUR'), status: z.enum(['active', 'inactive']).default('active'),
+    accountType: z.enum(['private', 'prop']).default('private'), propFirm: text(80).trim().default(''),
+    dailyLossLimit: amount.positive().nullable().default(null), maxLoss: amount.positive().nullable().default(null),
+    drawdownMode: z.enum(['static', 'trailing']).default('static'), profitTarget: amount.positive().nullable().default(null),
+    maxRiskPerTrade: z.number().positive().max(100).nullable().default(null), maxTradesPerDay: z.number().int().min(1).max(255).nullable().default(null),
+  }).strict(),
   userSettings: z.object({ ...owner, startingBalance: amount.positive().default(10000), commissionPercentage: z.number().min(0).max(100).default(0), theme: z.enum(['light', 'dark']).default('dark') }).strict(),
   symbols: z.object({ ...owner, symbol: text(30).trim().min(1).transform(value => value.toUpperCase()) }).strict(),
   cookieConsent: z.object({ ...owner, consentGiven: z.boolean(), preferences: text(4000).refine(value => { try { const parsed = JSON.parse(value); return parsed && typeof parsed === 'object' && !Array.isArray(parsed); } catch { return false; } }) }).strict(),
