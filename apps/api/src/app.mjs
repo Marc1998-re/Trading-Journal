@@ -17,6 +17,13 @@ export function createApp({ pool, config, mailer, fetcher, staticDir = fileURLTo
   app.set('trust proxy', config.TRUST_PROXY);
   // Existing charts use inline styles, and the current optional analytics script is kept compatible.
   app.use(helmet({ contentSecurityPolicy: { directives: { 'script-src': ["'self'", "'unsafe-inline'", 'https://www.googletagmanager.com'], 'img-src': ["'self'", 'data:', 'https:'], 'connect-src': ["'self'", 'https://www.google-analytics.com', 'https://region1.google-analytics.com'], 'upgrade-insecure-requests': config.secureCookie ? [] : null } }, referrerPolicy: { policy: 'no-referrer' } }));
+  const primaryHostname = new URL(config.origin).hostname;
+  app.use((req, res, next) => {
+    // Canonical navigation keeps cookie-authenticated requests on the configured Origin.
+    if (config.NODE_ENV !== 'production' || !['GET', 'HEAD'].includes(req.method) || req.hostname?.toLowerCase() !== 'www.' + primaryHostname) return next();
+    res.set('Cache-Control', 'no-store');
+    res.redirect(308, config.origin + req.originalUrl);
+  });
   app.use('/api', (_req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
   // Read-only AI access authenticates with bearer keys, never cookies, so it sits before the Origin check.
   app.use('/api/v1', aiRouter(pool, config, fetcher));
