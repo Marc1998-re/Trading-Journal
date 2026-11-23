@@ -65,10 +65,10 @@ export function screenshotImageUrl(url) {
   return null;
 }
 
-export function screenshotsOf(trade) {
+export function screenshotsOf(trade, path = 'trades') {
   return SCREENSHOT_FIELDS.filter(([field]) => trade[field]).map(([field, label], index) => {
     const imageUrl = screenshotImageUrl(trade[field]);
-    return { index, field, label, url: trade[field], imageUrl, proxyPath: trade.id && imageUrl && isProxyable(imageUrl) ? `/api/v1/trades/${trade.id}/screenshots/${index}` : null };
+    return { index, field, label, url: trade[field], imageUrl, proxyPath: trade.id && imageUrl && isProxyable(imageUrl) ? `/api/v1/${path}/${trade.id}/screenshots/${index}` : null };
   });
 }
 
@@ -147,7 +147,7 @@ export function writeSchemas() {
 }
 
 async function shape(pool, table, userId, items) {
-  if (table !== 'trades') return items.map(item => { const record = { ...item }; delete record.userId; delete record.date; delete record.time; return record; });
+  if (table !== 'trades') return items.map(item => { const record = { ...item, screenshots: screenshotsOf(item, 'missed-trades') }; delete record.userId; delete record.date; delete record.time; return record; });
   const { balances } = await balancesOf(pool, userId);
   return items.map(item => aiTrade(item, balances));
 }
@@ -213,6 +213,7 @@ export function openApiSpec(origin) {
   spec.paths['/trades'].post = write('createTrades', 'Trades anlegen', 'Einen Trade oder bis zu 200 auf einmal (alles oder nichts). Braucht Schreibrecht.', 'TradeInput', writeParams);
   spec.paths['/trades/{id}'].patch = write('updateTrade', 'Trade korrigieren', 'Nur die gesendeten Felder werden geändert.', 'TradeInput', [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }]);
   spec.paths['/missed-trades'].post = write('createMissedTrades', 'Nicht genommene Trades anlegen', 'Einen oder bis zu 200 Einträge. Braucht Schreibrecht.', 'MissedTradeInput', writeParams);
+  spec.paths['/missed-trades/{id}/screenshots/{index}'] = { get: { ...spec.paths['/trades/{id}/screenshots/{index}'].get, operationId: 'getMissedTradeScreenshot', summary: 'Screenshot-Bild eines nicht genommenen Trades' } };
   spec.paths['/missed-trades/{id}'] = { patch: write('updateMissedTrade', 'Nicht genommenen Trade korrigieren', 'Nur die gesendeten Felder werden geändert.', 'MissedTradeInput', [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }]) };
   return spec;
 }
@@ -284,9 +285,9 @@ export function aiRouter(pool, config, fetcher = (...args) => fetch(...args)) {
     const { balances } = await balancesOf(pool, req.apiUser.id);
     res.json(jsonSafe(aiTrade(trade, balances)));
   });
-  router.get('/trades/:id/screenshots/:index', async (req, res) => {
-    const trade = await findRecord(pool, 'trades', req.params.id, req.apiUser.id);
-    const shot = screenshotsOf(trade).find(item => String(item.index) === req.params.index);
+  for (const [path, table] of [['/trades', 'trades'], ['/missed-trades', 'missedTrades']]) router.get(path + '/:id/screenshots/:index', async (req, res) => {
+    const record = await findRecord(pool, table, req.params.id, req.apiUser.id);
+    const shot = screenshotsOf(record, path.slice(1)).find(item => String(item.index) === req.params.index);
     if (!shot?.proxyPath) throw new ApiError(404, 'Für diesen Link kann kein Bild geladen werden. Nutze die URL direkt.');
     let response;
     try { response = await fetcher(shot.imageUrl, { redirect: 'error', signal: AbortSignal.timeout(10000) }); }

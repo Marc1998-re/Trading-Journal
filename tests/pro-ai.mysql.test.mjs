@@ -59,8 +59,9 @@ test('real MySQL: pro fields, account rules, missed trades and AI keys end to en
     await call('/records/trades/' + trade.id, 'PATCH', { exitDate: '2026-11-18', exitTime: '16:05', grade: 'A', mfe: 3.2 });
 
     // Missed trades: create, filter by period, move with account deletion.
-    const missed = await call('/records/missedTrades', 'POST', { accountId: privateAccount.id, symbol: 'es', entryDate: '2026-11-19', entryTime: '09:31', reason: 'hesitation', decision: 'missed', potentialR: 2.5, grade: 'A', side: 'short' });
+    const missed = await call('/records/missedTrades', 'POST', { accountId: privateAccount.id, symbol: 'es', entryDate: '2026-11-19', entryTime: '09:31', reason: 'hesitation', decision: 'missed', potentialR: 2.5, grade: 'A', side: 'short', contextUrl: 'https://www.tradingview.com/x/Ctx11111/', validationUrl: 'https://www.tradingview.com/x/Val22222/', entryUrl: 'https://www.tradingview.com/x/Ent33333/' });
     assert.equal(missed.status, 201);
+    assert.deepEqual([missed.data.contextUrl, missed.data.validationUrl, missed.data.entryUrl].map(u => u.slice(-9, -1)), ['Ctx11111', 'Val22222', 'Ent33333'], 'all three chart links are stored');
     assert.equal(missed.data.symbol, 'ES');
     assert.equal((await call('/records/missedTrades?from=2026-11-19&to=2026-11-19')).data.totalItems, 1);
     assert.equal((await call('/records/missedTrades?from=2026-11-20')).data.totalItems, 0);
@@ -96,6 +97,10 @@ test('real MySQL: pro fields, account rules, missed trades and AI keys end to en
     assert.equal(summary.stats.totalTrades ?? summary.counts.trades, 1);
     assert.equal(summary.accountRules.trailing, true);
     assert.equal(summary.missedTrades.opportunityR, 2.5);
+    const missedList = (await call('/v1/missed-trades', 'GET', undefined, asRead)).data;
+    assert.deepEqual(missedList.items[0].screenshots.map(shot => shot.field), ['entryUrl', 'validationUrl', 'contextUrl']);
+    assert.equal(missedList.items[0].screenshots[0].proxyPath, '/api/v1/missed-trades/' + missed.data.id + '/screenshots/0');
+    assert.equal((await call('/v1/missed-trades/' + missed.data.id + '/screenshots/1', 'GET', undefined, asRead)).status, 200);
     const [[used]] = await pool.execute('SELECT lastUsedAt FROM apiKeys WHERE id = ?', [readKey.record.id]);
     assert.ok(used.lastUsedAt, 'last use is recorded');
 

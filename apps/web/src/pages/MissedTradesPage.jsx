@@ -12,6 +12,8 @@ import { getTradeDate, dayKey } from '@/lib/tradeCalculations';
 import { rValue, percent, decimal } from '@/lib/format';
 import { missedReasonOptions, missedReasonLabels, decisionLabels, disciplinedReasons, gradeOptions, sideLabel, summarizeMissedTrades } from '@/lib/proJournal';
 import { useAuth } from '@/contexts/AuthContext';
+import ChartStrip, { ChartLinks } from '@/components/journal/ChartStrip';
+import { chartFields } from '@/lib/screenshots';
 import pb from '@/lib/pocketbaseClient';
 
 function MissedEditor({ entry, accounts, setups, onClose, onSaved }) {
@@ -22,6 +24,7 @@ function MissedEditor({ entry, accounts, setups, onClose, onSaved }) {
     setup: entry?.setup || '', side: entry?.side || '', grade: entry?.grade || '',
     decision: entry?.decision || 'missed', reason: entry?.reason || 'hesitation',
     potentialR: entry?.potentialR ?? '', notes: entry?.notes || '', contextUrl: entry?.contextUrl || '',
+    validationUrl: entry?.validationUrl || '', entryUrl: entry?.entryUrl || '',
   });
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
   const set = (key, value) => setForm(f => ({ ...f, [key]: value }));
@@ -53,7 +56,8 @@ function MissedEditor({ entry, accounts, setups, onClose, onSaved }) {
         <label className="form-field max-w-xs">Hypothetisches Ergebnis (R)<Input type="number" step="any" placeholder="z. B. 2,5 oder −1" value={form.potentialR} onChange={e => set('potentialR', e.target.value)} /><span className="font-normal">Was hätte der Trade nach deinem Plan gebracht? Leer lassen, wenn unklar.</span></label>
       </div></fieldset>
       <fieldset className="form-section"><legend>Dokumentation</legend><div className="grid gap-4">
-        <label className="form-field">Chart-Link<Input type="url" placeholder="https://…" value={form.contextUrl} onChange={e => set('contextUrl', e.target.value)} /></label>
+        <div className="grid gap-4 md:grid-cols-3">{chartFields.map(([key, label, hint]) => <label key={key} className="form-field">{label === 'Validierung' ? 'Validierungs' : label === 'Einstieg' ? 'Einstiegs' : label}-Link<Input type="url" value={form[key]} onChange={e => set(key, e.target.value.trim())} placeholder="https://www.tradingview.com/x/…" aria-describedby={'missed-' + key + '-hint'} /><span id={'missed-' + key + '-hint'} className="font-normal">{hint}</span></label>)}</div>
+        <ChartStrip trade={form} />
         <label className="form-field">Notiz<Textarea rows={3} maxLength={5000} value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Was hast du gesehen? Was hat dich abgehalten?" /></label>
       </div></fieldset>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
@@ -103,12 +107,13 @@ export default function MissedTradesPage() {
       <div className="period-switch" role="group" aria-label="Bewertung filtern">{[['all', 'Alle'], ['missed', 'Verpasst'], ['valid', 'Bewusst ausgelassen']].map(([key, label]) => <button key={key} type="button" aria-pressed={filter === key} onClick={() => setFilter(key)}>{label}</button>)}</div>
     </SectionTitle>
     <div className="journal-table-wrap" role="region" aria-label="Nicht genommene Trades" tabIndex={0}><table className="journal-table">
-      <thead><tr>{['Setup', 'Grund', 'Bewertung', 'Hypothetisch', 'Notiz', ''].map((h, i) => <th key={i} scope="col">{h}</th>)}</tr></thead>
+      <thead><tr>{['Setup', 'Grund', 'Bewertung', 'Hypothetisch', 'Charts', 'Notiz', ''].map((h, i) => <th key={i} scope="col">{h}</th>)}</tr></thead>
       <tbody>{rows.map(m => <tr key={m.id}>
         <td className="min-w-44"><strong className="flex items-center gap-2">{m.symbol}{sideLabel(m.side) !== '—' && <span className={'side-badge ' + sideLabel(m.side).toLowerCase()}>{sideLabel(m.side)}</span>}{m.grade && <span className={'grade-badge grade-' + m.grade}>{m.grade}</span>}</strong><span className="sub">{getTradeDate(m)?.toLocaleDateString('de-DE')} · {m.entryTime} · {m.setup || 'Ohne Setup'}</span></td>
         <td className="min-w-44 text-sm">{missedReasonLabels[m.reason] || '—'}</td>
         <td><span className={m.decision === 'valid' ? 'status-pill ok' : 'status-pill warn'}>{decisionLabels[m.decision] || decisionLabels.missed}</span></td>
         <td className={`whitespace-nowrap font-mono text-sm ${m.potentialR == null ? 'text-muted-foreground' : toneOf(Number(m.potentialR)) === 'positive' ? 'text-success' : 'text-destructive'}`}>{m.potentialR == null ? '—' : rValue(Number(m.potentialR))}</td>
+        <td><ChartLinks trade={m} /></td>
         <td className="max-w-sm text-xs text-muted-foreground"><span className="line-clamp-2">{m.notes || '—'}</span></td>
         <td>{!data.demo && <div className="flex"><IconButton label="Eintrag bearbeiten" onClick={() => setEditor(m)}><Pencil size={15} /></IconButton><IconButton label="Eintrag löschen" onClick={() => setDeleting(m)}><Trash2 size={15} /></IconButton></div>}</td>
       </tr>)}</tbody>

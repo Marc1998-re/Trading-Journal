@@ -54,6 +54,6 @@ export const demoMissedTrades = Array.from({ length: 14 }, (_, i) => {
     decision: valid ? 'valid' : 'missed', reason,
     potentialR: valid ? [-1, 0.6, -1, 1.2][i % 4] : [2.4, 1.6, -1, 3.1, 1.1][i % 5],
     notes: valid ? 'Kriterien nicht vollständig erfüllt – korrekt ausgelassen.' : 'Setup war klar, aber ich habe den Einstieg nicht ausgeführt.',
-    contextUrl: '',
+    contextUrl: '', validationUrl: '', entryUrl: '',
   };
 });

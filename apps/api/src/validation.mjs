@@ -44,7 +44,7 @@ const missedTrade = z.object({
   setup: text(80).default(''), side: z.enum(['', 'long', 'short']).default(''), grade: z.enum(tradeGrades).default(''),
   decision: z.enum(['valid', 'missed']).default('missed'), reason: z.enum(missedReasons).default('other'),
   potentialR: rMultiple.nullable().default(null),
-  notes: text(5000).default(''), contextUrl: link.default(''),
+  notes: text(5000).default(''), contextUrl: link.default(''), validationUrl: link.default(''), entryUrl: link.default(''),
 }).strict();
 
 export const collectionSchemas = {
