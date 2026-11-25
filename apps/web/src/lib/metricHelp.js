@@ -90,6 +90,18 @@ export const metricHelp = {
     calculation: 'Mittelwert des geplanten Ziels in R und Mittelwert der Netto-R derselben Trades. Ziel erreicht: Gewinner mit mindestens 95 % des geplanten Ziels.',
     reading: 'Eine große Lücke zeigt, ob du deine Ziele konsequent laufen lässt oder vorzeitig aussteigst.',
   },
+  consistency: {
+    title: 'Konsistenz',
+    meaning: 'Anteil deines gesamten Gewinns, der an deinem besten Handelstag entstanden ist.',
+    calculation: 'Gewinn des besten Tages ÷ Gesamtgewinn des Kontos.',
+    reading: 'Viele Prop-Firms begrenzen diesen Anteil, häufig auf 30 bis 50 %. Prüfe die Regel deines Anbieters. Ein niedriger Wert zeigt, dass dein Ergebnis nicht an einem einzelnen Tag hängt.',
+  },
+  edgeFinder: {
+    title: 'Deine größten Hebel',
+    meaning: 'Wiederkehrende Muster in deinen Trades, die dich am meisten kosten oder am meisten bringen.',
+    calculation: 'Für jede Gruppe mit mindestens 5 Trades: Summe der Netto-Ergebnisse. „Ohne diese Trades“ zeigt dein Ergebnis, wenn du sie ausgelassen hättest.',
+    reading: 'Die Hebel überschneiden sich und lassen sich nicht addieren. Kleine Stichproben sind nur ein Hinweis. Nimm dir einen Hebel vor, nicht alle gleichzeitig.',
+  },
   adherence: {
     title: 'Regeltreue',
     meaning: 'Anteil abgeschlossener Reviews, in denen du Setup bzw. Risiko als eingehalten bewertet hast.',

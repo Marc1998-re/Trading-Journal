@@ -41,3 +41,13 @@ test('landing section links stay within the router history used by the review gu
   assert.match(page, /<Link to="#journal" className="hero-scroll"/);
   assert.match(scroll, /getElementById\(hash.slice\(1\)\)\?\.scrollIntoView\(\)/);
 });
+
+test('landing addresses funded and private traders with live calculations and a clearly labelled model', () => {
+  const simulator = readFileSync(new URL('../apps/web/src/components/landing/ChallengeSimulator.jsx', import.meta.url), 'utf8');
+  for (const id of ['trader', 'hebel', 'simulator']) assert.ok(page.includes(`id="${id}"`), id);
+  for (const phrase of ['Prop-Firm / Funded', 'Eigenes Kapital', 'Tagesverlust-Puffer', 'Konsistenz', 'Kostenlos starten', 'Demo ohne Anmeldung']) assert.ok(page.includes(phrase), phrase);
+  assert.match(page, /<EdgeFinder trades=\{demoTrades\}/);
+  assert.match(page, /<AccountRulesCard account=\{demoAccounts\[0\]\}/);
+  assert.match(simulator, /Keine Prognose und keine Zusage/);
+  assert.doesNotMatch(page + simulator, /garantiert|Gewinngarantie|sicher bestehen/i);
+});

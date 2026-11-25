@@ -266,4 +266,21 @@
   .bg-warning { background-color: hsl(var(--warning)); }
   .text-warning { color: hsl(var(--warning)); }
 }
+@layer components {
+  .edge-columns { @apply grid gap-x-8 gap-y-6; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+  .edge-heading { @apply mb-2 flex items-center gap-2 text-xs font-semibold uppercase; letter-spacing: .04em; }
+  .edge-row { @apply border-t py-3; }
+  .edge-row-head { @apply flex items-baseline justify-between gap-3; }
+  .edge-row-head strong { @apply min-w-0 text-sm font-medium; }
+  .edge-value { @apply shrink-0 text-right font-mono text-sm font-medium; }
+  .edge-value small { @apply ml-2 text-xs font-normal text-muted-foreground; }
+  .edge-row.is-leak .edge-value { @apply text-destructive; }
+  .edge-row.is-strength .edge-value { @apply text-success; }
+  .edge-meta { @apply mt-0.5 text-xs text-muted-foreground; }
+  .edge-advice { @apply mt-2 flex items-start gap-1.5 text-xs leading-5; }
+  .edge-advice svg { @apply mt-1 shrink-0 text-primary; }
+  .edge-advice i { @apply not-italic text-muted-foreground; }
+  .edge-advice b { @apply font-mono font-medium text-foreground; }
+  .edge-empty { @apply border-t py-4 text-sm text-muted-foreground; }
+}
 @media (min-width: 1280px) { .cockpit-grid.missed-grid { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); } }

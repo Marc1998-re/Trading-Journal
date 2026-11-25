@@ -43,11 +43,20 @@ export function evaluateAccountRules(account, trades, today = new Date()) {
   const tradeBreaches = tradesLimit === null ? 0 : dayList.filter(d => d.trades > tradesLimit).length;
   const dailyBreaches = daily === null ? 0 : dayList.filter(d => -d.net >= daily).length;
   const profit = balance - start;
+  // How many typical full losses still fit into each buffer, based on the latest recorded risk amounts.
+  const recentRisks = items.map(item => item.stopLossAmount).filter(value => value > 0).slice(-20);
+  const typicalRisk = recentRisks.length ? recentRisks.reduce((sum, value) => sum + value, 0) / recentRisks.length : null;
+  const lossesIn = buffer => typicalRisk ? Math.max(0, Math.floor(buffer / typicalRisk + 1e-9)) : null;
+  const bestDay = dayList.reduce((best, d) => !best || d.net > best.net ? d : best, null);
+  const avgDay = dayList.length ? profit / dayList.length : 0;
   return {
+    typicalRisk,
+    // Share of the total profit made on the single best day; many prop firms cap this (consistency rule).
+    consistency: profit > 0 && dayList.length >= 2 && bestDay.net > 0 ? { bestDay: bestDay.net, key: bestDay.key, share: bestDay.net / profit * 100 } : null,
     start, balance, peak, profit, trailing,
-    daily: daily === null ? null : { limit: daily, today: todayRow.net, used: Math.max(0, -todayRow.net), remaining: daily + Math.min(0, todayRow.net), worst: worstDay?.net ?? 0, breaches: dailyBreaches, todayTrades: todayRow.trades },
-    drawdown: maxLoss === null ? null : { limit: maxLoss, floor, distance: balance - floor, used: Math.max(0, maxLoss - (balance - floor)), closest: Number.isFinite(lowestFloorDistance) ? lowestFloorDistance : maxLoss, breached: Number.isFinite(lowestFloorDistance) && lowestFloorDistance <= 0 },
-    target: target === null ? null : { goal: target, progress: profit / target * 100, remaining: Math.max(0, target - profit), reached: profit >= target },
+    daily: daily === null ? null : { limit: daily, today: todayRow.net, used: Math.max(0, -todayRow.net), remaining: daily + Math.min(0, todayRow.net), lossesLeft: lossesIn(daily + Math.min(0, todayRow.net)), worst: worstDay?.net ?? 0, breaches: dailyBreaches, todayTrades: todayRow.trades },
+    drawdown: maxLoss === null ? null : { limit: maxLoss, floor, distance: balance - floor, lossesLeft: lossesIn(balance - floor), used: Math.max(0, maxLoss - (balance - floor)), closest: Number.isFinite(lowestFloorDistance) ? lowestFloorDistance : maxLoss, breached: Number.isFinite(lowestFloorDistance) && lowestFloorDistance <= 0 },
+    target: target === null ? null : { goal: target, progress: profit / target * 100, remaining: Math.max(0, target - profit), reached: profit >= target, daysLeft: profit < target && avgDay > 0 ? Math.ceil((target - profit) / avgDay) : null },
     risk: riskLimit === null ? null : { limit: riskLimit, breaches: riskBreaches, trades: items.length },
     activity: tradesLimit === null ? null : { limit: tradesLimit, breaches: tradeBreaches, today: todayRow.trades, days: dayList.length },
   };

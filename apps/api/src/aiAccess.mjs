@@ -9,6 +9,7 @@ import { findRecord, insertRecord, listRecords, updateRecord } from './records.m
 import { collectionSchemas, id, validateRecord } from './validation.mjs';
 import { transaction } from './database.mjs';
 import { buildProcessedTrades, calculateAdvancedStats, getTradeNetProfit, getTradeRiskBasis, getTradeFees } from '../../web/src/lib/tradeCalculations.js';
+import { findEdges } from '../../web/src/lib/edgeFinder.js';
 import { buildProBreakdowns, calculateDisciplineStats, calculateExecutionStats, holdingMinutes, sessionOf, summarizeMissedTrades } from '../../web/src/lib/proJournal.js';
 import { evaluateAccountRules } from '../../web/src/lib/accountRules.js';
 
@@ -330,6 +331,7 @@ export function aiRouter(pool, config, fetcher = (...args) => fetch(...args)) {
       scope: { accountId: q.accountId || null, from: q.from || null, to: q.to || null, accounts: scoped.map(a => a.accountName), startingBalance, currency: 'EUR' },
       counts: { trades: trades.length, missedTrades: missed.length, withRisk: processed.filter(item => item.stopLossAmount > 0).length, withScreenshots: trades.filter(t => t.entryUrl || t.validationUrl || t.contextUrl).length },
       stats, breakdowns, execution, discipline: calculateDisciplineStats(trades), missedTrades: summarizeMissedTrades(missed), accountRules: rules,
+      edges: (({ leaks, strengths }) => ({ leaks: leaks.slice(0, 8), strengths: strengths.slice(0, 8), note: 'Muster mit mindestens 5 Trades. Überschneiden sich, nicht addierbar.' }))(findEdges(trades, balances)),
       notes: 'R = Nettoergebnis / geplantes Risiko. Prop-Limits basieren nur auf realisierten Trades. Datum/Uhrzeit: lokale Zeit des Traders.',
     }));
   });

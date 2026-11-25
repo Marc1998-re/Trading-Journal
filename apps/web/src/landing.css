@@ -139,6 +139,80 @@
   .landing-signoff > a { @apply inline-flex items-center gap-3; font-size: 32px; line-height: 1.2; }
   .landing-signoff > a svg { @apply ml-3 h-7 w-7 text-primary; }
   .landing-signoff p { @apply text-xs leading-5 text-muted-foreground; }
+  .landing-theme { --warning: 30 88% 38%; }
+  .hero-buttons { @apply flex flex-wrap gap-3; }
+  .landing-cta-secondary { @apply border-foreground/25 bg-background/70 text-foreground hover:bg-background; }
+  .landing-audience { @apply border-y bg-muted py-24; scroll-margin-top: 0; }
+  .audience-tabs { @apply mt-12; }
+  .audience-tabs .product-tab-list { @apply w-full border-b; }
+  .audience-panel { @apply mt-10 grid items-start gap-16; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); }
+  .audience-panel[hidden] { display: none; }
+  .audience-panel h3 { font-size: 30px; font-weight: 500; line-height: 1.2; }
+  .audience-panel > div > p { @apply mt-4 max-w-lg text-base leading-7 text-muted-foreground; }
+  .audience-panel dl { @apply mt-8 grid gap-5; }
+  .audience-panel dt { @apply flex items-center gap-2 text-sm font-medium; }
+  .audience-panel dt svg { @apply shrink-0 text-primary; }
+  .audience-panel dd { @apply mt-1 pl-6 text-sm leading-6 text-muted-foreground; }
+  .landing-live { @apply min-w-0 text-foreground; }
+  .landing-live .journal-panel { @apply bg-background; box-shadow: 0 16px 40px hsl(var(--foreground) / .07); }
+  .landing-edges { @apply py-24; scroll-margin-top: 0; }
+  .landing-edges > figure { @apply mt-12; }
+  .edges-cta { @apply mt-10 flex flex-wrap items-center justify-between gap-6 border-t pt-8; }
+  .edges-cta p { @apply max-w-xl text-base leading-7; }
+  .landing-sim { @apply bg-secondary py-24; scroll-margin-top: 0; }
+  .sim { @apply mt-12 grid gap-0 overflow-hidden rounded border bg-background; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); box-shadow: 0 16px 40px hsl(var(--foreground) / .07); }
+  .sim-controls { @apply border-r p-8; }
+  .sim-presets { @apply inline-flex flex-wrap gap-1 rounded-sm border p-1; }
+  .sim-presets button { @apply rounded-sm px-3 py-2 text-xs font-medium text-muted-foreground; }
+  .sim-presets button[aria-pressed=true] { @apply bg-secondary text-primary; }
+  .sim-rules { @apply mt-3 text-xs text-muted-foreground; }
+  .sim-control { @apply mt-8; }
+  .sim-control > div { @apply mb-3 flex items-baseline justify-between gap-4 text-sm; }
+  .sim-control output { @apply font-mono text-base font-medium; }
+  .sim-control [role=slider] { @apply h-5 w-5 border-primary bg-background; }
+  .sim-result { @apply p-8; }
+  .sim-label { @apply text-xs font-medium text-muted-foreground; }
+  .sim-rate { @apply mt-1 font-medium; font-size: 84px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .sim-bar { @apply mt-6 flex h-2.5 w-full gap-0.5 overflow-hidden rounded-full; }
+  .sim-bar i { @apply block h-full; transition: width .25s ease; }
+  .sim-legend { @apply mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted-foreground; }
+  .sim-legend li { @apply flex items-center gap-1.5; }
+  .sim-legend i { @apply h-2 w-2 rounded-full; }
+  .sim-legend b { @apply font-mono font-medium text-foreground; }
+  .sim-facts { @apply mt-6 grid grid-cols-3 gap-4 border-y py-5; }
+  .sim-facts dt { @apply text-xs text-muted-foreground; }
+  .sim-facts dd { @apply mt-1 font-mono text-sm font-medium; }
+  .sim-verdict { @apply my-6 max-w-xl text-base leading-7; }
+  .sim-note { @apply mt-5 max-w-xl text-xs leading-5 text-muted-foreground; }
+  .product-facts { row-gap: 2.5rem; }
+  .landing-sticky-cta { @apply fixed inset-x-0 bottom-0 z-40 hidden items-center justify-between gap-4 border-t bg-background px-5 py-3 text-xs text-muted-foreground; padding-bottom: calc(12px + env(safe-area-inset-bottom)); transform: translateY(110%); transition: transform .25s ease; }
+  .landing-sticky-cta.is-visible { transform: none; }
+  @media (prefers-reduced-motion: reduce) { .landing-sticky-cta, .sim-bar i { transition: none; } }
+  @media (max-width: 1099px) {
+    .audience-panel { gap: 40px; }
+    .sim-rate { font-size: 68px; }
+  }
+  @media (max-width: 767px) {
+    .landing-sticky-cta { display: flex; }
+    .hero-buttons { flex-direction: column; align-items: stretch; width: 100%; }
+    .landing-audience, .landing-edges, .landing-sim { padding-block: 60px; }
+    .audience-tabs { margin-top: 30px; }
+    .audience-panel { grid-template-columns: minmax(0, 1fr); gap: 32px; margin-top: 28px; }
+    .audience-panel h3 { font-size: 25px; }
+    .audience-panel > div > p { font-size: 14px; line-height: 24px; }
+    .landing-edges > figure, .sim { margin-top: 30px; }
+    .edges-cta { margin-top: 28px; padding-top: 24px; }
+    .edges-cta p { font-size: 14px; line-height: 24px; }
+    .sim { grid-template-columns: minmax(0, 1fr); }
+    .sim-controls { border-right: 0; border-bottom-width: 1px; padding: 22px 18px; }
+    .sim-result { padding: 22px 18px; }
+    .sim-facts { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+    .sim-facts > div { display: flex; justify-content: space-between; gap: 12px; }
+    .sim-facts dd { margin-top: 0; }
+    .sim-verdict { font-size: 14px; line-height: 24px; }
+    .sim-result .landing-cta { width: 100%; justify-content: space-between; }
+    .landing-signoff { padding-bottom: 96px; }
+  }
   .landing-theme > footer { max-width: none; padding-inline: 5%; }
   .landing-theme .journal-footer { @apply mx-auto; max-width: 1280px; }
 

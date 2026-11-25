@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { money, percent } from '@/lib/format';
 import { Gauge } from './JournalUI';
+import MetricHelp from './MetricHelp';
 import { accountTypeLabels, evaluateAccountRules, hasRules, usageTone } from '@/lib/accountRules';
 
 function LimitMeter({ label, used, limit, left, detail, invert = false }) {
@@ -17,8 +18,10 @@ function LimitMeter({ label, used, limit, left, detail, invert = false }) {
   </div>;
 }
 
-export function AccountRulesCard({ account, trades, settingsPath = '/settings' }) {
-  const r = evaluateAccountRules(account, trades);
+const lossText = count => count === null || count === undefined ? '' : count === 0 ? 'Kein voller Verlust-Trade mehr drin · ' : `Platz für ${count} volle${count === 1 ? 'n' : ''} Verlust-Trade${count === 1 ? '' : 's'} · `;
+
+export function AccountRulesCard({ account, trades, settingsPath = '/settings', today }) {
+  const r = evaluateAccountRules(account, trades, today);
   const prop = account.accountType === 'prop';
   const breached = r.drawdown?.breached || (r.daily && r.daily.used >= r.daily.limit);
   return <section className="journal-panel rules-card">
@@ -27,9 +30,10 @@ export function AccountRulesCard({ account, trades, settingsPath = '/settings' }
       {breached ? <span className="status-pill bad"><AlertTriangle size={12} className="mr-1 inline" />Limit verletzt</span> : r.target?.reached ? <span className="status-pill ok"><CheckCircle2 size={12} className="mr-1 inline" />Ziel erreicht</span> : <span className="status-pill neutral">Im Rahmen</span>}
     </header>
     <div className="rules-body grid gap-4">
-      {r.daily && <LimitMeter label="Tagesverlust heute" used={r.daily.used} limit={r.daily.limit} left={`${money(r.daily.remaining)} frei`} detail={`Limit ${money(r.daily.limit)} · heute ${money(r.daily.today, true)} · schlechtester Tag ${money(r.daily.worst, true)}${r.daily.breaches ? ` · ${r.daily.breaches}× überschritten` : ''}`} />}
-      {r.drawdown && <LimitMeter label={r.trailing ? 'Max. Verlust (trailing)' : 'Max. Verlust (statisch)'} used={r.drawdown.used} limit={r.drawdown.limit} left={`${money(r.drawdown.distance)} Puffer`} detail={`Untergrenze ${money(r.drawdown.floor)} · Kontostand ${money(r.balance)} · knappster Abstand ${money(r.drawdown.closest)}`} />}
-      {r.target && <LimitMeter invert label={<span className="inline-flex items-center gap-1"><Target size={12} />Gewinnziel</span>} used={r.profit} limit={r.target.goal} left={percent(Math.max(0, r.target.progress), { digits: 0 })} detail={r.target.reached ? `${money(r.profit, true)} von ${money(r.target.goal)} – erreicht` : `${money(r.profit, true)} von ${money(r.target.goal)} · noch ${money(r.target.remaining)}`} />}
+      {r.daily && <LimitMeter label="Tagesverlust heute" used={r.daily.used} limit={r.daily.limit} left={`${money(r.daily.remaining)} frei`} detail={`${lossText(r.daily.lossesLeft)}Limit ${money(r.daily.limit)} · heute ${money(r.daily.today, true)} · schlechtester Tag ${money(r.daily.worst, true)}${r.daily.breaches ? ` · ${r.daily.breaches}× überschritten` : ''}`} />}
+      {r.drawdown && <LimitMeter label={r.trailing ? 'Max. Verlust (trailing)' : 'Max. Verlust (statisch)'} used={r.drawdown.used} limit={r.drawdown.limit} left={`${money(r.drawdown.distance)} Puffer`} detail={`${lossText(r.drawdown.lossesLeft)}Untergrenze ${money(r.drawdown.floor)} · Kontostand ${money(r.balance)} · knappster Abstand ${money(r.drawdown.closest)}`} />}
+      {r.target && <LimitMeter invert label={<span className="inline-flex items-center gap-1"><Target size={12} />Gewinnziel</span>} used={r.profit} limit={r.target.goal} left={percent(Math.max(0, r.target.progress), { digits: 0 })} detail={r.target.reached ? `${money(r.profit, true)} von ${money(r.target.goal)} – erreicht` : `${money(r.profit, true)} von ${money(r.target.goal)} · noch ${money(r.target.remaining)}${r.target.daysLeft ? ` · bei deinem Ø Tagesergebnis ca. ${r.target.daysLeft} Handelstage` : ''}`} />}
+      {prop && r.consistency && <div className="flex items-center justify-between gap-3 border-t pt-3 text-xs"><span className="flex items-center gap-1 text-muted-foreground">Konsistenz: bester Tag<MetricHelp helpKey="consistency" label="Konsistenz" /></span><strong className={r.consistency.share >= 50 ? 'text-destructive' : r.consistency.share >= 30 ? 'text-warning' : 'text-success'}>{percent(r.consistency.share, { digits: 0 })} des Gewinns · {money(r.consistency.bestDay, true)}</strong></div>}
       {r.risk && <div className="flex items-center justify-between gap-3 border-t pt-3 text-xs"><span className="text-muted-foreground">Risiko je Trade ≤ {percent(r.risk.limit)}</span><strong className={r.risk.breaches ? 'text-destructive' : 'text-success'}>{r.risk.breaches ? `${r.risk.breaches} von ${r.risk.trades} Trades darüber` : 'Immer eingehalten'}</strong></div>}
       {r.activity && <div className="flex items-center justify-between gap-3 border-t pt-3 text-xs"><span className="text-muted-foreground">Max. {r.activity.limit} Trades pro Tag</span><strong className={r.activity.breaches ? 'text-destructive' : 'text-success'}>{r.activity.breaches ? `${r.activity.breaches} Tage überschritten` : `Heute ${r.activity.today} / ${r.activity.limit}`}</strong></div>}
     </div>

@@ -13,6 +13,7 @@ import PerformanceChart from '@/components/journal/PerformanceChart';
 import MetricHelp from '@/components/journal/MetricHelp';
 import { AccountRulesCard, RulesPrompt } from '@/components/journal/AccountRules';
 import { hasRules } from '@/lib/accountRules';
+import EdgeFinder from '@/components/journal/EdgeFinder';
 import { reviewStatus, reviewStatusLabels } from '@/lib/review';
 import { calculateDisciplineStats, summarizeMissedTrades, sideLabel } from '@/lib/proJournal';
 
@@ -89,6 +90,8 @@ export default function DashboardPage() {
     })()}
 
     {!loading && !data.error && !trades.length && <div className="journal-empty mb-8"><h3>Platz für deinen nächsten Trade.</h3><p>In diesem Zeitraum gibt es noch keine Einträge. Erfasse einen Trade oder wähle einen anderen Zeitraum.</p><Button asChild variant="outline"><Link to={prefix + '/trades'}>Zum Trade-Journal<ArrowUpRight /></Link></Button></div>}
+
+    {!loading && !data.error && populated && <EdgeFinder className="mb-8" trades={trades} balances={balances} />}
 
     <div className="cockpit-grid">
       <Panel className="capital-panel" eyebrow="01 · Kapitalverlauf" title={percentage ? percent(stats.returnPct, { digits: 2, sign: true }) : money(mode === 'balance' ? stats.endingBalance : stats.netPnL)}
